@@ -1,0 +1,7 @@
+celery
+django
+django-celery
+feedparser
+MySQL-python
+opml
+

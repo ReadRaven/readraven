@@ -26,3 +26,19 @@ class ImportOPMLTaskTest(TestCase):
 
         feeds = Feed.objects.all()
         self.assertEqual(feeds.count(), 85)
+
+
+class ImportFromReaderAPITaskTest(TestCase):
+    '''Test ImportFromReaderAPITask.'''
+
+    @override_settings(CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
+                       CELERY_ALWAYS_EAGER=True,
+                       BROKER_BACKEND='memory',)
+    def test_run(self):
+        task = tasks.ImportFromReaderAPITask()
+        result = task.delay('alex@chizang.net', '')
+
+        self.assertTrue(result.successful())
+
+        feeds = Feed.objects.all()
+        self.assertEqual(feeds.count(), 84)

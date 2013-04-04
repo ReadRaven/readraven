@@ -5,6 +5,7 @@ import zipfile
 
 from celery.task import Task, PeriodicTask
 import feedparser
+import libgreader
 import opml
 import pytz
 
@@ -56,6 +57,7 @@ def source_URL_to_feed(url):
         item.save()
     return feed
 
+
 class ImportOPMLTask(Task):
     '''A task for importing feeds from OPML files.'''
 
@@ -80,3 +82,22 @@ class ImportOPMLTask(Task):
         else:
             return False
 
+
+class ImportFromReaderAPITask(Task):
+    '''A task for importing feeds from a Google Reader-compatible API.'''
+
+    def run(self, user, passwd, *args, **kwargs):
+        # TODO: we should support the more complex auth methods
+        auth = libgreader.ClientAuthMethod(user, passwd)
+        reader = libgreader.GoogleReader(auth)
+
+        if not reader.buildSubscriptionList():
+            # XXX: better error recovery here?
+            return False
+
+        for f in reader.feeds:
+            feed = source_URL_to_feed(f.feedUrl)
+
+        # TODO: here, we should suck in all the other metadata
+
+        return True

@@ -4,4 +4,5 @@ django-celery
 feedparser
 MySQL-python
 opml
-
+requests
+libgreader

@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.db import models
 
 
@@ -8,8 +9,7 @@ class Feed(models.Model):
     generator = models.CharField(max_length=100)
     title = models.CharField(max_length=200)
     url = models.URLField()
-    # Disabled until we figure out auth.
-    #user = models.ForeignKey(User)
+    user = models.ForeignKey(User)
 
 
 class FeedItem(models.Model):

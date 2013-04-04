@@ -12,7 +12,7 @@ import pytz
 from raven.models import Feed, FeedItem
 
 
-def source_URL_to_feed(url):
+def source_URL_to_feed(url, user):
     '''Take a source URL, and return a Feed model.'''
     data = feedparser.parse(url)
     if data.bozo is not 0 or data.status == 301:
@@ -28,6 +28,7 @@ def source_URL_to_feed(url):
         feed.generator = data.feed.generator
     except AttributeError:
         pass
+    feed.user = user
 
     feed.save()
     for entry in data.entries:
@@ -61,9 +62,7 @@ def source_URL_to_feed(url):
 class ImportOPMLTask(Task):
     '''A task for importing feeds from OPML files.'''
 
-    def run(self, filename, *args, **kwargs):
-        # TODO: this function should also have a user or user_id or something
-        # for linking the feeds to a user.
+    def run(self, user, filename, *args, **kwargs):
         if zipfile.is_zipfile(filename):
             with zipfile.ZipFile(filename, 'r') as z:
                 name = os.path.join(
@@ -72,12 +71,12 @@ class ImportOPMLTask(Task):
                 subscriptions = opml.from_string(z.open(name).read())
                 for sub in subscriptions:
                     if hasattr(sub, 'type'):
-                        feed = source_URL_to_feed(sub.xmlUrl)
+                        feed = source_URL_to_feed(sub.xmlUrl, user)
                     else:
                         # TODO: it makes sense to handle Reader's 'groups'
                         folder = sub
                         for sub in folder:
-                            feed = source_URL_to_feed(sub.xmlUrl)
+                            feed = source_URL_to_feed(sub.xmlUrl, user)
             return True
         else:
             return False
@@ -86,7 +85,7 @@ class ImportOPMLTask(Task):
 class ImportFromReaderAPITask(Task):
     '''A task for importing feeds from a Google Reader-compatible API.'''
 
-    def run(self, username, passwd, *args, **kwargs):
+    def run(self, user, username, passwd, *args, **kwargs):
         # TODO: we should support the more complex auth methods
         auth = libgreader.ClientAuthMethod(username, passwd)
         reader = libgreader.GoogleReader(auth)
@@ -96,7 +95,7 @@ class ImportFromReaderAPITask(Task):
             return False
 
         for f in reader.feeds:
-            feed = source_URL_to_feed(f.feedUrl)
+            feed = source_URL_to_feed(f.feedUrl, user)
 
         # TODO: here, we should suck in all the other metadata
 

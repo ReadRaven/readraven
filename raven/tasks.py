@@ -19,7 +19,7 @@ def source_URL_to_feed(url, user):
         return None
     feed = Feed()
     feed.title = data.feed.title
-    feed.url = data.feed.link
+    feed.link = data.feed.link
     try:
         feed.description = data.feed.description
     except AttributeError:

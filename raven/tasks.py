@@ -86,9 +86,9 @@ class ImportOPMLTask(Task):
 class ImportFromReaderAPITask(Task):
     '''A task for importing feeds from a Google Reader-compatible API.'''
 
-    def run(self, user, passwd, *args, **kwargs):
+    def run(self, username, passwd, *args, **kwargs):
         # TODO: we should support the more complex auth methods
-        auth = libgreader.ClientAuthMethod(user, passwd)
+        auth = libgreader.ClientAuthMethod(username, passwd)
         reader = libgreader.GoogleReader(auth)
 
         if not reader.buildSubscriptionList():

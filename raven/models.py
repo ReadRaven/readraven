@@ -49,12 +49,24 @@ class Feed(models.Model):
 class FeedItem(models.Model):
     '''A model for representing an item in a RSS feed.'''
 
-    description = models.TextField()
     feed = models.ForeignKey(Feed, related_name='items')
-    guid = models.CharField(max_length=500)
-    published = models.DateTimeField()
-    title = models.CharField(max_length=200)
+
+    # Required properties
+    description = models.TextField()
     # It's possible to have longer urls, but anything longer than 2083
     # characters will break in IE.
-    url = models.URLField(max_length=500)
+    link = models.URLField(max_length=500)
+    title = models.CharField(max_length=200)
+
+    # Optional metadata
+    guid = models.CharField(max_length=500)
+    published = models.DateTimeField()
+
+    # Currently unused RSS (optional) properties:
+    # author: <author>bob@example.com</author>
+    # category: <category>Wholesome pornography</category>
+    # comments: <comments>http://.../comments</comments.
+    # enclosure: <enclosure url="http://...mp3" length="200" type="audio/mpeg" />
+    # pubDate: <pubDate>Thu, 4 Apr 2013</pubDate>
+    # source: <source url="http://...">Example.com</source>
 

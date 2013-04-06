@@ -70,9 +70,38 @@ class Feed(models.Model):
         feed.update(data)
         return feed
 
+    def save(self, *args, **kwargs):
+        is_new = False
+        if not self.pk:
+            is_new = True
+        super(Feed, self).save(*args, **kwargs)
+
+        if is_new:
+            from raven.tasks import UpdateFeedTask
+            task = UpdateFeedTask()
+            task.delay([self])
+
     def update(self, data=None):
         if data is None:
             data = feedparser.parse(self.link)
+
+        updated = False
+        try:
+            if self.title is not data.feed.title:
+                self.title = data.feed.title
+                updated = True
+        except AttributeError:
+            # We may want to log data.bozo_exception
+            pass
+        try:
+            if self.description is not data.feed.description:
+                self.description = data.feed.description
+                updated = True
+        except AttributeError:
+            # We may want to log data.bozo_exception
+            pass
+        if updated:
+            self.save()
 
         for entry in data.entries:
             item = FeedItem()

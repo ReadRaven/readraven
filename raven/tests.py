@@ -15,7 +15,7 @@ TESTDATA_DIR = os.path.join(THIS_DIR, 'testdata')
 SECURE_FILE = os.path.join(THIS_DIR, '..', 'secure')
 
 
-class FeedTests(TestCase):
+class FeedTest(TestCase):
     '''Test the Feed model.'''
 
     def setUp(self):
@@ -106,6 +106,25 @@ class FeedTests(TestCase):
 
         self.assertEqual(user.feeds.count(), 1)
         self.assertEqual(user.items.count(), 2)
+
+    @override_settings(CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
+                       CELERY_ALWAYS_EAGER=True,
+                       BROKER_BACKEND='memory',)
+    def test_save(self):
+        user = User()
+        user.username = 'Bob'
+        user.save()
+
+        feed = Feed()
+        feed.link = 'http://paulhummer.org/rss'
+        feed.save()
+
+        # Re-fetch the feed
+        feed = Feed.objects.get(pk=feed.pk)
+
+        self.assertEqual(feed.items.count(), 20)
+        self.assertEqual(feed.title, 'Dapper as...')
+        self.assertTrue(feed.description.startswith('Bike rider'))
 
 
 class UserFeedItemTest(TestCase):

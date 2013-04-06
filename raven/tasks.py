@@ -15,9 +15,10 @@ class UpdateFeedTask(PeriodicTask):
     SLICE_SIZE = 100
     run_every = timedelta(seconds=60*5)
 
-    def run(self):
-        age = datetime.now() - timedelta(minutes=30)
-        feeds = Feed.objects.filter(last_fetched__lt=age)[:self.SLICE_SIZE]
+    def run(self, feeds=[]):
+        if len(feeds) is 0:
+            age = datetime.now() - timedelta(minutes=30)
+            feeds = Feed.objects.filter(last_fetched__lt=age)[:self.SLICE_SIZE]
 
         for feed in feeds:
             feed.update()

@@ -19,7 +19,7 @@ def source_URL_to_feed(url, user):
         return None
     feed = Feed()
     feed.title = data.feed.title
-    feed.url = data.feed.link
+    feed.link = data.feed.link
     try:
         feed.description = data.feed.description
     except AttributeError:
@@ -54,7 +54,7 @@ def source_URL_to_feed(url, user):
         except AttributeError:
             # Fuck you LiveJournal.
             item.title = feed.title
-        item.url = entry.link
+        item.link = entry.link
         item.save()
     return feed
 

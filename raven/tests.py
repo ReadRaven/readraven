@@ -14,6 +14,38 @@ TESTDATA_DIR = os.path.join(THIS_DIR, 'testdata')
 SECURE_FILE = os.path.join(THIS_DIR, '..', 'secure')
 
 
+class FeedTests(TestCase):
+    '''Test the Feed model.'''
+
+    def setUp(self):
+        self.user = User()
+        self.user.save()
+
+    def test_feed_users(self):
+        bob = User()
+        bob.username = 'Bob'
+        bob.save()
+        steve = User()
+        steve.username = 'Steve'
+        steve.save()
+
+        feed = Feed()
+        feed.title = 'Some Political Bullshit'
+        feed.save()
+        feed.users.add(bob)
+        feed.users.add(steve)
+        feed.save()
+
+        other_feed = Feed()
+        other_feed.title = 'Mom\'s recipe blog'
+        other_feed.save()
+        other_feed.users.add(steve)
+        other_feed.save()
+
+        self.assertEqual(steve.feeds.count(), 2)
+        self.assertEqual(bob.feeds.count(), 1)
+
+
 class ImportOPMLTaskTest(TestCase):
     '''Test ImportOPMLTask.'''
 

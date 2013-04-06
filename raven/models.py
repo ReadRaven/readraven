@@ -1,11 +1,12 @@
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.db import models
 
 
 class Feed(models.Model):
     '''A model for representing an RSS feed.'''
 
-    user = models.ForeignKey(User)
+    users = models.ManyToManyField(User, related_name='feeds')
 
     # Required properties
     description = models.TextField()

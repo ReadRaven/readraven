@@ -71,3 +71,15 @@ class FeedItem(models.Model):
     # pubDate: <pubDate>Thu, 4 Apr 2013</pubDate>
     # source: <source url="http://...">Example.com</source>
 
+
+class UserFeedItem(models.Model):
+    '''A model for user metadata on a post.'''
+
+    class Meta:
+        unique_together = ('item', 'user',)
+
+    item = models.ForeignKey(FeedItem, related_name='+')
+    user = models.ForeignKey(User, related_name='items')
+
+    read = models.BooleanField(default=False)
+

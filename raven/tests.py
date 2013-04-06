@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 import unittest
 
@@ -6,7 +7,7 @@ from django.test import TestCase
 from django.test.utils import override_settings
 
 from raven import tasks
-from raven.models import Feed
+from raven.models import Feed, FeedItem, UserFeedItem
 
 
 THIS_DIR = os.path.dirname(__file__)
@@ -44,6 +45,35 @@ class FeedTests(TestCase):
 
         self.assertEqual(steve.feeds.count(), 2)
         self.assertEqual(bob.feeds.count(), 1)
+
+
+class UserFeedItemTest(TestCase):
+    '''Test the UserFeedItem model.'''
+
+    def test_basics(self):
+        feed = Feed()
+        feed.title = 'BoingBoing'
+        feed.save()
+
+        item = FeedItem()
+        item.title = 'Octopus v. Platypus'
+        item.description = 'A fight to the death.'
+        item.link = item.guid = 'http://www.example.com/rss/post'
+        item.published = datetime.now()
+        item.feed = feed
+        item.save()
+
+        user = User()
+        user.username = 'Bob'
+        user.save()
+
+        # Okay, finally we can do the test.
+        user_feed_item = UserFeedItem()
+        user_feed_item.user = user
+        user_feed_item.item = item
+        user_feed_item.save()
+
+        self.assertEqual(user.items.count(), 1)
 
 
 class ImportOPMLTaskTest(TestCase):

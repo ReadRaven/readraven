@@ -5,4 +5,4 @@ feedparser
 MySQL-python
 opml
 requests
-libgreader
+git+ssh://git@github.com/AmeliaKnows/libgreader.git#egg=libgreader

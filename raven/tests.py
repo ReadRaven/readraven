@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 import unittest
 
@@ -135,6 +135,29 @@ class UserFeedItemTest(TestCase):
         user_feed_item.save()
 
         self.assertEqual(user.items.count(), 1)
+
+
+class UpdateFeedTaskTest(TestCase):
+    '''Test UpdateFeedTask.'''
+
+    @override_settings(CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
+                       CELERY_ALWAYS_EAGER=True,
+                       BROKER_BACKEND='memory',)
+    def test_run(self):
+        feed = Feed()
+        feed.link = 'http://paulhummer.org/rss'
+        feed.last_fetched = last_fetched = datetime.now() - timedelta(minutes=31)
+        feed.save()
+
+        task = tasks.UpdateFeedTask()
+        result = task.delay()
+
+        self.assertTrue(result.successful())
+
+        # Re-fetch the feed
+        feed = Feed.objects.get(link='http://paulhummer.org/rss')
+        self.assertNotEqual(feed.last_fetched, last_fetched)
+        self.assertEqual(feed.items.count(), 20)
 
 
 class ImportOPMLTaskTest(TestCase):

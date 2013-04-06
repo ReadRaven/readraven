@@ -19,6 +19,7 @@ class Feed(models.Model):
     '''A model for representing an RSS feed.'''
 
     users = models.ManyToManyField(User, related_name='feeds')
+    last_fetched = models.DateTimeField(null=True)
 
     # Required properties
     description = models.TextField()

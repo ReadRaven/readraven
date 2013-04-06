@@ -2,7 +2,7 @@ celery
 django
 django-celery
 feedparser
-MySQL-python
+psycopg2
 opml
 requests
 git+ssh://git@github.com/AmeliaKnows/libgreader.git#egg=libgreader

@@ -1,15 +1,12 @@
 from datetime import datetime, timedelta
 import os
-import time
 import zipfile
 
 from celery.task import Task, PeriodicTask
-import feedparser
 import libgreader
 import opml
-import pytz
 
-from raven.models import Feed, FeedItem, UserFeedItem
+from raven.models import Feed
 
 
 class UpdateFeedTask(PeriodicTask):
@@ -40,12 +37,12 @@ class ImportOPMLTask(Task):
                 subscriptions = opml.from_string(z.open(name).read())
                 for sub in subscriptions:
                     if hasattr(sub, 'type'):
-                        feed = Feed.create_from_url(sub.xmlUrl, user)
+                        Feed.create_from_url(sub.xmlUrl, user)
                     else:
                         # TODO: it makes sense to handle Reader's 'groups'
                         folder = sub
                         for sub in folder:
-                            feed = Feed.create_from_url(sub.xmlUrl, user)
+                            Feed.create_from_url(sub.xmlUrl, user)
             return True
         else:
             return False
@@ -64,9 +61,8 @@ class ImportFromReaderAPITask(Task):
             return False
 
         for f in reader.feeds:
-            feed = Feed.create_from_url(f.feedUrl, user)
+            Feed.create_from_url(f.feedUrl, user)
 
         # TODO: here, we should suck in all the other metadata
 
         return True
-

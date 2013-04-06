@@ -2,10 +2,8 @@ from datetime import datetime
 import time
 
 from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
 from django.db import models
 import feedparser
-import pytz
 
 
 class UserFeedItem(models.Model):
@@ -83,14 +81,15 @@ class Feed(models.Model):
             item.guid = entry.link
             try:
                 if entry.published_parsed is None:
-                    # In this case, there's a "date", but it's unparseable, i.e.
-                    # it's something silly like "No date found", which isn't a
-                    # date.
+                    # In this case, there's a "date", but it's unparseable,
+                    # i.e. it's something silly like "No date found",
+                    # which isn't a date.
                     item.published = datetime.utcnow()
                 else:
-                    # This warns about naive timestamps.
+                    # This warns about naive timestamps when timezone
+                    # support is enabled.
                     item.published = datetime.utcfromtimestamp(
-                        time.mktime(entry.published_parsed)).replace(tzinfo=pytz.UTC)
+                        time.mktime(entry.published_parsed))
             except AttributeError:
                 # Ugh. Some feeds don't have published dates...
                 item.published = datetime.utcnow()
@@ -110,7 +109,8 @@ class Feed(models.Model):
 
     # Currently unused RSS (optional) properties:
     # category: <category>Filthy pornography</category>
-    # cloud: <cloud domain="www...com" port="80" path="/RPC" registerProcedure="NotifyMe" protocol="xml-rpc">
+    # cloud: <cloud domain="www...com" port="80" path="/RPC"
+    #               registerProcedure="NotifyMe" protocol="xml-rpc">
     # copyright: <copyright>1871 Copyright Troll</copyright>
     # docs: <docs>http://...</docs>
     # image: <image>
@@ -159,7 +159,8 @@ class FeedItem(models.Model):
     # author: <author>bob@example.com</author>
     # category: <category>Wholesome pornography</category>
     # comments: <comments>http://.../comments</comments.
-    # enclosure: <enclosure url="http://...mp3" length="200" type="audio/mpeg" />
+    # enclosure: <enclosure url="http://...mp3" length="200"
+    #                       type="audio/mpeg" />
     # pubDate: <pubDate>Thu, 4 Apr 2013</pubDate>
     # source: <source url="http://...">Example.com</source>
 

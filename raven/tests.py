@@ -146,7 +146,8 @@ class UpdateFeedTaskTest(TestCase):
     def test_run(self):
         feed = Feed()
         feed.link = 'http://paulhummer.org/rss'
-        feed.last_fetched = last_fetched = datetime.now() - timedelta(minutes=31)
+        last_fetched = datetime.now() - timedelta(minutes=31)
+        feed.last_fetched = last_fetched
         feed.save()
 
         task = tasks.UpdateFeedTask()

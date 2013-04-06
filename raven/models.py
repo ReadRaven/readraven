@@ -1,6 +1,11 @@
+from datetime import datetime
+import time
+
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
+import feedparser
+import pytz
 
 
 class UserFeedItem(models.Model):
@@ -42,6 +47,66 @@ class Feed(models.Model):
             user_item.item = item
             user_item.user = subscriber
             user_item.save()
+
+    @classmethod
+    def create_from_url(Class, url, subscriber):
+        data = feedparser.parse(url)
+        if data.bozo is not 0 or data.status == 301:
+            return None
+        feed = Class()
+        feed.title = data.feed.title
+        feed.link = data.feed.link
+        try:
+            feed.description = data.feed.description
+        except AttributeError:
+            pass
+        try:
+            feed.generator = data.feed.generator
+        except AttributeError:
+            pass
+        feed.save()  # Save so that Feed has a key
+
+        feed.users.add(subscriber)
+        feed.save()
+
+        feed.update(data)
+        return feed
+
+    def update(self, data=None):
+        if data is None:
+            data = feedparser.parse(self.link)
+
+        for entry in data.entries:
+            item = FeedItem()
+            item.feed = self
+            item.description = entry.summary
+            item.guid = entry.link
+            try:
+                if entry.published_parsed is None:
+                    # In this case, there's a "date", but it's unparseable, i.e.
+                    # it's something silly like "No date found", which isn't a
+                    # date.
+                    item.published = datetime.utcnow()
+                else:
+                    # This warns about naive timestamps.
+                    item.published = datetime.utcfromtimestamp(
+                        time.mktime(entry.published_parsed)).replace(tzinfo=pytz.UTC)
+            except AttributeError:
+                # Ugh. Some feeds don't have published dates...
+                item.published = datetime.utcnow()
+            try:
+                item.title = entry.title
+            except AttributeError:
+                # Fuck you LiveJournal.
+                item.title = self.title
+            item.link = entry.link
+            item.save()
+
+            for user in self.users.all():
+                user_item = UserFeedItem()
+                user_item.user = user
+                user_item.item = item
+                user_item.save()
 
     # Currently unused RSS (optional) properties:
     # category: <category>Filthy pornography</category>

@@ -176,8 +176,8 @@ class ImportOPMLTaskTest(TestCase):
         other_owner.username = 'Mike'
         other_owner.save()
         other_feed = Feed()
-        other_feed.user = other_owner
         other_feed.save()
+        other_owner.subscribe(other_feed)
 
         task = tasks.ImportOPMLTask()
         result = task.delay(
@@ -186,11 +186,9 @@ class ImportOPMLTaskTest(TestCase):
 
         self.assertTrue(result.successful())
 
-        feeds = Feed.objects.all()
-        self.assertEqual(feeds.count(), 86)
-
-        owner_feeds = Feed.objects.filter(user=owner)
-        self.assertEqual(owner_feeds.count(), 85)
+        total_feeds = Feed.objects.all().count()
+        owner = User.objects.get(pk=owner.pk)
+        self.assertEqual(owner.feeds.count(), total_feeds-1)
 
 
 class ImportFromReaderAPITaskTest(TestCase):
@@ -212,8 +210,8 @@ class ImportFromReaderAPITaskTest(TestCase):
         other_owner.username = 'Mike'
         other_owner.save()
         other_feed = Feed()
-        other_feed.user = other_owner
         other_feed.save()
+        other_owner.subscribe(other_feed)
 
         task = tasks.ImportFromReaderAPITask()
         result = task.delay(owner, 'alex@chizang.net', secure)
@@ -223,6 +221,6 @@ class ImportFromReaderAPITaskTest(TestCase):
         feeds = Feed.objects.all()
         self.assertEqual(feeds.count(), 85)
 
-        owner_feeds = Feed.objects.filter(user=owner)
-        self.assertEqual(owner_feeds.count(), 84)
-
+        total_feeds = Feed.objects.all().count()
+        owner = User.objects.get(pk=owner.pk)
+        self.assertEqual(owner.feeds.count(), total_feeds-1)

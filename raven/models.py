@@ -97,3 +97,8 @@ class FeedItem(models.Model):
     # pubDate: <pubDate>Thu, 4 Apr 2013</pubDate>
     # source: <source url="http://...">Example.com</source>
 
+
+# User monkeypatching for syntactic sugar
+def subscribe(self, feed):
+    feed.add_subscriber(self)
+User.subscribe = subscribe

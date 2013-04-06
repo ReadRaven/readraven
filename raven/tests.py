@@ -76,6 +76,37 @@ class FeedTests(TestCase):
         self.assertEqual(user.feeds.count(), 1)
         self.assertEqual(user.items.count(), 2)
 
+    def test_user_subscribe(self):
+        '''Test the syntactic sugar monkeypatch for User.subscribe.'''
+        user = User()
+        user.username = 'Bob'
+        user.save()
+
+        feed = Feed()
+        feed.title = 'BoingBoing'
+        feed.save()
+
+        item = FeedItem()
+        item.title = 'Octopus v. Platypus'
+        item.description = 'A fight to the death.'
+        item.link = item.guid = 'http://www.example.com/rss/post'
+        item.published = datetime.now()
+        item.feed = feed
+        item.save()
+
+        item2 = FeedItem()
+        item2.title = 'Cute bunny rabbit video'
+        item2.description = 'They die at the end.'
+        item2.link = item.guid = 'http://www.example.com/rss/post'
+        item2.published = datetime.now()
+        item2.feed = feed
+        item2.save()
+
+        user.subscribe(feed)
+
+        self.assertEqual(user.feeds.count(), 1)
+        self.assertEqual(user.items.count(), 2)
+
 
 class UserFeedItemTest(TestCase):
     '''Test the UserFeedItem model.'''

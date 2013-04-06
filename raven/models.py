@@ -3,6 +3,18 @@ from django.core.exceptions import ValidationError
 from django.db import models
 
 
+class UserFeedItem(models.Model):
+    '''A model for user metadata on a post.'''
+
+    class Meta:
+        unique_together = ('item', 'user',)
+
+    item = models.ForeignKey('FeedItem', related_name='+')
+    user = models.ForeignKey(User, related_name='items')
+
+    read = models.BooleanField(default=False)
+
+
 class Feed(models.Model):
     '''A model for representing an RSS feed.'''
 
@@ -15,6 +27,20 @@ class Feed(models.Model):
 
     # Optional metadata
     generator = models.CharField(max_length=100, blank=True)
+
+    def add_subscriber(self, subscriber):
+        '''Add a subscriber to this feed.
+
+        This not only adds an entry in the FeedUser join table, but also
+        populates UserFeedItem with unread FeedItems from the feed.
+        '''
+        self.users.add(subscriber)
+
+        for item in self.items.all():
+            user_item = UserFeedItem()
+            user_item.item = item
+            user_item.user = subscriber
+            user_item.save()
 
     # Currently unused RSS (optional) properties:
     # category: <category>Filthy pornography</category>
@@ -70,16 +96,4 @@ class FeedItem(models.Model):
     # enclosure: <enclosure url="http://...mp3" length="200" type="audio/mpeg" />
     # pubDate: <pubDate>Thu, 4 Apr 2013</pubDate>
     # source: <source url="http://...">Example.com</source>
-
-
-class UserFeedItem(models.Model):
-    '''A model for user metadata on a post.'''
-
-    class Meta:
-        unique_together = ('item', 'user',)
-
-    item = models.ForeignKey(FeedItem, related_name='+')
-    user = models.ForeignKey(User, related_name='items')
-
-    read = models.BooleanField(default=False)
 

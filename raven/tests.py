@@ -1,4 +1,5 @@
 import os
+import unittest
 
 from django.contrib.auth.models import User
 from django.test import TestCase
@@ -10,11 +11,13 @@ from raven.models import Feed
 
 THIS_DIR = os.path.dirname(__file__)
 TESTDATA_DIR = os.path.join(THIS_DIR, 'testdata')
+SECURE_FILE = os.path.join(THIS_DIR, '..', 'secure')
 
 
 class ImportOPMLTaskTest(TestCase):
     '''Test ImportOPMLTask.'''
 
+    @unittest.skipUnless(os.path.exists(SECURE_FILE), 'password unavailable')
     @override_settings(CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
                        CELERY_ALWAYS_EAGER=True,
                        BROKER_BACKEND='memory',)
@@ -47,10 +50,14 @@ class ImportOPMLTaskTest(TestCase):
 class ImportFromReaderAPITaskTest(TestCase):
     '''Test ImportFromReaderAPITask.'''
 
+    @unittest.skipUnless(os.path.exists(SECURE_FILE), 'password unavailable')
     @override_settings(CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
                        CELERY_ALWAYS_EAGER=True,
                        BROKER_BACKEND='memory',)
     def test_run(self):
+        with open(SECURE_FILE) as f:
+            secure = f.read()
+
         owner = User()
         owner.username = 'Bob'
         owner.save()
@@ -63,7 +70,7 @@ class ImportFromReaderAPITaskTest(TestCase):
         other_feed.save()
 
         task = tasks.ImportFromReaderAPITask()
-        result = task.delay(owner, 'alex@chizang.net', '')
+        result = task.delay(owner, 'alex@chizang.net', secure)
 
         self.assertTrue(result.successful())
 

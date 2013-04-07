@@ -126,7 +126,7 @@ class Feed(models.Model):
                 item.title = entry.title
             except AttributeError:
                 # Fuck you LiveJournal.
-                item.title = self.title
+                item.title = u'(none)'
             item.link = entry.link
             item.save()
 

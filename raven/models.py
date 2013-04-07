@@ -5,8 +5,12 @@ import time
 from django.contrib.auth.models import User
 from django.db import models
 import feedparser
+from south.modelsinspector import add_introspection_rules
 
 from oauth2client.django_orm import FlowField, CredentialsField
+
+add_introspection_rules([], ['oauth2client.django_orm.CredentialsField'])
+add_introspection_rules([], ['oauth2client.django_orm.FlowField'])
 
 logger = logging.getLogger('django')
 

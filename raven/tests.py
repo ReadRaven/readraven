@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 import unittest
 
@@ -15,7 +15,7 @@ TESTDATA_DIR = os.path.join(THIS_DIR, 'testdata')
 SECURE_FILE = os.path.join(THIS_DIR, '..', 'secure')
 
 
-class FeedTests(TestCase):
+class FeedTest(TestCase):
     '''Test the Feed model.'''
 
     def setUp(self):
@@ -107,6 +107,25 @@ class FeedTests(TestCase):
         self.assertEqual(user.feeds.count(), 1)
         self.assertEqual(user.items.count(), 2)
 
+    @override_settings(CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
+                       CELERY_ALWAYS_EAGER=True,
+                       BROKER_BACKEND='memory',)
+    def test_save(self):
+        user = User()
+        user.username = 'Bob'
+        user.save()
+
+        feed = Feed()
+        feed.link = 'http://paulhummer.org/rss'
+        feed.save()
+
+        # Re-fetch the feed
+        feed = Feed.objects.get(pk=feed.pk)
+
+        self.assertEqual(feed.items.count(), 20)
+        self.assertEqual(feed.title, 'Dapper as...')
+        self.assertTrue(feed.description.startswith('Bike rider'))
+
 
 class UserFeedItemTest(TestCase):
     '''Test the UserFeedItem model.'''
@@ -137,6 +156,30 @@ class UserFeedItemTest(TestCase):
         self.assertEqual(user.items.count(), 1)
 
 
+class UpdateFeedTaskTest(TestCase):
+    '''Test UpdateFeedTask.'''
+
+    @override_settings(CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
+                       CELERY_ALWAYS_EAGER=True,
+                       BROKER_BACKEND='memory',)
+    def test_run(self):
+        feed = Feed()
+        feed.link = 'http://paulhummer.org/rss'
+        last_fetched = datetime.now() - timedelta(minutes=31)
+        feed.last_fetched = last_fetched
+        feed.save()
+
+        task = tasks.UpdateFeedTask()
+        result = task.delay()
+
+        self.assertTrue(result.successful())
+
+        # Re-fetch the feed
+        feed = Feed.objects.get(link='http://paulhummer.org/rss')
+        self.assertNotEqual(feed.last_fetched, last_fetched)
+        self.assertEqual(feed.items.count(), 20)
+
+
 class ImportOPMLTaskTest(TestCase):
     '''Test ImportOPMLTask.'''
 
@@ -153,8 +196,8 @@ class ImportOPMLTaskTest(TestCase):
         other_owner.username = 'Mike'
         other_owner.save()
         other_feed = Feed()
-        other_feed.user = other_owner
         other_feed.save()
+        other_owner.subscribe(other_feed)
 
         task = tasks.ImportOPMLTask()
         result = task.delay(
@@ -163,11 +206,9 @@ class ImportOPMLTaskTest(TestCase):
 
         self.assertTrue(result.successful())
 
-        feeds = Feed.objects.all()
-        self.assertEqual(feeds.count(), 86)
-
-        owner_feeds = Feed.objects.filter(user=owner)
-        self.assertEqual(owner_feeds.count(), 85)
+        total_feeds = Feed.objects.all().count()
+        owner = User.objects.get(pk=owner.pk)
+        self.assertEqual(owner.feeds.count(), total_feeds-1)
 
 
 class ImportFromReaderAPITaskTest(TestCase):
@@ -189,8 +230,8 @@ class ImportFromReaderAPITaskTest(TestCase):
         other_owner.username = 'Mike'
         other_owner.save()
         other_feed = Feed()
-        other_feed.user = other_owner
         other_feed.save()
+        other_owner.subscribe(other_feed)
 
         task = tasks.ImportFromReaderAPITask()
         result = task.delay(owner, 'alex@chizang.net', secure)
@@ -200,6 +241,6 @@ class ImportFromReaderAPITaskTest(TestCase):
         feeds = Feed.objects.all()
         self.assertEqual(feeds.count(), 85)
 
-        owner_feeds = Feed.objects.filter(user=owner)
-        self.assertEqual(owner_feeds.count(), 84)
-
+        total_feeds = Feed.objects.all().count()
+        owner = User.objects.get(pk=owner.pk)
+        self.assertEqual(owner.feeds.count(), total_feeds-1)

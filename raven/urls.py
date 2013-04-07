@@ -18,5 +18,5 @@ urlpatterns = patterns('',
     (r'^usher', 'raven.views.usher'),
     (r'^logout/$', 'django.contrib.auth.views.logout',
                    {'next_page': '/'}),
-    (r'^oauth2callback', 'raven.views.auth_return'),
+    (r'^google_auth_callback', 'raven.views.google_auth_callback'),
 )

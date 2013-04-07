@@ -24,7 +24,7 @@ SCOPE = [
 FLOW = flow_from_clientsecrets(
     CLIENT_SECRETS,
     scope=SCOPE,
-    redirect_uri='http://localhost:8000/oauth2callback')
+    redirect_uri='http://localhost:8000/google_auth_callback')
 
 
 # XXX: I have no idea if this is the right way to do things.
@@ -37,6 +37,7 @@ def usher(request):
 
 def index(request):
     if not request.user.is_anonymous():
+        # XXX: Assumes a Google OAuth2 credential!
         storage = Storage(CredentialsModel, 'id', request.user, 'credential')
         credential = storage.get()
 
@@ -67,7 +68,7 @@ def index(request):
         return HttpResponse(html)
 
 
-def auth_return(request):
+def google_auth_callback(request):
     if not xsrfutil.validate_token(settings.SECRET_KEY,
                                    request.REQUEST['state'],
                                    request.user):

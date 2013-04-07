@@ -6,7 +6,6 @@ feedparser
 gunicorn
 opml
 psycopg2
-requests
 South
 git+ssh://git@github.com/AmeliaKnows/libgreader.git#egg=libgreader
 google-api-python-client

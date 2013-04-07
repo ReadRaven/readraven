@@ -15,5 +15,6 @@ urlpatterns = patterns('',
     # Uncomment the next line to enable the admin:
     # url(r'^admin/', include(admin.site.urls)),
     (r'^$', 'raven.views.index'),
+    (r'^usher', 'raven.views.usher'),
     (r'^oauth2callback', 'raven.views.auth_return'),
 )

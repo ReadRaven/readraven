@@ -103,6 +103,8 @@ MIDDLEWARE_CLASSES = (
 
 ROOT_URLCONF = 'raven.urls'
 
+LOGIN_URL = '/usher'
+
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'raven.wsgi.application'
 

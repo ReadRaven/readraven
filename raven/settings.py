@@ -12,11 +12,11 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'readraven',
-        'USER': 'readraven',
-        'PASSWORD': 'readraven',
-        'HOST': 'localhost',
-        'PORT': '',
+        'NAME': 'd8ij5eddp5m7rp',
+        'USER': 'fosibpjnqdhrax',
+        'PASSWORD': 'wEl_rZsLsVSdrI0pCtmFrdNfVy',
+        'HOST': 'ec2-23-21-89-65.compute-1.amazonaws.com',
+        'PORT': '5432',
     }
 }
 
@@ -78,7 +78,7 @@ STATICFILES_DIRS = (
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-#    'django.contrib.staticfiles.finders.DefaultStorageFinder',
+    #'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
 # Make this unique, and don't share it with anybody.
@@ -88,7 +88,7 @@ SECRET_KEY = '#q-(%d84p^i4)z9r9_*+hb&%6_@gw!pwgs(zit7)9m&et=5qxq'
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
-#     'django.template.loaders.eggs.Loader',
+    #'django.template.loaders.eggs.Loader',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -107,9 +107,6 @@ ROOT_URLCONF = 'raven.urls'
 WSGI_APPLICATION = 'raven.wsgi.application'
 
 TEMPLATE_DIRS = (
-    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
 )
 
 INSTALLED_APPS = (
@@ -170,3 +167,9 @@ BROKER_VHOST = 'readraven'
 
 # Use this for testing celery tasks
 TEST_RUNNER = 'djcelery.contrib.test_runner.CeleryTestSuiteRunner'
+
+
+try:
+    from localsettings import *
+except ImportError:
+    pass

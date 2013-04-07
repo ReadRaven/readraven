@@ -1,3 +1,5 @@
 env
 *.pyc
 *.swp
+secure
+raven/localsettings.py

@@ -1,0 +1,10 @@
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'readraven',
+        'USER': 'readraven',
+        'PASSWORD': 'readraven',
+        'HOST': 'localhost',
+        'PORT': '',
+    }
+}

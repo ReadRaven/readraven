@@ -1,6 +1,4 @@
-import os
-
-from django.contrib.auth import login, logout
+from django.contrib.auth import login
 from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
@@ -21,12 +19,13 @@ SCOPE = [
     'https://www.googleapis.com/auth/userinfo.email',
     'https://www.googleapis.com/auth/userinfo.profile',
     'https://www.google.com/reader/api/',
-    ]
+]
 
 FLOW = flow_from_clientsecrets(
     CLIENT_SECRETS,
     scope=SCOPE,
     redirect_uri='http://localhost:8000/oauth2callback')
+
 
 # XXX: I have no idea if this is the right way to do things.
 def usher(request):
@@ -43,7 +42,7 @@ def index(request):
 
         # XXX: Wonder if we should be doing more validation here to see
         # if it is expired or not...
-        if credential is None or credential.invalid == True:
+        if credential is None or credential.invalid:
             FLOW.params['state'] = xsrfutil.generate_token(settings.SECRET_KEY,
                                                            request.user)
             authorize_url = FLOW.step1_get_authorize_url()
@@ -67,6 +66,7 @@ def index(request):
         html += "<a href=/usher>usher</a>"
         return HttpResponse(html)
 
+
 def auth_return(request):
     if not xsrfutil.validate_token(settings.SECRET_KEY,
                                    request.REQUEST['state'],
@@ -87,4 +87,3 @@ def auth_return(request):
     user.backend = 'django.contrib.auth.backends.ModelBackend'
     login(request, user)
     return HttpResponseRedirect("/")
-

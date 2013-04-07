@@ -16,5 +16,7 @@ urlpatterns = patterns('',
     # url(r'^admin/', include(admin.site.urls)),
     (r'^$', 'raven.views.index'),
     (r'^usher', 'raven.views.usher'),
+    (r'^logout/$', 'django.contrib.auth.views.logout',
+                   {'next_page': '/'}),
     (r'^oauth2callback', 'raven.views.auth_return'),
 )

@@ -1,7 +1,6 @@
 import os
 
-from django.contrib.auth import login
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth import login, logout
 from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
@@ -18,7 +17,6 @@ from raven.models import CredentialsModel
 
 
 CLIENT_SECRETS = './raven/purloined/client_secrets.json'
-OAUTH2_STORAGE = './raven/purloined/oauth2.dat'
 SCOPE = [
     'https://www.googleapis.com/auth/userinfo.email',
     'https://www.googleapis.com/auth/userinfo.profile',
@@ -37,20 +35,20 @@ def usher(request):
     authorize_url = FLOW.step1_get_authorize_url()
     return HttpResponseRedirect(authorize_url)
 
-# XXX: index probably shouldn't require a login. But if we detect one,
-# we should just DTRT (ie, display the user's feeds); else show our
-# pretty splash screen and invite user to login.
-@login_required
-def index(request):
-    storage = Storage(CredentialsModel, 'id', request.user, 'credential')
-    credential = storage.get()
 
-    if credential is None or credential.invalid == True:
-        FLOW.params['state'] = xsrfutil.generate_token(settings.SECRET_KEY,
-                                                       request.user)
-        authorize_url = FLOW.step1_get_authorize_url()
-        return HttpResponseRedirect(authorize_url)
-    else:
+def index(request):
+    if not request.user.is_anonymous():
+        storage = Storage(CredentialsModel, 'id', request.user, 'credential')
+        credential = storage.get()
+
+        # XXX: Wonder if we should be doing more validation here to see
+        # if it is expired or not...
+        if credential is None or credential.invalid == True:
+            FLOW.params['state'] = xsrfutil.generate_token(settings.SECRET_KEY,
+                                                           request.user)
+            authorize_url = FLOW.step1_get_authorize_url()
+            return HttpResponseRedirect(authorize_url)
+
         auth = OAuth2Method(credential.client_id, credential.client_secret)
         auth.authFromAccessToken(credential.access_token)
         auth.setActionToken()
@@ -59,7 +57,14 @@ def index(request):
         info = reader.getUserInfo()
 
         html = "Hello %s! Your email is %s." % (info['userName'], info['userEmail'])
+        html += "<br><br>"
+        html += "<a href=/logout>logout</a>"
 
+        return HttpResponse(html)
+    else:
+        html = "Hello anonymous user. Wouldn't you like to login?"
+        html += "<br><br>"
+        html += "<a href=/usher>usher</a>"
         return HttpResponse(html)
 
 def auth_return(request):

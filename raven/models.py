@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 import time
 
 from django.contrib.auth.models import User
@@ -6,6 +7,8 @@ from django.db import models
 import feedparser
 
 from oauth2client.django_orm import FlowField, CredentialsField
+
+logger = logging.getLogger('django')
 
 
 class FlowModel(models.Model):
@@ -69,7 +72,8 @@ class Feed(models.Model):
         try:
             feed.description = data.feed.description
         except AttributeError:
-            pass
+            logger.DEBUG(
+                'Feed has no description: %s' % data.feed.description)
         try:
             feed.generator = data.feed.generator
         except AttributeError:
@@ -103,15 +107,17 @@ class Feed(models.Model):
                 self.title = data.feed.title
                 updated = True
         except AttributeError:
-            # We may want to log data.bozo_exception
-            pass
+            logger.DEBUG(
+                'Feed has no description: %s' % data.feed.description)
+            logger.DEBUG('Exception is %s', data.bozo_exception)
         try:
             if self.description is not data.feed.description:
                 self.description = data.feed.description
                 updated = True
         except AttributeError:
-            # We may want to log data.bozo_exception
-            pass
+            logger.DEBUG(
+                'Feed has no description: %s' % data.feed.description)
+            logger.DEBUG('Exception is %s', data.bozo_exception)
         if updated:
             self.save()
 

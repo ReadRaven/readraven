@@ -76,8 +76,7 @@ class Feed(models.Model):
         try:
             feed.description = data.feed.description
         except AttributeError:
-            logger.DEBUG(
-                'Feed has no description: %s' % data.feed.description)
+            logger.debug('Feed missing a description at %s' % data.feed.link)
         try:
             feed.generator = data.feed.generator
         except AttributeError:
@@ -111,17 +110,17 @@ class Feed(models.Model):
                 self.title = data.feed.title
                 updated = True
         except AttributeError:
-            logger.DEBUG(
-                'Feed has no description: %s' % data.feed.description)
-            logger.DEBUG('Exception is %s', data.bozo_exception)
+            logger.debug('Potential problem with feed id: %s' % self.pk)
+            if data.bozo == 1:
+                logger.debug('Exception is %s' % data.bozo_exception)
         try:
             if self.description is not data.feed.description:
                 self.description = data.feed.description
                 updated = True
         except AttributeError:
-            logger.DEBUG(
-                'Feed has no description: %s' % data.feed.description)
-            logger.DEBUG('Exception is %s', data.bozo_exception)
+            logger.debug('Potential problem with feed id: %s' % self.pk)
+            if data.bozo == 1:
+                logger.debug('Exception is %s' % data.bozo_exception)
         if updated:
             self.save()
 

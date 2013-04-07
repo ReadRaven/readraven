@@ -4,7 +4,11 @@
 <p>Hello anonymous user. Wouldn't you like to login?</p>
 <p><a href="/usher">Log in</a></p>
 {% else %}
-<p>Hello {{ name }}! Your email is {{ email }}</p>
-<p><a href="/logout">Log out</a></p>
+{% if user.full_name %}
+<p>Hello {{ user.full_name }}! Your email is {{ user.email }}</p>
+{% else %}
+<p>Hello! Your email is {{ user.email }}</p>
+{% endif %}
+<p><a href="{% url 'django.contrib.auth.views.logout' %}">Log out</a></p>
 {% endif %}
 {% endblock %}

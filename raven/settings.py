@@ -93,6 +93,7 @@ TEMPLATE_LOADERS = (
 )
 
 MIDDLEWARE_CLASSES = (
+    'djangosecure.middleware.SecurityMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -124,6 +125,7 @@ INSTALLED_APPS = (
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 
+    'djangosecure',
     'djcelery',
     'south',
 
@@ -171,6 +173,13 @@ BROKER_VHOST = 'readraven'
 
 # Use this for testing celery tasks
 TEST_RUNNER = 'djcelery.contrib.test_runner.CeleryTestSuiteRunner'
+
+
+# Security shit
+SESSION_COOKIE_SECURE = True
+SECURE_FRAME_DENY = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_BROWSER_XSS_FILTER = True
 
 
 try:

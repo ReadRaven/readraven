@@ -1,6 +1,7 @@
 celery
 django
 django-celery
+django-secure
 django-tastypie
 feedparser
 gunicorn

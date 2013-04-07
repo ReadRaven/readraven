@@ -1,4 +1,7 @@
-# Django settings for raven project.
+import os
+
+
+THIS_DIR = os.path.dirname(__file__)
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -110,6 +113,7 @@ LOGIN_URL = '/usher'
 WSGI_APPLICATION = 'raven.wsgi.application'
 
 TEMPLATE_DIRS = (
+    os.path.join(THIS_DIR, '..', 'templates'),
 )
 
 INSTALLED_APPS = (

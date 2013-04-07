@@ -3,12 +3,12 @@ from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseRedirect
-
+from django.shortcuts import render_to_response
+from django.template import RequestContext
+from libgreader import GoogleReader, OAuth2Method
 from oauth2client import xsrfutil
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.django_orm import Storage
-
-from libgreader import GoogleReader, OAuth2Method
 
 from raven import settings
 from raven.models import CredentialsModel
@@ -56,16 +56,14 @@ def index(request):
         reader = GoogleReader(auth)
         info = reader.getUserInfo()
 
-        html = "Hello %s! Your email is %s." % (info['userName'], info['userEmail'])
-        html += "<br><br>"
-        html += "<a href=/logout>logout</a>"
-
-        return HttpResponse(html)
+        return render_to_response(
+            'raven/index.html',
+            {'user': info['userName'], 'email': info['userEmail']},
+            context_instance=RequestContext(request))
     else:
-        html = "Hello anonymous user. Wouldn't you like to login?"
-        html += "<br><br>"
-        html += "<a href=/usher>usher</a>"
-        return HttpResponse(html)
+        return render_to_response(
+            'raven/index.html',
+            context_instance=RequestContext(request))
 
 
 def google_auth_callback(request):
@@ -77,9 +75,9 @@ def google_auth_callback(request):
     credential = FLOW.step2_exchange(request.REQUEST)
     email = credential.id_token['email']
     try:
-        user = User.objects.get(username=email)
+        user = User.objects.get(username=email[:30])
     except User.DoesNotExist:
-        user = User.objects.create_user(email)
+        user = User.objects.create_user(email[:30])
 
     storage = Storage(CredentialsModel, 'id', user, 'credential')
     storage.put(credential)

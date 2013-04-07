@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+{% if user.is_anonymous %}
+<p>Hello anonymous user. Wouldn't you like to login?</p>
+<p><a href="/usher">Log in</a></p>
+{% else %}
+<p>Hello {{ name }}! Your email is {{ email }}</p>
+<p><a href="/logout">Log out</a></p>
+{% endif %}
+{% endblock %}

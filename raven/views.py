@@ -1,6 +1,5 @@
 from django.contrib.auth import login
 from django.contrib.auth.models import User
-from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response
@@ -25,14 +24,6 @@ FLOW = flow_from_clientsecrets(
     CLIENT_SECRETS,
     scope=SCOPE,
     redirect_uri='http://localhost:8000/google_auth_callback')
-
-
-# XXX: I have no idea if this is the right way to do things.
-def usher(request):
-    FLOW.params['state'] = xsrfutil.generate_token(settings.SECRET_KEY,
-                                                   request.user)
-    authorize_url = FLOW.step1_get_authorize_url()
-    return HttpResponseRedirect(authorize_url)
 
 
 def index(request):
@@ -66,6 +57,13 @@ def index(request):
             context_instance=RequestContext(request))
 
 
+def usher(request):
+    FLOW.params['state'] = xsrfutil.generate_token(
+        settings.SECRET_KEY, request.user)
+    authorize_url = FLOW.step1_get_authorize_url()
+    return HttpResponseRedirect(authorize_url)
+
+
 def google_auth_callback(request):
     if not xsrfutil.validate_token(settings.SECRET_KEY,
                                    request.REQUEST['state'],
@@ -78,11 +76,11 @@ def google_auth_callback(request):
         user = User.objects.get(username=email[:30])
     except User.DoesNotExist:
         user = User.objects.create_user(email[:30])
-
     storage = Storage(CredentialsModel, 'id', user, 'credential')
     storage.put(credential)
 
-    # XXX: is this hacky? no idea. internet is hard.
+    # This fakes the same process as authenticate, but since we're using
+    # a mechanism authenticate doesn't support, we'll do this ourselves.
     user.backend = 'django.contrib.auth.backends.ModelBackend'
     login(request, user)
     return HttpResponseRedirect("/")

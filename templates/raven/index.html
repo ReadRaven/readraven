@@ -1,14 +1,5 @@
 {% extends "base.html" %}
 {% block content %}
-{% if user.is_anonymous %}
 <p>Hello anonymous user. Wouldn't you like to login?</p>
-<p><a href="/usher">Log in</a></p>
-{% else %}
-{% if user.full_name %}
-<p>Hello {{ user.full_name }}! Your email is {{ user.email }}</p>
-{% else %}
-<p>Hello! Your email is {{ user.email }}</p>
-{% endif %}
-<p><a href="{% url 'django.contrib.auth.views.logout' %}">Log out</a></p>
-{% endif %}
+<p><a href="{% url 'raven.views.usher' %}">Log in</a></p>
 {% endblock %}

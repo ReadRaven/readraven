@@ -1,5 +1,7 @@
 from django.contrib.auth import login
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.core.urlresolvers import reverse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response
@@ -27,13 +29,17 @@ FLOW = flow_from_clientsecrets(
 
 def index(request):
     if request.user.is_authenticated():
-        return render_to_response(
-            'raven/index.html',
-            context_instance=RequestContext(request))
-    else:
-        return render_to_response(
-            'raven/index.html',
-            context_instance=RequestContext(request))
+        return HttpResponseRedirect(reverse('raven.views.home'))
+    return render_to_response(
+        'raven/index.html',
+        context_instance=RequestContext(request))
+
+
+@login_required
+def home(request):
+    return render_to_response(
+        'raven/home.html',
+        context_instance=RequestContext(request))
 
 
 def usher(request):

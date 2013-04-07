@@ -1,22 +1,19 @@
 from django.conf.urls import patterns, include, url
 
-# Uncomment the next two lines to enable the admin:
-# from django.contrib import admin
-# admin.autodiscover()
+from tastypie.api import Api
 
-urlpatterns = patterns('',
-    # Examples:
-    # url(r'^$', 'raven.views.home', name='home'),
-    # url(r'^raven/', include('raven.foo.urls')),
+from raven import resources
 
-    # Uncomment the admin/doc line below to enable admin documentation:
-    # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 
-    # Uncomment the next line to enable the admin:
-    # url(r'^admin/', include(admin.site.urls)),
-    (r'^$', 'raven.views.index'),
-    (r'^usher', 'raven.views.usher'),
-    (r'^logout/$', 'django.contrib.auth.views.logout',
-                   {'next_page': '/'}),
-    (r'^google_auth_callback', 'raven.views.google_auth_callback'),
+v09 = Api(api_name='0.9')
+v09.register(resources.FeedResource())
+
+urlpatterns = patterns(
+    '',
+    url(r'api/', include(v09.urls)),
+    url(r'^usher', 'raven.views.usher'),
+    url(r'^logout/$', 'django.contrib.auth.views.logout',
+        {'next_page': '/'}),
+    url(r'^google_auth_callback', 'raven.views.google_auth_callback'),
+    url(r'^$', 'raven.views.index'),
 )

@@ -1,6 +1,7 @@
 celery
 django
 django-celery
+django-tastypie
 feedparser
 gunicorn
 opml

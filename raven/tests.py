@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta
+import json
 import os
 import unittest
 
 from django.contrib.auth.models import User
 from django.test import TestCase
+from django.test.client import Client
 from django.test.utils import override_settings
 
 from raven import tasks
@@ -154,6 +156,64 @@ class UserFeedItemTest(TestCase):
         user_feed_item.save()
 
         self.assertEqual(user.items.count(), 1)
+
+
+class FeedResourceTest(TestCase):
+    '''Test the FeedResource.'''
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_empty(self):
+        response = self.client.get('/api/0.9/feed/')
+        content = json.loads(response.content)
+
+        self.assertEqual(content['objects'], [])
+
+    def test_single_resource_list(self):
+        feed = Feed()
+        feed.link = 'http://www.paulhummer.org/rss'
+        feed.save()
+
+        response = self.client.get('/api/0.9/feed/')
+        content = json.loads(response.content)
+        objects = content['objects']
+
+        self.assertEqual(len(objects), 1)
+
+        feed = Feed.objects.get(pk=feed.pk)
+        resource = objects[0]
+
+        self.assertEqual(resource['description'], feed.description)
+        self.assertEqual(resource['title'], feed.title)
+        self.assertEqual(resource['link'], feed.link)
+
+        self.assertEqual(
+            sorted(resource.keys()),
+            [u'description', u'link', u'resource_uri', u'title'])
+
+    def test_single_resource(self):
+        feed = Feed()
+        feed.link = 'http://www.paulhummer.org/rss'
+        feed.save()
+
+        response = self.client.get('/api/0.9/feed/')
+        content = json.loads(response.content)
+        objects = content['objects']
+        resource = objects[0]
+
+        response = self.client.get(resource['resource_uri'])
+        content = json.loads(response.content)
+
+        feed = Feed.objects.get(pk=feed.pk)
+
+        self.assertEqual(content['description'], feed.description)
+        self.assertEqual(content['title'], feed.title)
+        self.assertEqual(content['link'], feed.link)
+
+        self.assertEqual(
+            sorted(content.keys()),
+            [u'description', u'link', u'resource_uri', u'title'])
 
 
 class UpdateFeedTaskTest(TestCase):

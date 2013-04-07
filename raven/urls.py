@@ -14,4 +14,9 @@ urlpatterns = patterns('',
 
     # Uncomment the next line to enable the admin:
     # url(r'^admin/', include(admin.site.urls)),
+    (r'^$', 'raven.views.index'),
+    (r'^usher', 'raven.views.usher'),
+    (r'^logout/$', 'django.contrib.auth.views.logout',
+                   {'next_page': '/'}),
+    (r'^google_auth_callback', 'raven.views.google_auth_callback'),
 )

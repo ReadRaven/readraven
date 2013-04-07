@@ -7,6 +7,7 @@ from raven import resources
 
 v09 = Api(api_name='0.9')
 v09.register(resources.FeedResource())
+v09.register(resources.FeedItemResource())
 
 urlpatterns = patterns(
     '',

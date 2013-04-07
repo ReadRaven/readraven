@@ -216,6 +216,66 @@ class FeedResourceTest(TestCase):
             [u'description', u'link', u'resource_uri', u'title'])
 
 
+class FeedItemResourceTest(TestCase):
+    '''Test the FeedItemResource.'''
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_empty(self):
+        response = self.client.get('/api/0.9/item/')
+        content = json.loads(response.content)
+
+        self.assertEqual(content['objects'], [])
+
+    def test_single_resource_list(self):
+        feed = Feed()
+        feed.link = 'http://www.paulhummer.org/rss'
+        feed.save()
+
+        response = self.client.get('/api/0.9/item/')
+        content = json.loads(response.content)
+        objects = content['objects']
+
+        self.assertEqual(len(objects), 20)
+
+        resource = objects[0]
+        resource_id = resource['resource_uri'].split('/')[-2]
+        item = FeedItem.objects.get(pk=resource_id)
+
+        self.assertEqual(resource['description'], item.description)
+        self.assertEqual(resource['title'], item.title)
+        self.assertEqual(resource['link'], item.link)
+
+        self.assertEqual(
+            sorted(resource.keys()),
+            [u'description', u'link', u'published', u'resource_uri', u'title'])
+
+    def test_single_resource(self):
+        feed = Feed()
+        feed.link = 'http://www.paulhummer.org/rss'
+        feed.save()
+
+        response = self.client.get('/api/0.9/item/')
+        content = json.loads(response.content)
+        objects = content['objects']
+        resource = objects[0]
+
+        response = self.client.get(resource['resource_uri'])
+        content = json.loads(response.content)
+
+        resource_id = resource['resource_uri'].split('/')[-2]
+        item = FeedItem.objects.get(pk=resource_id)
+
+        self.assertEqual(resource['description'], item.description)
+        self.assertEqual(resource['title'], item.title)
+        self.assertEqual(resource['link'], item.link)
+
+        self.assertEqual(
+            sorted(resource.keys()),
+            [u'description', u'link', u'published', u'resource_uri', u'title'])
+
+
 class UpdateFeedTaskTest(TestCase):
     '''Test UpdateFeedTask.'''
 

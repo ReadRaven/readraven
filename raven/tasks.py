@@ -40,7 +40,7 @@ class ImportOPMLTask(Task):
                     if hasattr(sub, 'type'):
                         Feed.create_from_url(sub.xmlUrl, user)
                     else:
-                        # TODO: it makes sense to handle Reader's 'groups'
+                        # In this case, it's a 'group' of feeds.
                         folder = sub
                         for sub in folder:
                             Feed.create_from_url(sub.xmlUrl, user)

@@ -1,6 +1,5 @@
-from django.contrib.auth import login
+from django.contrib.auth import login, get_user_model
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseRedirect
@@ -13,6 +12,8 @@ from oauth2client.django_orm import Storage
 from raven import settings
 from raven.models import CredentialsModel
 
+
+User = get_user_model()
 
 CLIENT_SECRETS = './raven/purloined/client_secrets.json'
 SCOPE = [
@@ -58,9 +59,10 @@ def google_auth_callback(request):
     credential = FLOW.step2_exchange(request.REQUEST)
     email = credential.id_token['email']
     try:
-        user = User.objects.get(username=email[:30])
+        user = User.objects.get(username=email)
     except User.DoesNotExist:
-        user = User.objects.create_user(email[:30], email)
+        user = User.objects.create_user(email, email)
+
     storage = Storage(CredentialsModel, 'id', user, 'credential')
     storage.put(credential)
 

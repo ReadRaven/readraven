@@ -3,7 +3,8 @@ import json
 import os
 import unittest
 
-from django.contrib.auth.models import User
+from django.db import IntegrityError, DatabaseError, connection
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.test.client import Client
 from django.test.utils import override_settings
@@ -16,20 +17,81 @@ THIS_DIR = os.path.dirname(__file__)
 TESTDATA_DIR = os.path.join(THIS_DIR, 'testdata')
 SECURE_FILE = os.path.join(THIS_DIR, '..', 'secure')
 
+User = get_user_model()
+
+class UserTest(TestCase):
+    def test_add_users(self):
+        user = User()
+        user.username = 'Edgar'
+        user.email = 'edgar@poe.com'
+        user.save()
+
+        user = User()
+        user.username = 'Allan'
+        user.email = 'allan@poe.com'
+        user.save()
+
+        user = User()
+        user.username = 'Edgar'
+        user.email = 'edgar@poe.com'
+        self.assertRaises(IntegrityError, user.save)
+
+    def test_create_user(self):
+        user = User.objects.create_user('Edgar', 'edgar@poe.com')
+        user = User.objects.get(email='edgar@poe.com')
+        self.assertEquals(user.username, 'Edgar')
+
+        user = User.objects.create_user('Allan', 'allan@poe.com')
+        user = User.objects.get(email='allan@poe.com')
+        self.assertEquals(user.username, 'Allan')
+
+        self.assertRaises(IntegrityError, User.objects.create_user,
+                          'Whoever', 'edgar@poe.com')
+
+    # XXX: Our model should be puking on this but it's not
+    @unittest.skip("Not hooked up yet")
+    def test_normalize_email(self):
+        self.assertRaises(ValueError, User.objects.create_user,
+                          'Edgar', 'invalid')
+
+    def test_long_fields(self):
+        user = User()
+        user.email = 'x' * 254
+        self.assertEquals(len(user.email), 254)
+        user.save()
+
+        user = User()
+        user.email = 'y' * 255
+        self.assertEquals(len(user.email), 255)
+        self.assertRaises(DatabaseError, user.save)
+        # This should probably be its own test somehow
+        connection._rollback()
+
+        user = User()
+        user.username = 'x' * 254
+        self.assertEquals(len(user.username), 254)
+        user.email = 'edgar@poe.com'
+        user.save()
+
+        user = User()
+        user.username = 'x' * 255
+        user.email = 'allan@poe.com'
+        self.assertRaises(DatabaseError, user.save)
 
 class FeedTest(TestCase):
     '''Test the Feed model.'''
 
     def setUp(self):
         self.user = User()
+        self.email = 'edgar@poe.com'
         self.user.save()
 
     def test_feed_users(self):
         bob = User()
-        bob.username = 'Bob'
+        bob.email = 'Bob'
         bob.save()
         steve = User()
-        steve.username = 'Steve'
+        steve.email = 'Steve'
         steve.save()
 
         feed = Feed()
@@ -50,7 +112,7 @@ class FeedTest(TestCase):
 
     def test_add_subscriber(self):
         user = User()
-        user.username = 'Bob'
+        user.email = 'Bob'
         user.save()
 
         feed = Feed()
@@ -81,7 +143,7 @@ class FeedTest(TestCase):
     def test_user_subscribe(self):
         '''Test the syntactic sugar monkeypatch for User.subscribe.'''
         user = User()
-        user.username = 'Bob'
+        user.email = 'Bob'
         user.save()
 
         feed = Feed()
@@ -114,7 +176,7 @@ class FeedTest(TestCase):
                        BROKER_BACKEND='memory',)
     def test_save(self):
         user = User()
-        user.username = 'Bob'
+        user.email = 'Bob'
         user.save()
 
         feed = Feed()
@@ -146,7 +208,7 @@ class UserFeedItemTest(TestCase):
         item.save()
 
         user = User()
-        user.username = 'Bob'
+        user.email = 'Bob'
         user.save()
 
         # Okay, finally we can do the test.
@@ -309,11 +371,11 @@ class ImportOPMLTaskTest(TestCase):
                        BROKER_BACKEND='memory',)
     def test_run(self):
         owner = User()
-        owner.username = 'Bob'
+        owner.email = 'Bob'
         owner.save()
 
         other_owner = User()
-        other_owner.username = 'Mike'
+        other_owner.email = 'Mike'
         other_owner.save()
         other_feed = Feed()
         other_feed.save()
@@ -327,7 +389,7 @@ class ImportOPMLTaskTest(TestCase):
         self.assertTrue(result.successful())
 
         total_feeds = Feed.objects.all().count()
-        owner = User.objects.get(pk=owner.pk)
+        owner = User().objects.get(pk=owner.pk)
         self.assertEqual(owner.feeds.count(), total_feeds-1)
 
 
@@ -343,11 +405,11 @@ class ImportFromReaderAPITaskTest(TestCase):
             secure = f.read()
 
         owner = User()
-        owner.username = 'Bob'
+        owner.email = 'Bob'
         owner.save()
 
         other_owner = User()
-        other_owner.username = 'Mike'
+        other_owner.email = 'Mike'
         other_owner.save()
         other_feed = Feed()
         other_feed.save()
@@ -362,5 +424,5 @@ class ImportFromReaderAPITaskTest(TestCase):
         self.assertEqual(feeds.count(), 85)
 
         total_feeds = Feed.objects.all().count()
-        owner = User.objects.get(pk=owner.pk)
+        owner = User().objects.get(pk=owner.pk)
         self.assertEqual(owner.feeds.count(), total_feeds-1)

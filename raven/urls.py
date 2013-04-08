@@ -12,9 +12,9 @@ v09.register(resources.FeedItemResource())
 urlpatterns = patterns(
     '',
     url(r'api/', include(v09.urls)),
-    url(r'^usher', 'raven.views.usher'),
-    url(r'^logout/$', 'django.contrib.auth.views.logout',
-        {'next_page': '/'}),
     url(r'^google_auth_callback', 'raven.views.google_auth_callback'),
+    url(r'^home', 'raven.views.home'),
+    url(r'^logout/$', 'django.contrib.auth.views.logout', {'next_page': '/'}),
+    url(r'^usher', 'raven.views.usher'),
     url(r'^$', 'raven.views.index'),
 )

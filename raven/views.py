@@ -1,14 +1,14 @@
 from django.contrib.auth import login
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.http import HttpResponse
+from django.core.urlresolvers import reverse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseRedirect
-
+from django.shortcuts import render_to_response
+from django.template import RequestContext
 from oauth2client import xsrfutil
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.django_orm import Storage
-
-from libgreader import GoogleReader, OAuth2Method
 
 from raven import settings
 from raven.models import CredentialsModel
@@ -27,45 +27,26 @@ FLOW = flow_from_clientsecrets(
     redirect_uri='http://localhost:8000/google_auth_callback')
 
 
-# XXX: I have no idea if this is the right way to do things.
+def index(request):
+    if request.user.is_authenticated():
+        return HttpResponseRedirect(reverse('raven.views.home'))
+    return render_to_response(
+        'raven/index.html',
+        context_instance=RequestContext(request))
+
+
+@login_required
+def home(request):
+    return render_to_response(
+        'raven/home.html',
+        context_instance=RequestContext(request))
+
+
 def usher(request):
-    FLOW.params['state'] = xsrfutil.generate_token(settings.SECRET_KEY,
-                                                   request.user)
+    FLOW.params['state'] = xsrfutil.generate_token(
+        settings.SECRET_KEY, request.user)
     authorize_url = FLOW.step1_get_authorize_url()
     return HttpResponseRedirect(authorize_url)
-
-
-def index(request):
-    if not request.user.is_anonymous():
-        # XXX: Assumes a Google OAuth2 credential!
-        storage = Storage(CredentialsModel, 'id', request.user, 'credential')
-        credential = storage.get()
-
-        # XXX: Wonder if we should be doing more validation here to see
-        # if it is expired or not...
-        if credential is None or credential.invalid:
-            FLOW.params['state'] = xsrfutil.generate_token(settings.SECRET_KEY,
-                                                           request.user)
-            authorize_url = FLOW.step1_get_authorize_url()
-            return HttpResponseRedirect(authorize_url)
-
-        auth = OAuth2Method(credential.client_id, credential.client_secret)
-        auth.authFromAccessToken(credential.access_token)
-        auth.setActionToken()
-
-        reader = GoogleReader(auth)
-        info = reader.getUserInfo()
-
-        html = "Hello %s! Your email is %s." % (info['userName'], info['userEmail'])
-        html += "<br><br>"
-        html += "<a href=/logout>logout</a>"
-
-        return HttpResponse(html)
-    else:
-        html = "Hello anonymous user. Wouldn't you like to login?"
-        html += "<br><br>"
-        html += "<a href=/usher>usher</a>"
-        return HttpResponse(html)
 
 
 def google_auth_callback(request):
@@ -77,14 +58,14 @@ def google_auth_callback(request):
     credential = FLOW.step2_exchange(request.REQUEST)
     email = credential.id_token['email']
     try:
-        user = User.objects.get(username=email)
+        user = User.objects.get(username=email[:30])
     except User.DoesNotExist:
-        user = User.objects.create_user(email)
-
+        user = User.objects.create_user(email[:30], email)
     storage = Storage(CredentialsModel, 'id', user, 'credential')
     storage.put(credential)
 
-    # XXX: is this hacky? no idea. internet is hard.
+    # This fakes the same process as authenticate, but since we're using
+    # a mechanism authenticate doesn't support, we'll do this ourselves.
     user.backend = 'django.contrib.auth.backends.ModelBackend'
     login(request, user)
     return HttpResponseRedirect("/")

@@ -1,0 +1,30 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Read Raven : Nevermore</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link media="screen" rel="stylesheet" href="{% static 'css/bootstrap.css' %}" />
+    <link media="screen" rel="stylesheet" href="{% static 'css/style.css' %}" />
+    <link href='http://fonts.googleapis.com/css?family=Special+Elite' rel='stylesheet' type='text/css'>
+  </head>
+  <body id="index">
+    <div class="page-wrapper">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="span8">
+            <h1>Google Reader is shutting down July 1st.</h1>
+            <p>Your news. Your way. $5. Evermore.</p>
+            <p>(ReadRaven logo)</p>
+          </div>
+          <div class="span3">
+            <div class="googleauth">
+              <a class="googleauth button" href="{% url 'raven.views.usher' %}"></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+  <script src="{% static 'js/bootstrap.js' %}"></script>
+</html>

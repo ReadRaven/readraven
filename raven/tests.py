@@ -49,11 +49,12 @@ class UserTest(TestCase):
         self.assertRaises(IntegrityError, User.objects.create_user,
                           'Whoever', 'edgar@poe.com')
 
-    # XXX: Our model should be puking on this but it's not
-    @unittest.skip("Not hooked up yet")
     def test_normalize_email(self):
-        self.assertRaises(ValueError, User.objects.create_user,
-                          'Edgar', 'invalid')
+        # Built-in email normalization is pretty weak; it only
+        # lower-cases the domain part of an email address; doesn't do
+        # any additional error checking
+        user = User.objects.create_user('Edgar', 'edgar@POE.com')
+        self.assertEquals(user.email, 'edgar@poe.com')
 
     def test_long_fields(self):
         user = User()

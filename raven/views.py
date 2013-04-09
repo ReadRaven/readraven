@@ -59,7 +59,7 @@ def google_auth_callback(request):
     credential = FLOW.step2_exchange(request.REQUEST)
     email = credential.id_token['email']
     try:
-        user = User.objects.get(username=email)
+        user = User.objects.get(email=email)
     except User.DoesNotExist:
         user = User.objects.create_user(email, email)
 

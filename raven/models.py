@@ -5,26 +5,12 @@ import time
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
 from django.db import models
 import feedparser
-from south.modelsinspector import add_introspection_rules
 
 from oauth2client.django_orm import FlowField, CredentialsField
 
 from raven import settings
 
-add_introspection_rules([], ['oauth2client.django_orm.CredentialsField'])
-add_introspection_rules([], ['oauth2client.django_orm.FlowField'])
-
 logger = logging.getLogger('django')
-
-
-class FlowModel(models.Model):
-    id = models.ForeignKey(settings.AUTH_USER_MODEL, primary_key=True)
-    flow = FlowField()
-
-
-class CredentialsModel(models.Model):
-    id = models.ForeignKey(settings.AUTH_USER_MODEL, primary_key=True)
-    credential = CredentialsField()
 
 
 class UserManager(BaseUserManager):
@@ -33,18 +19,16 @@ class UserManager(BaseUserManager):
             raise ValueError('Users must have an email address')
 
         user = self.model(
-            username = username,
-            email = BaseUserManager.normalize_email(email),
+            username=username,
+            email=BaseUserManager.normalize_email(email),
         )
 
         user.set_password(password)
         user.save()
         return user
 
-    def create_superuser(self, email, password):
-        user = self.create_user(email,
-            password=password,
-        )
+    def create_superuser(self, username, email, password):
+        user = self.create_user(username, email, password)
         user.is_admin = True
         user.save()
         return user
@@ -53,6 +37,8 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser):
     username = models.CharField(max_length=254)
     email = models.EmailField(max_length=254, unique=True, db_index=True)
+    flow = FlowField()
+    credential = CredentialsField()
 
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)

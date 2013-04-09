@@ -7,10 +7,8 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from oauth2client import xsrfutil
 from oauth2client.client import flow_from_clientsecrets
-from oauth2client.django_orm import Storage
 
 from raven import settings
-from raven.models import CredentialsModel
 
 
 User = get_user_model()
@@ -63,8 +61,9 @@ def google_auth_callback(request):
     except User.DoesNotExist:
         user = User.objects.create_user(email, email)
 
-    storage = Storage(CredentialsModel, 'id', user, 'credential')
-    storage.put(credential)
+    user.credential = credential
+    user.flow = FLOW
+    user.save()
 
     # This fakes the same process as authenticate, but since we're using
     # a mechanism authenticate doesn't support, we'll do this ourselves.

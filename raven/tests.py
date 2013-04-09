@@ -19,6 +19,7 @@ SECURE_FILE = os.path.join(THIS_DIR, '..', 'secure')
 
 User = get_user_model()
 
+
 class UserTest(TestCase):
     def test_add_users(self):
         user = User()
@@ -77,6 +78,7 @@ class UserTest(TestCase):
         user.username = 'x' * 255
         user.email = 'allan@poe.com'
         self.assertRaises(DatabaseError, user.save)
+
 
 class FeedTest(TestCase):
     '''Test the Feed model.'''

@@ -1,6 +1,5 @@
-from django.contrib.auth import login
+from django.contrib.auth import login, get_user_model
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseRedirect
@@ -8,11 +7,11 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from oauth2client import xsrfutil
 from oauth2client.client import flow_from_clientsecrets
-from oauth2client.django_orm import Storage
 
 from raven import settings
-from raven.models import CredentialsModel
 
+
+User = get_user_model()
 
 CLIENT_SECRETS = './raven/purloined/client_secrets.json'
 SCOPE = [
@@ -58,11 +57,13 @@ def google_auth_callback(request):
     credential = FLOW.step2_exchange(request.REQUEST)
     email = credential.id_token['email']
     try:
-        user = User.objects.get(username=email[:30])
+        user = User.objects.get(email=email)
     except User.DoesNotExist:
-        user = User.objects.create_user(email[:30], email)
-    storage = Storage(CredentialsModel, 'id', user, 'credential')
-    storage.put(credential)
+        user = User.objects.create_user(email, email)
+
+    user.credential = credential
+    user.flow = FLOW
+    user.save()
 
     # This fakes the same process as authenticate, but since we're using
     # a mechanism authenticate doesn't support, we'll do this ourselves.

@@ -2,27 +2,72 @@ from datetime import datetime
 import logging
 import time
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
 from django.db import models
 import feedparser
-from south.modelsinspector import add_introspection_rules
 
 from oauth2client.django_orm import FlowField, CredentialsField
 
-add_introspection_rules([], ['oauth2client.django_orm.CredentialsField'])
-add_introspection_rules([], ['oauth2client.django_orm.FlowField'])
+from raven import settings
 
 logger = logging.getLogger('django')
 
 
-class FlowModel(models.Model):
-    id = models.ForeignKey(User, primary_key=True)
+class UserManager(BaseUserManager):
+    def create_user(self, username, email, password=None):
+        if not email:
+            raise ValueError('Users must have an email address')
+
+        user = self.model(
+            username=username,
+            email=BaseUserManager.normalize_email(email),
+        )
+
+        user.set_password(password)
+        user.save()
+        return user
+
+    def create_superuser(self, username, email, password):
+        user = self.create_user(username, email, password)
+        user.is_admin = True
+        user.save()
+        return user
+
+
+class User(AbstractBaseUser):
+    username = models.CharField(max_length=254)
+    email = models.EmailField(max_length=254, unique=True, db_index=True)
     flow = FlowField()
-
-
-class CredentialsModel(models.Model):
-    id = models.ForeignKey(User, primary_key=True)
     credential = CredentialsField()
+
+    is_active = models.BooleanField(default=True)
+    is_admin = models.BooleanField(default=False)
+
+    objects = UserManager()
+
+    USERNAME_FIELD = 'email'
+
+    def get_full_name(self):
+        return self.email
+
+    def get_short_name(self):
+        return self.email
+
+    def __unicode__(self):
+        return self.email
+
+    def has_perm(self, perm, obj=None):
+        # Handle whether the user has a specific permission?"
+        return True
+
+    def has_module_perms(self, app_label):
+        # Handle whether the user has permissions to view the app `app_label`?"
+        return True
+
+    @property
+    def is_staff(self):
+        # Handle whether the user is a member of staff?"
+        return self.is_admin
 
 
 class UserFeedItem(models.Model):
@@ -32,7 +77,7 @@ class UserFeedItem(models.Model):
         unique_together = ('item', 'user',)
 
     item = models.ForeignKey('FeedItem', related_name='+')
-    user = models.ForeignKey(User, related_name='items')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='items')
 
     read = models.BooleanField(default=False)
 
@@ -40,7 +85,7 @@ class UserFeedItem(models.Model):
 class Feed(models.Model):
     '''A model for representing an RSS feed.'''
 
-    users = models.ManyToManyField(User, related_name='feeds')
+    users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='feeds')
     last_fetched = models.DateTimeField(null=True)
 
     # Required properties

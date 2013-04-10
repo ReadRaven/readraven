@@ -1,6 +1,52 @@
-{% if user.full_name %}
-<p>Hello {{ user.full_name }}! Your email is {{ user.email }}</p>
-{% else %}
-<p>Hello! Your email is {{ user.email }}</p>
-{% endif %}
-<p><a href="{% url 'django.contrib.auth.views.logout' %}">Log out</a></p>
+{% load handlebars %}
+{% load staticfiles %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Read Raven : Nevermore</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link media="screen" rel="stylesheet" href="{% static 'css/bootstrap.css' %}" />
+    <link media="screen" rel="stylesheet" href="{% static 'css/style.css' %}" />
+    <link href='http://fonts.googleapis.com/css?family=Special+Elite' rel='stylesheet' type='text/css'>
+  </head>
+  <body>
+  </body>
+  {% comment %}
+  This causes a javascript error. FuckifIknow...
+  <script src="{% static 'js/bootstrap.js' %}"></script>
+  {% endcomment %}
+  <script src="{% static 'js/handlebars-1.0.0-rc.3.js' %}"></script>
+  <script src="{% static 'js/jquery-1.9.1.js' %}"></script>
+  <script src="{% static 'js/ember-1.0.0-rc.2.js' %}"></script>
+  <script src="{% static 'js/raven.js' %}"></script>
+  {% handlebars %}
+  <script type="text/x-handlebars">
+    <div class="navbar">
+      <div class="navbar-inner">
+        <a class="brand" href="#">ReadRaven</a>
+        <ul class="nav">
+          <li>{{#linkTo 'index'}}Home{{/linkTo}}</li>
+          <li>{{#linkTo 'help'}}Help{{/linkTo}}</li>
+          <li></li>
+        </ul>
+      </div>
+    </div>
+    <h1>ReadRaven</h1>
+    <div>Logged in as {{#linkTo 'account'}}{{ email }}{{/linkTo}}</div>
+  {% endhandlebars %}
+    <p><a href="{% url 'django.contrib.auth.views.logout' %}">Log out</a></p>
+  {% handlebars %}
+
+    {{outlet}}
+  </script>
+  <script type="text/x-handlebars" id="index">
+    {{#each model}}
+    <div class="span6">{{ title }}</div>
+    <div class="span6">{{ description }}</div>
+    {{/each}}
+  </script>
+  <script type="text/x-handlebars" id="help">
+    This is the help page.
+  </script>
+  {% endhandlebars %}
+</html>

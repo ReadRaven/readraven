@@ -1,6 +1,93 @@
-{% if user.full_name %}
-<p>Hello {{ user.full_name }}! Your email is {{ user.email }}</p>
-{% else %}
-<p>Hello! Your email is {{ user.email }}</p>
-{% endif %}
-<p><a href="{% url 'django.contrib.auth.views.logout' %}">Log out</a></p>
+{% load handlebars %}
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>ReadRaven : Evermore</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <link href="{% static 'css/bootstrap.css' %}" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    <style>
+      body {
+        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+      }
+    </style>
+    <link href="{% static 'css/bootstrap-responsive.css' %}" rel="stylesheet">
+
+    <!--[if lt IE 9]>
+      <script src="{% static 'js/html5shiv.js' %}"></script>
+    <![endif]-->
+
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="{% static 'ico/apple-touch-icon-144-precomposed.png' %}">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="{% static 'ico/apple-touch-icon-114-precomposed.png' %}">
+      <link rel="apple-touch-icon-precomposed" sizes="72x72" href="{% static 'ico/apple-touch-icon-72-precomposed.png' %}">
+    <link rel="apple-touch-icon-precomposed" href="{% static 'ico/apple-touch-icon-57-precomposed.png' %}">
+    <link rel="shortcut icon" href="{% static 'ico/favicon.png' %}">
+    <link href='http://fonts.googleapis.com/css?family=Special+Elite' rel='stylesheet' type='text/css'>
+  </head>
+
+  <body>
+  </body>
+  {% comment %}
+  This causes a javascript error. FuckifIknow...
+  <script src="{% static 'js/bootstrap.js' %}"></script>
+  {% endcomment %}
+  <script src="{% static 'js/handlebars-1.0.0-rc.3.js' %}"></script>
+  <script src="{% static 'js/jquery-1.9.1.js' %}"></script>
+  <script src="{% static 'js/ember-1.0.0-rc.2.js' %}"></script>
+  <script src="{% static 'js/raven.js' %}"></script>
+  {% handlebars %}
+  <script type="text/x-handlebars">
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="brand" href="#">ReadRaven</a>
+          <div class="nav-collapse collapse">
+            <p class="navbar-text pull-right">
+            {{ email }} |
+{% endhandlebars %}
+            <a href="{% url 'django.contrib.auth.views.logout' %}">Log out</a>
+{% handlebars %}
+            </p>
+            <ul class="nav">
+              <li>{{#linkTo 'index'}}Home{{/linkTo}}</li>
+              <li>{{#linkTo 'help'}}Help{{/linkTo}}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="container">
+    {{outlet}}
+    </div>
+  </script>
+  <script type="text/x-handlebars" id="index">
+    <div class="row">
+      <div class="span3">
+        <h3>Feeds</h3>
+        <ul>
+        {{#each model}}
+          <li>{{ title }}</li>
+        {{/each}}
+        </ul>
+      </div>
+
+      <div class="span9">
+        <h3>Posts</h3>
+      </div>
+    </div>
+  </script>
+  <script type="text/x-handlebars" id="help">
+    This is the help page.
+  </script>
+  {% endhandlebars %}
+</html>

@@ -238,11 +238,12 @@ class FeedResourceTest(TestCase):
     '''Test the FeedResource.'''
 
     def setUp(self):
-        self.user = User.objects.create_user(username='bob', password='bob')
+        self.user = User.objects.create_user(
+            'bob', 'bob@bob.com', password='bob')
         self.user.save()
 
         self.client = Client()
-        self.client.login(username='bob', password='bob')
+        self.client.login(username='bob@bob.com', password='bob')
 
     def test_empty(self):
         response = self.client.get('/api/0.9/feed/')
@@ -300,11 +301,12 @@ class FeedItemResourceTest(TestCase):
     '''Test the FeedItemResource.'''
 
     def setUp(self):
-        self.user = User.objects.create_user(username='bob', password='bob')
+        self.user = User.objects.create_user(
+            'bob', 'bob@bob.com', password='bob')
         self.user.save()
 
         self.client = Client()
-        self.client.login(username='bob', password='bob')
+        self.client.login(username='bob@bob.com', password='bob')
 
     def test_empty(self):
         response = self.client.get('/api/0.9/item/')

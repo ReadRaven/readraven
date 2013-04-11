@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 import json
 import os
 import unittest
+from urllib import urlopen
 
 from django.db import IntegrityError, DatabaseError, connection
 from django.contrib.auth import get_user_model
@@ -79,6 +80,15 @@ class UserTest(TestCase):
         user.username = 'x' * 255
         user.email = 'allan@poe.com'
         self.assertRaises(DatabaseError, user.save)
+
+
+def network_available():
+    '''Check to make sure the network is up.'''
+    try:
+        urlopen('http://www.google.com/')
+        return True
+    except IOError:
+        return False
 
 
 class FeedTest(TestCase):
@@ -174,6 +184,7 @@ class FeedTest(TestCase):
         self.assertEqual(user.feeds.count(), 1)
         self.assertEqual(user.items.count(), 2)
 
+    @unittest.skipUnless(network_available(), 'Network unavailable')
     @override_settings(CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
                        CELERY_ALWAYS_EAGER=True,
                        BROKER_BACKEND='memory',)
@@ -227,7 +238,11 @@ class FeedResourceTest(TestCase):
     '''Test the FeedResource.'''
 
     def setUp(self):
+        self.user = User.objects.create_user(username='bob', password='bob')
+        self.user.save()
+
         self.client = Client()
+        self.client.login(username='bob', password='bob')
 
     def test_empty(self):
         response = self.client.get('/api/0.9/feed/')
@@ -285,20 +300,28 @@ class FeedItemResourceTest(TestCase):
     '''Test the FeedItemResource.'''
 
     def setUp(self):
+        self.user = User.objects.create_user(username='bob', password='bob')
+        self.user.save()
+
         self.client = Client()
+        self.client.login(username='bob', password='bob')
 
     def test_empty(self):
         response = self.client.get('/api/0.9/item/')
-        content = json.loads(response.content)
 
+        self.assertEqual(response.status_code, 200)
+        content = json.loads(response.content)
         self.assertEqual(content['objects'], [])
 
+    @unittest.skipUnless(network_available(), 'Network unavailable')
     def test_single_resource_list(self):
         feed = Feed()
         feed.link = 'http://www.paulhummer.org/rss'
         feed.save()
 
         response = self.client.get('/api/0.9/item/')
+        self.assertEqual(response.status_code, 200)
+
         content = json.loads(response.content)
         objects = content['objects']
 
@@ -316,17 +339,22 @@ class FeedItemResourceTest(TestCase):
             sorted(resource.keys()),
             [u'description', u'link', u'published', u'resource_uri', u'title'])
 
+    @unittest.skipUnless(network_available(), 'Network unavailable')
     def test_single_resource(self):
         feed = Feed()
         feed.link = 'http://www.paulhummer.org/rss'
         feed.save()
 
         response = self.client.get('/api/0.9/item/')
+        self.assertEqual(response.status_code, 200)
+
         content = json.loads(response.content)
         objects = content['objects']
         resource = objects[0]
 
         response = self.client.get(resource['resource_uri'])
+        self.assertEqual(response.status_code, 200)
+
         content = json.loads(response.content)
 
         resource_id = resource['resource_uri'].split('/')[-2]
@@ -344,6 +372,7 @@ class FeedItemResourceTest(TestCase):
 class UpdateFeedTaskTest(TestCase):
     '''Test UpdateFeedTask.'''
 
+    @unittest.skipUnless(network_available(), 'Network unavailable')
     @override_settings(CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
                        CELERY_ALWAYS_EAGER=True,
                        BROKER_BACKEND='memory',)
@@ -368,6 +397,7 @@ class UpdateFeedTaskTest(TestCase):
 class ImportOPMLTaskTest(TestCase):
     '''Test ImportOPMLTask.'''
 
+    @unittest.skipUnless(network_available(), 'Network unavailable')
     @unittest.skipUnless(os.path.exists(SECURE_FILE), 'password unavailable')
     @override_settings(CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
                        CELERY_ALWAYS_EAGER=True,
@@ -399,6 +429,7 @@ class ImportOPMLTaskTest(TestCase):
 class ImportFromReaderAPITaskTest(TestCase):
     '''Test ImportFromReaderAPITask.'''
 
+    @unittest.skipUnless(network_available(), 'Network unavailable')
     @unittest.skipUnless(os.path.exists(SECURE_FILE), 'password unavailable')
     @override_settings(CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
                        CELERY_ALWAYS_EAGER=True,

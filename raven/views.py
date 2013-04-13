@@ -8,7 +8,7 @@ from django.template import RequestContext
 from oauth2client import xsrfutil
 from oauth2client.client import flow_from_clientsecrets
 
-from raven import settings
+from django.conf import settings
 
 
 User = get_user_model()

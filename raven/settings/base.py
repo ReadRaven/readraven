@@ -2,7 +2,6 @@ import os
 from unipath import Path
 
 
-THIS_DIR = os.path.dirname(__file__)
 PROJECT_DIR = Path(__file__).ancestor(3)
 
 DEBUG = False
@@ -14,17 +13,6 @@ ADMINS = (
 )
 
 MANAGERS = ADMINS
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'd8ij5eddp5m7rp',
-        'USER': 'fosibpjnqdhrax',
-        'PASSWORD': 'wEl_rZsLsVSdrI0pCtmFrdNfVy',
-        'HOST': 'ec2-23-21-89-65.compute-1.amazonaws.com',
-        'PORT': '5432',
-    }
-}
 
 AUTH_USER_MODEL = 'raven.User'
 
@@ -76,7 +64,7 @@ STATIC_URL = '/static/'
 
 # Additional locations of static files
 STATICFILES_DIRS = (
-    os.path.join(THIS_DIR, '..', 'static'),
+    PROJECT_DIR.child("static"),
 )
 
 # List of finder classes that know how to find static files in
@@ -116,7 +104,7 @@ LOGIN_URL = '/usher'
 WSGI_APPLICATION = 'raven.wsgi.application'
 
 TEMPLATE_DIRS = (
-    os.path.join(THIS_DIR, '..', 'templates'),
+    PROJECT_DIR.child("templates"),
 )
 
 INSTALLED_APPS = (
@@ -186,9 +174,3 @@ SESSION_COOKIE_SECURE = True
 SECURE_FRAME_DENY = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
-
-
-try:
-    from localsettings import *
-except ImportError:
-    pass

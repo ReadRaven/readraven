@@ -10,3 +10,4 @@ psycopg2
 South
 git+ssh://git@github.com/AmeliaKnows/libgreader.git#egg=libgreader
 google-api-python-client
+Unipath

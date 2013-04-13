@@ -1,7 +1,9 @@
 import os
+from unipath import Path
 
 
 THIS_DIR = os.path.dirname(__file__)
+PROJECT_DIR = Path(__file__).ancestor(3)
 
 DEBUG = False
 TEMPLATE_DEBUG = DEBUG

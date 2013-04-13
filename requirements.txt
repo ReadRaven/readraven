@@ -8,6 +8,6 @@ gunicorn
 opml
 psycopg2
 South
-git+ssh://git@github.com/AmeliaKnows/libgreader.git#egg=libgreader
+http://chizang.net/libgreader/libgreader-0.7.0.tar.gz
 google-api-python-client
 Unipath

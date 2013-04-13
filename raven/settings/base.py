@@ -74,6 +74,10 @@ STATICFILES_FINDERS = (
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = os.environ['SECRET_KEY']
 
+# We do store some low-risk secrets in the filesystem, such as Google
+# API json files
+SECRETS_DIR = PROJECT_DIR.child("secrets")
+
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',

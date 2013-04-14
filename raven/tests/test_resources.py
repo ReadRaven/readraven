@@ -157,3 +157,36 @@ class FeedItemResourceTest(TestCase):
             sorted(resource.keys()),
             [u'description', u'feed', u'link', u'published', u'read',
              u'resource_uri', u'title'])
+
+    @unittest.skipUnless(network_available(), 'Network unavailable')
+    def test_resource_read(self):
+        feed = Feed()
+        feed.link = 'http://www.paulhummer.org/rss'
+        feed.save()
+        feed.add_subscriber(self.user)
+
+        response = self.client.get('/api/0.9/item/')
+        self.assertEqual(response.status_code, 200)
+
+        content = json.loads(response.content)
+        objects = content['objects']
+        resource = objects[0]
+
+        response = self.client.get(resource['resource_uri'])
+        self.assertEqual(response.status_code, 200)
+
+        content = json.loads(response.content)
+
+        resource_id = resource['resource_uri'].split('/')[-2]
+        item = FeedItem.objects.get(pk=resource_id)
+        useritem = UserFeedItem.objects.get(user=self.user, item=item)
+
+        self.assertEqual(resource['read'], False)
+
+        useritem.read = True
+        useritem.save()
+
+        response = self.client.get(resource['resource_uri'])
+        resource = json.loads(response.content)
+
+        self.assertEqual(resource['read'], True)

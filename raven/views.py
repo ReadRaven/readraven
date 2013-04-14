@@ -8,12 +8,12 @@ from django.template import RequestContext
 from oauth2client import xsrfutil
 from oauth2client.client import flow_from_clientsecrets
 
-from raven import settings
+from django.conf import settings
 
 
 User = get_user_model()
 
-CLIENT_SECRETS = './raven/purloined/client_secrets.json'
+CLIENT_SECRETS = settings.GOOGLE_API_SECRETS
 SCOPE = [
     'https://www.googleapis.com/auth/userinfo.email',
     'https://www.googleapis.com/auth/userinfo.profile',
@@ -23,7 +23,7 @@ SCOPE = [
 FLOW = flow_from_clientsecrets(
     CLIENT_SECRETS,
     scope=SCOPE,
-    redirect_uri='http://localhost:8000/google_auth_callback')
+    redirect_uri=settings.GOOGLE_OAUTH2_CALLBACK)
 
 
 def index(request):

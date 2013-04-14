@@ -1,7 +1,8 @@
 import os
+from unipath import Path
 
 
-THIS_DIR = os.path.dirname(__file__)
+PROJECT_DIR = Path(__file__).ancestor(3)
 
 DEBUG = False
 TEMPLATE_DEBUG = DEBUG
@@ -13,22 +14,11 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'd8ij5eddp5m7rp',
-        'USER': 'fosibpjnqdhrax',
-        'PASSWORD': 'wEl_rZsLsVSdrI0pCtmFrdNfVy',
-        'HOST': 'ec2-23-21-89-65.compute-1.amazonaws.com',
-        'PORT': '5432',
-    }
-}
-
 AUTH_USER_MODEL = 'raven.User'
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['.herokuapp.com']
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -68,13 +58,9 @@ MEDIA_URL = ''
 # Example: "/var/www/example.com/static/"
 STATIC_ROOT = ''
 
-# URL prefix for static files.
-# Example: "http://example.com/static/", "http://static.example.com/"
-STATIC_URL = '/static/'
-
 # Additional locations of static files
 STATICFILES_DIRS = (
-    os.path.join(THIS_DIR, '..', 'static'),
+    PROJECT_DIR.child("static"),
 )
 
 # List of finder classes that know how to find static files in
@@ -86,7 +72,11 @@ STATICFILES_FINDERS = (
 )
 
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = '#q-(%d84p^i4)z9r9_*+hb&%6_@gw!pwgs(zit7)9m&et=5qxq'
+SECRET_KEY = os.environ['SECRET_KEY']
+
+# We do store some low-risk secrets in the filesystem, such as Google
+# API json files
+SECRETS_DIR = PROJECT_DIR.child("secrets")
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
@@ -114,7 +104,7 @@ LOGIN_URL = '/usher'
 WSGI_APPLICATION = 'raven.wsgi.application'
 
 TEMPLATE_DIRS = (
-    os.path.join(THIS_DIR, '..', 'templates'),
+    PROJECT_DIR.child("templates"),
 )
 
 INSTALLED_APPS = (
@@ -185,8 +175,10 @@ SECURE_FRAME_DENY = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
 
+# XXX: Do NOT turn this off. Google OAuth2 will break on you in strange
+# and horrifying ways.
+SECURE_SSL_REDIRECT = True
 
-try:
-    from localsettings import *
-except ImportError:
-    pass
+# XXX: If you remove this, you will get an infinite-redirect loop on
+# heroku
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

@@ -8,7 +8,7 @@ import feedparser
 
 from oauth2client.django_orm import FlowField, CredentialsField
 
-from raven import settings
+from django.conf import settings
 
 logger = logging.getLogger('django')
 

@@ -1,3 +1,9 @@
+@font-face {
+    font-family: 'Special Elite';
+    src: url(../font/SpecialElite.ttf),
+         url('https://s3.amazonaws.com/readraven/static/font/SpecialElite.ttf');
+}
+
 body#index {
     background: url(../img/bg.jpg) no-repeat center center fixed;
     -webkit-background-size: cover;

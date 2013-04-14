@@ -76,7 +76,7 @@ class UserFeedItem(models.Model):
     class Meta:
         unique_together = ('item', 'user',)
 
-    item = models.ForeignKey('FeedItem', related_name='+')
+    item = models.ForeignKey('FeedItem', related_name='userfeeditems')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='items')
 
     read = models.BooleanField(default=False)
@@ -85,7 +85,8 @@ class UserFeedItem(models.Model):
 class Feed(models.Model):
     '''A model for representing an RSS feed.'''
 
-    users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='feeds')
+    users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, related_name='feeds')
     last_fetched = models.DateTimeField(null=True)
 
     # Required properties
@@ -234,8 +235,19 @@ class Feed(models.Model):
     # webMaster: <webMaster>webmaster@w3schools.com</webMaster>
 
 
+class FeedItemManager(models.Manager):
+    '''A manager for user-specific queries.'''
+
+    def for_user(self, user):
+        userfeeditems = UserFeedItem.objects.filter(user=user)
+        items = self.filter(userfeeditems__in=userfeeditems)
+        return items
+
+
 class FeedItem(models.Model):
     '''A model for representing an item in a RSS feed.'''
+
+    objects = FeedItemManager()
 
     feed = models.ForeignKey(Feed, related_name='items')
 

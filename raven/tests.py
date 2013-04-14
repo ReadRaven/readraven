@@ -320,6 +320,7 @@ class FeedItemResourceTest(TestCase):
         feed = Feed()
         feed.link = 'http://www.paulhummer.org/rss'
         feed.save()
+        self.user.subscribe(feed)
 
         response = self.client.get('/api/0.9/item/')
         self.assertEqual(response.status_code, 200)
@@ -337,15 +338,17 @@ class FeedItemResourceTest(TestCase):
         self.assertEqual(resource['title'], item.title)
         self.assertEqual(resource['link'], item.link)
 
-        self.assertEqual(
-            sorted(resource.keys()),
-            [u'description', u'link', u'published', u'resource_uri', u'title'])
-
     @unittest.skipUnless(network_available(), 'Network unavailable')
     def test_single_resource(self):
         feed = Feed()
         feed.link = 'http://www.paulhummer.org/rss'
         feed.save()
+        self.user.subscribe(feed)
+
+        #Create another feed that the user isn't subscribed to.
+        unused_feed = Feed()
+        unused_feed.link = 'http://www.chizang.net/alex/blog/feed/'
+        unused_feed.save()
 
         response = self.client.get('/api/0.9/item/')
         self.assertEqual(response.status_code, 200)
@@ -361,14 +364,20 @@ class FeedItemResourceTest(TestCase):
 
         resource_id = resource['resource_uri'].split('/')[-2]
         item = FeedItem.objects.get(pk=resource_id)
+        useritem = UserFeedItem.objects.get(user=self.user, item=item)
 
         self.assertEqual(resource['description'], item.description)
-        self.assertEqual(resource['title'], item.title)
         self.assertEqual(resource['link'], item.link)
+        self.assertEqual(resource['read'], useritem.read)
+        self.assertEqual(resource['title'], item.title)
+
+        feed_id = int(resource['feed'].split('/')[-2])
+        self.assertEqual(feed_id, item.feed.pk)
 
         self.assertEqual(
             sorted(resource.keys()),
-            [u'description', u'link', u'published', u'resource_uri', u'title'])
+            [u'description', u'feed', u'link', u'published', u'read',
+             u'resource_uri', u'title'])
 
 
 class UpdateFeedTaskTest(TestCase):

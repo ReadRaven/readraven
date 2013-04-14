@@ -15,6 +15,8 @@ __all__ = ['UserTest', 'FeedTest', 'FeedItemTest', 'UserFeedItemTest']
 
 
 class UserTest(TestCase):
+    '''Tests for Raven's custom User class.'''
+
     def test_add_users(self):
         user = User()
         user.username = 'Edgar'
@@ -74,69 +76,6 @@ class UserTest(TestCase):
         user.email = 'allan@poe.com'
         self.assertRaises(DatabaseError, user.save)
 
-
-class FeedTest(TestCase):
-    '''Test the Feed model.'''
-
-    def setUp(self):
-        self.user = User()
-        self.email = 'edgar@poe.com'
-        self.user.save()
-
-    def test_feed_users(self):
-        bob = User()
-        bob.email = 'Bob'
-        bob.save()
-        steve = User()
-        steve.email = 'Steve'
-        steve.save()
-
-        feed = Feed()
-        feed.title = 'Some Political Bullshit'
-        feed.save()
-        feed.users.add(bob)
-        feed.users.add(steve)
-        feed.save()
-
-        other_feed = Feed()
-        other_feed.title = 'Mom\'s recipe blog'
-        other_feed.save()
-        other_feed.users.add(steve)
-        other_feed.save()
-
-        self.assertEqual(steve.feeds.count(), 2)
-        self.assertEqual(bob.feeds.count(), 1)
-
-    def test_add_subscriber(self):
-        user = User()
-        user.email = 'Bob'
-        user.save()
-
-        feed = Feed()
-        feed.title = 'BoingBoing'
-        feed.save()
-
-        item = FeedItem()
-        item.title = 'Octopus v. Platypus'
-        item.description = 'A fight to the death.'
-        item.link = item.guid = 'http://www.example.com/rss/post'
-        item.published = datetime.now()
-        item.feed = feed
-        item.save()
-
-        item2 = FeedItem()
-        item2.title = 'Cute bunny rabbit video'
-        item2.description = 'They die at the end.'
-        item2.link = item.guid = 'http://www.example.com/rss/post'
-        item2.published = datetime.now()
-        item2.feed = feed
-        item2.save()
-
-        feed.add_subscriber(user)
-
-        self.assertEqual(user.feeds.count(), 1)
-        self.assertEqual(user.items.count(), 2)
-
     def test_user_subscribe(self):
         '''Test the syntactic sugar monkeypatch for User.subscribe.'''
         user = User()
@@ -166,7 +105,67 @@ class FeedTest(TestCase):
         user.subscribe(feed)
 
         self.assertEqual(user.feeds.count(), 1)
-        self.assertEqual(user.items.count(), 2)
+        self.assertEqual(user.feeditems.count(), 2)
+
+
+class FeedTest(TestCase):
+    '''Test the Feed model.'''
+
+    def setUp(self):
+        self.user = User()
+        self.email = 'edgar@poe.com'
+        self.user.save()
+
+    def test_subscribers(self):
+        bob = User()
+        bob.email = 'Bob'
+        bob.save()
+        steve = User()
+        steve.email = 'Steve'
+        steve.save()
+
+        feed = Feed()
+        feed.title = 'Some Political Bullshit'
+        feed.save()
+        feed.add_subscriber(bob)
+        feed.add_subscriber(steve)
+
+        other_feed = Feed()
+        other_feed.title = 'Mom\'s recipe blog'
+        other_feed.save()
+        other_feed.add_subscriber(steve)
+
+        self.assertEqual(feed.subscribers.count(), 2)
+        self.assertEqual(other_feed.subscribers.count(), 1)
+
+    def test_add_subscriber(self):
+        user = User()
+        user.email = 'Bob'
+        user.save()
+
+        feed = Feed()
+        feed.title = 'BoingBoing'
+        feed.save()
+
+        item = FeedItem()
+        item.title = 'Octopus v. Platypus'
+        item.description = 'A fight to the death.'
+        item.link = item.guid = 'http://www.example.com/rss/post'
+        item.published = datetime.now()
+        item.feed = feed
+        item.save()
+
+        item2 = FeedItem()
+        item2.title = 'Cute bunny rabbit video'
+        item2.description = 'They die at the end.'
+        item2.link = item.guid = 'http://www.example.com/rss/post'
+        item2.published = datetime.now()
+        item2.feed = feed
+        item2.save()
+
+        feed.add_subscriber(user)
+
+        self.assertEqual(feed.subscribers.count(), 1)
 
     @unittest.skipUnless(network_available(), 'Network unavailable')
     @override_settings(CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
@@ -248,4 +247,4 @@ class UserFeedItemTest(TestCase):
         user_feed_item.item = item
         user_feed_item.save()
 
-        self.assertEqual(user.items.count(), 1)
+        self.assertEqual(user.feeditems.count(), 1)

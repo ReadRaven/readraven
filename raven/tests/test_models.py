@@ -11,7 +11,7 @@ from raven.test_utils import network_available
 
 User = get_user_model()
 
-__all__ = ['UserTest', 'FeedTest', 'UserFeedItemTest']
+__all__ = ['UserTest', 'FeedTest', 'FeedItemTest', 'UserFeedItemTest']
 
 
 class UserTest(TestCase):
@@ -187,6 +187,39 @@ class FeedTest(TestCase):
         self.assertEqual(feed.items.count(), 20)
         self.assertEqual(feed.title, 'Dapper as...')
         self.assertTrue(feed.description.startswith('Bike rider'))
+
+
+class FeedItemTest(TestCase):
+    '''Tests for the FeedItem model.'''
+
+    @unittest.skipUnless(network_available(), 'Network unavailable')
+    @override_settings(CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
+                       CELERY_ALWAYS_EAGER=True,
+                       BROKER_BACKEND='memory',)
+    def test_for_user(self):
+        '''Test FeedItemManager.for_user.'''
+        user = User()
+        user.email = 'abc@123.come'
+        user.save()
+
+        feed = Feed()
+        feed.link = 'http://paulhummer.org/rss'
+        feed.save()
+        user.subscribe(feed)
+
+        other_feed = Feed()
+        other_feed.link = 'http://www.chizang.net/alex/blog/feed/'
+        other_feed.save()
+
+        userfeeditems = FeedItem.objects.for_user(user)
+        self.assertEqual(userfeeditems.count(), feed.items.count())
+
+        other_feed.add_subscriber(user)
+
+        userfeeditems = FeedItem.objects.for_user(user)
+        self.assertEqual(
+            userfeeditems.count(),
+            feed.items.count() + other_feed.items.count())
 
 
 class UserFeedItemTest(TestCase):

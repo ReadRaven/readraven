@@ -12,11 +12,12 @@ up to heroku. Which is quite annoying.
 Its url is:
 	http://readraven-staging.herokuapp.com/
 
-To get it to work properly, at least two environment variables
+To get it to work properly, at least three environment variables
 must be set:
 
 	heroku config:set SECRET_KEY=...
 	heroku config:set DJANGO_SETTINGS_MODULE=raven.settings.staging
+	heroku config:set HTTPS=on
 
 Also note that the settings in raven/settings/staging.py is quite
 important here. Especially note that the database we use there is

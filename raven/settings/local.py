@@ -3,7 +3,9 @@ from .base import *
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
+SECURE_SSL_REDIRECT = False
 SESSION_COOKIE_SECURE = False
+SECURE_PROXY_SSL_HEADER = ()
 
 # URL prefix for static files.
 # Example: "http://example.com/static/", "http://static.example.com/"

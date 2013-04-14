@@ -1,7 +1,5 @@
 from .base import *
 
-ALLOWED_HOSTS = ['.herokuapp.com']
-
 # URL prefix for static files.
 # Example: "http://example.com/static/", "http://static.example.com/"
 STATIC_URL = 'https://s3.amazonaws.com/readraven/static/'

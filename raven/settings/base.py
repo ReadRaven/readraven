@@ -18,7 +18,7 @@ AUTH_USER_MODEL = 'raven.User'
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['.herokuapp.com']
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -174,3 +174,11 @@ SESSION_COOKIE_SECURE = True
 SECURE_FRAME_DENY = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
+
+# XXX: Do NOT turn this off. Google OAuth2 will break on you in strange
+# and horrifying ways.
+SECURE_SSL_REDIRECT = True
+
+# XXX: If you remove this, you will get an infinite-redirect loop on
+# heroku
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

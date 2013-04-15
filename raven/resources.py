@@ -18,19 +18,31 @@ class FeedResource(ModelResource):
 class FeedItemResource(ModelResource):
     '''A resource representing FeedItems.'''
     class Meta:
-        allowed_methods = ('get',)
+        allowed_methods = ('get', 'put',)
         authentication = SessionAuthentication()
+        default_format = 'application/json'
         fields = ['description', 'link', 'published', 'title']
         queryset = models.FeedItem.objects.all()
         resource_name = 'item'
 
     feed = fields.ForeignKey(FeedResource, 'feed')
-    read = fields.BooleanField(default=True)
+    read = fields.BooleanField()
 
     def get_object_list(self, request):
         return models.FeedItem.objects.for_user(request.user)
 
+    def obj_get(self, bundle=None, request=None, **kwargs):
+        bundle.obj = models.FeedItem.objects.get(pk=kwargs['pk'])
+        userfeeditem = bundle.obj.userfeeditem(bundle.request.user)
+        return bundle.obj
+
+    def obj_update(self, bundle, request=None, **kwargs):
+        bundle.obj = models.FeedItem.objects.get(pk=kwargs['pk'])
+        userfeeditem = bundle.obj.userfeeditem(bundle.request.user)
+        userfeeditem.read = bundle.data['read']
+        userfeeditem.save()
+        return bundle
+
     def dehydrate_read(self, bundle):
-        userfeeditem = models.UserFeedItem.objects.get(
-            user=bundle.request.user, item=bundle.obj)
+        userfeeditem = bundle.obj.userfeeditem(bundle.request.user)
         return userfeeditem.read

@@ -301,6 +301,11 @@ class FeedItem(models.Model):
     guid = models.CharField(max_length=500)
     published = models.DateTimeField()
 
+    def userfeeditem(self, user):
+        userfeeditem = UserFeedItem.objects.get(
+            user=user, item=self)
+        return userfeeditem
+
     # Currently unused RSS (optional) properties:
     # author: <author>bob@example.com</author>
     # category: <category>Wholesome pornography</category>

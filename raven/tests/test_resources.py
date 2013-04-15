@@ -190,3 +190,51 @@ class FeedItemResourceTest(TestCase):
         resource = json.loads(response.content)
 
         self.assertEqual(resource['read'], True)
+
+    @unittest.skipUnless(network_available(), 'Network unavailable')
+    def test_unauthorized(self):
+        feed = Feed()
+        feed.link = 'http://www.paulhummer.org/rss'
+        feed.save()
+        self.user.subscribe(feed)
+
+        #Create another feed that the user isn't subscribed to.
+        unused_feed = Feed()
+        unused_feed.link = 'http://www.chizang.net/alex/blog/feed/'
+        unused_feed.save()
+        feeditem_id = unused_feed.items.all()[0].pk
+
+        response = self.client.get(
+            '/api/0.9/item/{0}'.format(feeditem_id),
+            follow=True)
+        self.assertEqual(response.status_code, 404)
+
+    @unittest.skipUnless(network_available(), 'Network unavailable')
+    def test_resource_put_read(self):
+        feed = Feed()
+        feed.link = 'http://www.paulhummer.org/rss'
+        feed.save()
+        feed.add_subscriber(self.user)
+
+        response = self.client.get('/api/0.9/item/')
+        self.assertEqual(response.status_code, 200)
+
+        content = json.loads(response.content)
+        objects = content['objects']
+        resource = objects[0]
+
+        response = self.client.get(resource['resource_uri'])
+        self.assertEqual(response.status_code, 200)
+
+        resource = json.loads(response.content)
+
+        self.assertEqual(resource['read'], False)
+
+        self.client.put(
+            resource['resource_uri'],
+            data=json.dumps({'read': True}),
+            content_type='application/json')
+
+        response = self.client.get(resource['resource_uri'])
+        resource = json.loads(response.content)
+        self.assertEqual(resource['read'], True)

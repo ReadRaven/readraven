@@ -31,10 +31,22 @@ class FeedResourceTest(TestCase):
 
         self.assertEqual(content['objects'], [])
 
+    def test_feeds_but_no_subscriptions(self):
+        feed = Feed()
+        feed.link = 'http://www.paulhummer.org/rss'
+        feed.save()
+
+        response = self.client.get('/api/0.9/feed/')
+        content = json.loads(response.content)
+        objects = content['objects']
+
+        self.assertEqual(len(objects), 0)
+
     def test_single_resource_list(self):
         feed = Feed()
         feed.link = 'http://www.paulhummer.org/rss'
         feed.save()
+        feed.add_subscriber(self.user)
 
         response = self.client.get('/api/0.9/feed/')
         content = json.loads(response.content)
@@ -57,6 +69,7 @@ class FeedResourceTest(TestCase):
         feed = Feed()
         feed.link = 'http://www.paulhummer.org/rss'
         feed.save()
+        feed.add_subscriber(self.user)
 
         response = self.client.get('/api/0.9/feed/')
         content = json.loads(response.content)
@@ -75,6 +88,15 @@ class FeedResourceTest(TestCase):
         self.assertEqual(
             sorted(content.keys()),
             [u'description', u'link', u'resource_uri', u'title'])
+
+    def test_unauthorized(self):
+        feed = Feed()
+        feed.link = 'http://www.paulhummer.org/rss'
+        feed.save()
+
+        uri = '/api/0.9/feed/{0}'.format(feed.pk)
+        response = self.client.get(uri, follow=True)
+        self.assertEqual(response.status_code, 404)
 
 
 class UserFeedResourceTest(ResourceTestCase):
@@ -133,10 +155,9 @@ class UserFeedResourceTest(ResourceTestCase):
         self.assertEqual(response.status_code, 204)
 
         #Ensure the feed is now deleted.
-        #response = self.api_client.get('/api/0.9/feed/')
-        #content = json.loads(response.content)
-        #self.assertEqual(len(content['objects']), 0)
-        self.assertEqual(UserFeed.objects.count(), 0)
+        response = self.api_client.get('/api/0.9/feed/')
+        content = json.loads(response.content)
+        self.assertEqual(len(content['objects']), 0)
 
 
 class FeedItemResourceTest(TestCase):

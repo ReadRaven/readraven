@@ -13,9 +13,18 @@ class FeedResource(ModelResource):
     class Meta:
         allowed_methods = ('get',)
         authentication = SessionAuthentication()
+        default_format = 'application/json'
         fields = ['description', 'title', 'link']
         queryset = models.Feed.objects.all()
         resource_name = 'feed'
+
+    def get_object_list(self, request):
+        return models.Feed.objects.for_user(request.user)
+
+    def obj_get(self, bundle=None, **kwargs):
+        bundle.obj = models.Feed.objects.get(pk=kwargs['pk'])
+        bundle.obj.userfeed(bundle.request.user)
+        return bundle.obj
 
 
 class UserFeedResource(ModelResource):

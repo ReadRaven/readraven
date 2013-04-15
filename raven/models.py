@@ -117,6 +117,8 @@ class FeedManager(models.Manager):
 class Feed(models.Model):
     '''A model for representing an RSS feed.'''
 
+    objects = FeedManager()
+
     last_fetched = models.DateTimeField(null=True)
 
     # Required properties
@@ -151,7 +153,8 @@ class Feed(models.Model):
             user_item.save()
 
     def userfeed(self, user):
-        return UserFeed.objects.get(user=user, feed=self)
+        userfeed = UserFeed.objects.get(user=user, feed=self)
+        return userfeed
 
     @classmethod
     def create_from_url(Class, url, subscriber):

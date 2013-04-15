@@ -69,6 +69,28 @@ class User(AbstractBaseUser):
         # Handle whether the user is a member of staff?"
         return self.is_admin
 
+    @property
+    def feeds(self):
+        userfeeds = UserFeed.objects.filter(user=self)
+        feeds = Feed.objects.filter(userfeeds__in=userfeeds)
+        return feeds
+
+    @property
+    def feeditems(self):
+        userfeeditems = UserFeedItem.objects.filter(user=self)
+        feeditems = FeedItem.objects.filter(userfeeditems__in=userfeeditems)
+        return feeditems
+
+    def subscribe(self, feed):
+        feed.add_subscriber(self)
+
+
+class UserFeed(models.Model):
+    '''A model for user metadata on a feed.'''
+    feed = models.ForeignKey('Feed', related_name='userfeeds')
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, related_name='userfeeds')
+
 
 class UserFeedItem(models.Model):
     '''A model for user metadata on a post.'''
@@ -76,16 +98,27 @@ class UserFeedItem(models.Model):
     class Meta:
         unique_together = ('item', 'user',)
 
-    item = models.ForeignKey('FeedItem', related_name='+')
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='items')
+    item = models.ForeignKey('FeedItem', related_name='userfeeditems')
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, related_name='userfeeditems')
 
     read = models.BooleanField(default=False)
+
+
+class FeedManager(models.Manager):
+    '''A manager for user-specific queries on Feeds.'''
+
+    def for_user(self, user):
+        userfeeds = UserFeed.objects.filter(user=user)
+        feeds = self.filter(userfeeds__in=userfeeds)
+        return feeds
 
 
 class Feed(models.Model):
     '''A model for representing an RSS feed.'''
 
-    users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='feeds')
+    objects = FeedManager()
+
     last_fetched = models.DateTimeField(null=True)
 
     # Required properties
@@ -96,19 +129,32 @@ class Feed(models.Model):
     # Optional metadata
     generator = models.CharField(max_length=100, blank=True)
 
+    @property
+    def subscribers(self):
+        userfeeds = UserFeed.objects.filter(feed=self)
+        users = User.objects.filter(userfeeds__in=userfeeds)
+        return users
+
     def add_subscriber(self, subscriber):
         '''Add a subscriber to this feed.
 
         This not only adds an entry in the FeedUser join table, but also
         populates UserFeedItem with unread FeedItems from the feed.
         '''
-        self.users.add(subscriber)
+        userfeed = UserFeed()
+        userfeed.feed = self
+        userfeed.user = subscriber
+        userfeed.save()
 
         for item in self.items.all():
             user_item = UserFeedItem()
             user_item.item = item
             user_item.user = subscriber
             user_item.save()
+
+    def userfeed(self, user):
+        userfeed = UserFeed.objects.get(user=user, feed=self)
+        return userfeed
 
     @classmethod
     def create_from_url(Class, url, subscriber):
@@ -128,7 +174,7 @@ class Feed(models.Model):
             pass
         feed.save()  # Save so that Feed has a key
 
-        feed.users.add(subscriber)
+        feed.add_subscriber(subscriber)
         feed.save()
 
         feed.update(data)
@@ -196,7 +242,7 @@ class Feed(models.Model):
             item.link = entry.link
             item.save()
 
-            for user in self.users.all():
+            for user in self.subscribers.all():
                 user_item = UserFeedItem()
                 user_item.user = user
                 user_item.item = item
@@ -234,8 +280,19 @@ class Feed(models.Model):
     # webMaster: <webMaster>webmaster@w3schools.com</webMaster>
 
 
+class FeedItemManager(models.Manager):
+    '''A manager for user-specific queries.'''
+
+    def for_user(self, user):
+        userfeeditems = UserFeedItem.objects.filter(user=user)
+        items = self.filter(userfeeditems__in=userfeeditems)
+        return items
+
+
 class FeedItem(models.Model):
     '''A model for representing an item in a RSS feed.'''
+
+    objects = FeedItemManager()
 
     feed = models.ForeignKey(Feed, related_name='items')
 
@@ -250,6 +307,11 @@ class FeedItem(models.Model):
     guid = models.CharField(max_length=500)
     published = models.DateTimeField()
 
+    def userfeeditem(self, user):
+        userfeeditem = UserFeedItem.objects.get(
+            user=user, item=self)
+        return userfeeditem
+
     # Currently unused RSS (optional) properties:
     # author: <author>bob@example.com</author>
     # category: <category>Wholesome pornography</category>
@@ -258,9 +320,3 @@ class FeedItem(models.Model):
     #                       type="audio/mpeg" />
     # pubDate: <pubDate>Thu, 4 Apr 2013</pubDate>
     # source: <source url="http://...">Example.com</source>
-
-
-# User monkeypatching for syntactic sugar
-def subscribe(self, feed):
-    feed.add_subscriber(self)
-User.subscribe = subscribe

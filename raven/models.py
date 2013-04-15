@@ -150,6 +150,9 @@ class Feed(models.Model):
             user_item.user = subscriber
             user_item.save()
 
+    def userfeed(self, user):
+        return UserFeed.objects.get(user=user, feed=self)
+
     @classmethod
     def create_from_url(Class, url, subscriber):
         data = feedparser.parse(url)

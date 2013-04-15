@@ -4,13 +4,14 @@ import unittest
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.test.client import Client
+from tastypie.test import ResourceTestCase
 
-from raven.models import Feed, FeedItem, UserFeedItem
+from raven.models import Feed, FeedItem, UserFeed, UserFeedItem
 from raven.test_utils import network_available
 
 User = get_user_model()
 
-__all__ = ['FeedResourceTest', 'FeedItemResourceTest']
+__all__ = ['FeedResourceTest', 'FeedItemResourceTest', 'UserFeedResourceTest']
 
 
 class FeedResourceTest(TestCase):
@@ -74,6 +75,68 @@ class FeedResourceTest(TestCase):
         self.assertEqual(
             sorted(content.keys()),
             [u'description', u'link', u'resource_uri', u'title'])
+
+
+class UserFeedResourceTest(ResourceTestCase):
+    '''Test the UserFeedResource.'''
+
+    def setUp(self):
+        super(UserFeedResourceTest, self).setUp()
+        self.user = User.objects.create_user(
+            'bob', 'bob@bob.com', password='bob')
+        self.user.save()
+
+        self.api_client.client.login(username='bob@bob.com', password='bob')
+
+    def test_subscribe(self):
+        #First, make sure there are no subscribed feeds.
+        response = self.api_client.get('/api/0.9/feed/')
+        content = json.loads(response.content)
+        self.assertEqual(len(content['objects']), 0)
+
+        #Subscribe to a feed.
+        response = self.api_client.post(
+            '/api/0.9/subscription/', format='json',
+            data={'link': 'http://paulhummer.org/rss'})
+        self.assertEqual(response.status_code, 201)
+
+        #Ensure the feed is accessible via the API now.
+        response = self.api_client.get('/api/0.9/feed/')
+        content = json.loads(response.content)
+        self.assertEqual(len(content['objects']), 1)
+        self.assertEqual(
+            content['objects'][0]['link'],
+            'http://paulhummer.org/rss')
+
+    def test_unauthorize(self):
+        self.api_client.client.logout()
+
+        response = self.api_client.post(
+            '/api/0.9/subscription/', format='json',
+            data={'link': 'http://paulhummer.org/rss'})
+        self.assertEqual(response.status_code, 401)
+
+    def test_unsubscribe(self):
+        feed = Feed()
+        feed.link = 'http://www.paulhummer.org/rss'
+        feed.save()
+        feed.add_subscriber(self.user)
+
+        #Ensure the user is subscribed.
+        response = self.api_client.get('/api/0.9/feed/')
+        content = json.loads(response.content)
+        self.assertEqual(len(content['objects']), 1)
+
+        response = self.api_client.delete(
+            '/api/0.9/subscription/', follow=True,
+            data=json.dumps({'link': 'http://www.paulhummer.org/rss'}))
+        self.assertEqual(response.status_code, 204)
+
+        #Ensure the feed is now deleted.
+        #response = self.api_client.get('/api/0.9/feed/')
+        #content = json.loads(response.content)
+        #self.assertEqual(len(content['objects']), 0)
+        self.assertEqual(UserFeed.objects.count(), 0)
 
 
 class FeedItemResourceTest(TestCase):

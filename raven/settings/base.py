@@ -14,7 +14,7 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
-AUTH_USER_MODEL = 'raven.User'
+AUTH_USER_MODEL = 'usher.User'
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
@@ -124,6 +124,7 @@ INSTALLED_APPS = (
     #'south',
 
     'raven',
+    'usher',
 )
 
 # A sample logging configuration. The only tangible logging

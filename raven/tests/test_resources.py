@@ -6,7 +6,7 @@ from django.test import TestCase
 from django.test.client import Client
 from tastypie.test import ResourceTestCase
 
-from raven.models import Feed, FeedItem, UserFeed, UserFeedItem
+from raven.models import Feed, FeedItem, UserFeedItem
 from raven.test_utils import network_available
 
 User = get_user_model()

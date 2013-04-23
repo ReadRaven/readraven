@@ -2,89 +2,20 @@ from datetime import datetime
 import logging
 import time
 
-from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
+from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db import models
+
 import feedparser
 
-from oauth2client.django_orm import FlowField, CredentialsField
-
-from django.conf import settings
-
 logger = logging.getLogger('django')
+User = get_user_model()
 
 
-class UserManager(BaseUserManager):
-    def create_user(self, username, email, password=None):
-        if not email:
-            raise ValueError('Users must have an email address')
-
-        user = self.model(
-            username=username,
-            email=BaseUserManager.normalize_email(email),
-        )
-
-        user.set_password(password)
-        user.save()
-        return user
-
-    def create_superuser(self, username, email, password):
-        user = self.create_user(username, email, password)
-        user.is_admin = True
-        user.save()
-        return user
-
-
-class User(AbstractBaseUser):
-    username = models.CharField(max_length=254)
-    email = models.EmailField(max_length=254, unique=True, db_index=True)
-    flow = FlowField()
-    credential = CredentialsField()
-
-    is_active = models.BooleanField(default=True)
-    is_admin = models.BooleanField(default=False)
-
-    objects = UserManager()
-
-    USERNAME_FIELD = 'email'
-
-    def get_full_name(self):
-        return self.email
-
-    def get_short_name(self):
-        return self.email
-
-    def __unicode__(self):
-        return self.email
-
-    def has_perm(self, perm, obj=None):
-        # Handle whether the user has a specific permission?"
-        return True
-
-    def has_module_perms(self, app_label):
-        # Handle whether the user has permissions to view the app `app_label`?"
-        return True
-
-    @property
-    def is_staff(self):
-        # Handle whether the user is a member of staff?"
-        return self.is_admin
-
-    @property
-    def feeds(self):
-        userfeeds = UserFeed.objects.filter(user=self)
-        feeds = Feed.objects.filter(userfeeds__in=userfeeds)
-        return feeds
-
-    @property
-    def feeditems(self):
-        userfeeditems = UserFeedItem.objects.filter(user=self)
-        feeditems = FeedItem.objects.filter(userfeeditems__in=userfeeditems)
-        return feeditems
-
-    def subscribe(self, feed):
-        feed.add_subscriber(self)
-
-
+# UserFeed and UserFeedItem are hand-rolled intermediate join tables
+# instead of using django's ManyToManyField. We use these because we
+# wish to store metadata about the relationship between Users and
+# Feeds and FeedItems, such as tags and read state.
 class UserFeed(models.Model):
     '''A model for user metadata on a feed.'''
     feed = models.ForeignKey('Feed', related_name='userfeeds')
@@ -320,3 +251,20 @@ class FeedItem(models.Model):
     #                       type="audio/mpeg" />
     # pubDate: <pubDate>Thu, 4 Apr 2013</pubDate>
     # source: <source url="http://...">Example.com</source>
+
+
+# User monkeypatches
+@property
+def feeds(self):
+    userfeeds = UserFeed.objects.filter(user=self)
+    feeds = Feed.objects.filter(userfeeds__in=userfeeds)
+    return feeds
+User.feeds = feeds
+
+
+@property
+def feeditems(self):
+    userfeeditems = UserFeedItem.objects.filter(user=self)
+    feeditems = FeedItem.objects.filter(userfeeditems__in=userfeeditems).order_by('published')
+    return feeditems
+User.feeditems = feeditems

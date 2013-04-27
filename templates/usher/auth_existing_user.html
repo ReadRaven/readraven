@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Read Raven : Usher</title>
+    <title>The House of Usher</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link media="screen" rel="stylesheet" href="{% static 'css/bootstrap.css' %}" />
     <link media="screen" rel="stylesheet" href="{% static 'css/usher.css' %}" />
@@ -13,20 +13,10 @@
       <div class="container-fluid">
         <div class="row">
           <div class="span8">
-            <h1>join us</h1>
-            <p>Read Raven sign up is fast and easy.</p>
-            <p>
-             <ol>
-              <li>allow us to import your existing Google Reader account
-              <li>give us your credit card number
-              <li>that's it!
-             </ol>
-            </p>
-            <p>Let's get started...</p>
-          </div>
-          <div class="span3">
+            <h1>welcome back!...</h1>
+            <p>We're glad you're here.</p>
             <div class="googleauth">
-              <a class="googleauth button" href="{% url 'usher.views.index' %}"></a>
+              <a class="googleauth button" href="{% url 'usher.views.google_auth' %}"></a>
             </div>
           </div>
         </div>

@@ -13,9 +13,11 @@ v09.register(resources.UserFeedResource())
 urlpatterns = patterns(
     '',
     url(r'api/', include(v09.urls)),
-    url(r'^google_auth_callback', 'raven.views.google_auth_callback'),
     url(r'^home', 'raven.views.home'),
     url(r'^logout/$', 'django.contrib.auth.views.logout', {'next_page': '/'}),
-    url(r'^usher', 'usher.views.index'),
     url(r'^$', 'raven.views.index'),
+    url(r'^usher/sign_up', 'usher.views.sign_up'),
+    url(r'^usher/sign_in', 'usher.views.sign_in'),
+    url(r'^usher/google_auth', 'usher.views.google_auth'),
+    url(r'^google_auth_callback', 'usher.views.google_auth_callback'),
 )

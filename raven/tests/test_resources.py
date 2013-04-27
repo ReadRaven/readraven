@@ -284,7 +284,7 @@ class FeedItemResourceTest(TestCase):
 
         #Create another feed that the user isn't subscribed to.
         unused_feed = Feed()
-        unused_feed.link = 'http://www.chizang.net/alex/blog/feed/'
+        unused_feed.link = 'http://xkcd.com/atom.xml'
         unused_feed.save()
         feeditem_id = unused_feed.items.all()[0].pk
 

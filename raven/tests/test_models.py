@@ -150,6 +150,7 @@ class UserFeedItemTest(TestCase):
         user_feed_item = UserFeedItem()
         user_feed_item.user = user
         user_feed_item.item = item
+        user_feed_item.feed = feed
         user_feed_item.save()
 
         self.assertEqual(user.feeditems.count(), 1)

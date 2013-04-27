@@ -36,10 +36,11 @@ class UserFeedItem(models.Model):
     class Meta:
         unique_together = ('user', 'item',)
         index_together = [
-            ['user', 'read', 'item'],
+            ['user', 'feed', 'read', 'item'],
         ]
 
     item = models.ForeignKey('FeedItem', related_name='userfeeditems')
+    feed = models.ForeignKey('Feed', related_name='feeditems')
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, related_name='userfeeditems')
 
@@ -91,6 +92,7 @@ class Feed(models.Model):
             user_item = UserFeedItem()
             user_item.item = item
             user_item.user = subscriber
+            user_item.feed = self
             user_item.save()
 
     def userfeed(self, user):
@@ -187,6 +189,7 @@ class Feed(models.Model):
                 user_item = UserFeedItem()
                 user_item.user = user
                 user_item.item = item
+                user_item.feed = self
                 user_item.save()
 
     # Currently unused RSS (optional) properties:

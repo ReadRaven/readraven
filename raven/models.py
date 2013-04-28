@@ -18,6 +18,13 @@ User = get_user_model()
 # Feeds and FeedItems, such as tags and read state.
 class UserFeed(models.Model):
     '''A model for user metadata on a feed.'''
+
+    class Meta:
+        unique_together = ('user', 'feed')
+        index_together = [
+            ['user', 'feed'],
+        ]
+
     feed = models.ForeignKey('Feed', related_name='userfeeds')
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, related_name='userfeeds')
@@ -27,9 +34,13 @@ class UserFeedItem(models.Model):
     '''A model for user metadata on a post.'''
 
     class Meta:
-        unique_together = ('item', 'user',)
+        unique_together = ('user', 'item',)
+        index_together = [
+            ['user', 'feed', 'read', 'item'],
+        ]
 
     item = models.ForeignKey('FeedItem', related_name='userfeeditems')
+    feed = models.ForeignKey('Feed', related_name='feeditems')
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, related_name='userfeeditems')
 
@@ -81,6 +92,7 @@ class Feed(models.Model):
             user_item = UserFeedItem()
             user_item.item = item
             user_item.user = subscriber
+            user_item.feed = self
             user_item.save()
 
     def userfeed(self, user):
@@ -177,6 +189,7 @@ class Feed(models.Model):
                 user_item = UserFeedItem()
                 user_item.user = user
                 user_item.item = item
+                user_item.feed = self
                 user_item.save()
 
     # Currently unused RSS (optional) properties:
@@ -236,7 +249,7 @@ class FeedItem(models.Model):
 
     # Optional metadata
     guid = models.CharField(max_length=500)
-    published = models.DateTimeField()
+    published = models.DateTimeField(db_index=True)
 
     def userfeeditem(self, user):
         userfeeditem = UserFeedItem.objects.get(

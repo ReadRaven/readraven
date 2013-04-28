@@ -290,6 +290,7 @@ User.feeds = feeds
 @property
 def feeditems(self):
     userfeeditems = UserFeedItem.objects.filter(user=self)
-    feeditems = FeedItem.objects.filter(userfeeditems__in=userfeeditems).order_by('published')
+    feeditems = FeedItem.objects.filter(
+        userfeeditems__in=userfeeditems).order_by('published')
     return feeditems
 User.feeditems = feeditems

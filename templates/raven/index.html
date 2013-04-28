@@ -6,20 +6,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link media="screen" rel="stylesheet" href="{% static 'css/bootstrap.css' %}" />
     <link media="screen" rel="stylesheet" href="{% static 'css/style.css' %}" />
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300,600' rel='stylesheet' type='text/css'>
   </head>
   <body id="index">
     <div class="page-wrapper">
       <div class="container-fluid">
         <div class="row">
-          <div class="span8">
-            <h1>Google Reader is shutting down July 1st.</h1>
-            <p>Your news. Your way. $5. Evermore.</p>
-            <p>(ReadRaven logo)</p>
+          <div class="span9">
+            <h1>Welcome to Readraven</h1>
           </div>
-          <div class="span3">
-            <div class="googleauth">
-              <a class="googleauth button" href="{% url 'usher.views.index' %}"></a>
-            </div>
+        </div>
+        <div class="row">
+          <div class="span5">
+            <p>Google Reader is shutting down July 1.</p>
+            <hr>
+            <p>Readraven has a 100% perfect importer for your Google Reader
+            feeds. Import now before it's too late.</p>
+            <hr>
+            <p>$5 a month. For evermore.</p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="span3 offset9">
+            <a href="{% url 'usher.views.sign_up' %}"><button class="btn btn-large btn-primary" type="button">Sign Up</button></a>
+            &nbsp; or &nbsp;
+            <a href="{% url 'raven.views.home' %}">login</a>
           </div>
         </div>
       </div>

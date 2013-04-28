@@ -1,4 +1,5 @@
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 
 from oauth2client.django_orm import FlowField, CredentialsField
@@ -62,3 +63,20 @@ class User(AbstractBaseUser):
 
     def subscribe(self, feed):
         feed.add_subscriber(self)
+
+    def is_customer(self):
+        try:
+            customer = self.customer
+            if customer.stripe_customer.get('deleted'):
+                customer.purge()
+                return False
+            try:
+                current_plan = self.customer.current_subscription.plan
+                return True
+            # XXX: should be CurrentSubscription.DoesNotExist:
+            except:
+                return False
+        except ObjectDoesNotExist:
+            return False
+
+        return False

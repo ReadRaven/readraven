@@ -9,8 +9,12 @@ body#index {
     -webkit-background-size: cover;
     -moz-background-size: cover;
     background-size: cover;
-    font-family: 'Special Elite', cursive;
+    font-family: 'Open Sans';
+    font-size: 16px;
 }
+    body#index h1 {
+        font-family: 'Special Elite';
+    }
     body#index div.page-wrapper {
         position: static;
         left: -2px;

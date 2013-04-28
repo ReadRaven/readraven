@@ -15,6 +15,8 @@ ADMINS = (
 MANAGERS = ADMINS
 
 AUTH_USER_MODEL = 'usher.User'
+LOGIN_URL = '/usher/sign_in'
+
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
@@ -98,8 +100,6 @@ MIDDLEWARE_CLASSES = (
 
 ROOT_URLCONF = 'raven.urls'
 
-LOGIN_URL = '/usher'
-
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'raven.wsgi.application'
 
@@ -122,10 +122,26 @@ INSTALLED_APPS = (
     'djangosecure',
     'djcelery',
     #'south',
+    'payments',
 
     'raven',
     'usher',
 )
+
+# django-stripe-payments
+STRIPE_PUBLIC_KEY = os.environ['STRIPE_PUBLIC_KEY']
+STRIPE_SECRET_KEY = os.environ['STRIPE_SECRET_KEY']
+
+PAYMENTS_PLANS = {
+    "monthly": {
+        "stripe_plan_id": "raven-monthly",
+        "name": "raven-monthly",
+        "description": "The monthly subscription plan",
+        "price": 5,
+        "currency": "usd",
+        "interval": "month"
+    },
+}
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to

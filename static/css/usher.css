@@ -8,7 +8,7 @@ body#index {
     -webkit-background-size: cover;
     -moz-background-size: cover;
     background-size: cover;
-    font-family: Helvetica;
+    font-family: 'Open Sans';
 }
     body#index h1 {
         font-family: 'Special Elite', cursive;

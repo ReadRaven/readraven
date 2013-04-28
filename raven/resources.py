@@ -11,7 +11,7 @@ from raven import models
 class FeedResource(ModelResource):
     '''A resource representing Feeds.'''
     class Meta:
-        allowed_methods = ('get',)
+        allowed_methods = ('get', 'post', 'delete',)
         authentication = SessionAuthentication()
         default_format = 'application/json'
         fields = ['description', 'title', 'link']
@@ -26,19 +26,6 @@ class FeedResource(ModelResource):
         bundle.obj.userfeed(bundle.request.user)
         return bundle.obj
 
-
-class UserFeedResource(ModelResource):
-    '''A resource representing UserFeeds (subscriptions).'''
-    link = fields.CharField(attribute='link', null=True)
-
-    class Meta:
-        #allowed_methods = ('delete', 'post',)
-        authentication = SessionAuthentication()
-        default_format = 'application/json'
-        fields = ['link', ]
-        queryset = models.UserFeed.objects.all()
-        resource_name = 'subscription'
-
     def obj_create(self, bundle=None, **kwargs):
         data = json.loads(bundle.request.body)
         try:
@@ -47,16 +34,13 @@ class UserFeedResource(ModelResource):
             feed = models.Feed(link=data['link'])
             feed.save()
         feed.add_subscriber(bundle.request.user)
-        return
 
     def obj_delete(self, bundle=None, **kwargs):
-        raise
-
-    def obj_delete_list(self, bundle=None, **kwargs):
-        data = json.loads(bundle.request.body)
-        feed = models.Feed.objects.get(link=data['link'])
-        userfeed = feed.userfeed(bundle.request.user)
-        userfeed.delete()
+        try:
+            feed = models.Feed.objects.get(pk=kwargs['pk'])
+        except ObjectDoesNotExist:
+            return
+        feed.remove_subscriber(bundle.request.user)
 
 
 class FeedItemResource(ModelResource):

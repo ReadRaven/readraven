@@ -99,6 +99,14 @@ class Feed(models.Model):
             user_item.feed = self
             user_item.save()
 
+    def remove_subscriber(self, subscriber):
+        '''Remove a subscriber from the feed.
+
+        Also remove all UserFeedItems.
+        '''
+        UserFeedItem.objects.filter(user=subscriber, feed=self).delete()
+        UserFeed.objects.filter(feed=self, user=subscriber).delete()
+
     def userfeed(self, user):
         userfeed = UserFeed.objects.get(user=user, feed=self)
         return userfeed

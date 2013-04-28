@@ -5,12 +5,12 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.test.utils import override_settings
 
-from raven.models import Feed, FeedItem, UserFeedItem
+from raven.models import Feed, FeedItem, UserFeed, UserFeedItem
 from raven.test_utils import network_available
 
 User = get_user_model()
 
-__all__ = ['FeedTest', 'FeedItemTest', 'UserFeedItemTest']
+__all__ = ['FeedTest', 'FeedItemTest', 'UserFeedTest', 'UserFeedItemTest']
 
 
 class FeedTest(TestCase):
@@ -93,6 +93,90 @@ class FeedTest(TestCase):
         self.assertTrue(feed.description.startswith('Bike rider'))
 
 
+class UserFeedTest(TestCase):
+    '''Test the UserFeed model.'''
+
+    def setUp(self):
+        self.user = User()
+        self.email = 'edgar@poe.com'
+        self.user.save()
+
+    def test_basics(self):
+        bob = User()
+        bob.email = 'Bob'
+        bob.save()
+        steve = User()
+        steve.email = 'Steve'
+        steve.save()
+
+        feed = Feed()
+        feed.title = 'Some Political Bullshit'
+        feed.save()
+
+        other_feed = Feed()
+        other_feed.title = 'Mom\'s recipe blog'
+        other_feed.save()
+
+        user_feed = UserFeed()
+        user_feed.user = bob
+        user_feed.feed = feed
+        user_feed.save()
+
+        user_feed2 = UserFeed()
+        user_feed2.user = steve
+        user_feed2.feed = feed
+        user_feed2.save()
+
+        user_feed3 = UserFeed()
+        user_feed3.user = steve
+        user_feed3.feed = other_feed
+        user_feed3.save()
+
+        self.assertEqual(feed.subscribers.count(), 2)
+        self.assertEqual(other_feed.subscribers.count(), 1)
+
+        feeds_for_steve = UserFeed.objects.filter(user=steve)
+        self.assertEqual(len(feeds_for_steve), 2)
+
+    def test_tagging(self):
+        bob = User()
+        bob.email = 'Bob'
+        bob.save()
+
+        feed = Feed()
+        feed.title = 'Some Political Bullshit'
+        feed.save()
+        feed.add_subscriber(bob)
+
+        other_feed = Feed()
+        other_feed.title = 'Mom\'s recipe blog'
+        other_feed.save()
+        other_feed.add_subscriber(bob)
+
+        userfeed = UserFeed.objects.get(user=bob, feed=feed)
+        userfeed.tags.add('politics', 'mom')
+
+        userfeed2 = UserFeed.objects.get(user=bob, feed=other_feed)
+        userfeed2.tags.add('mom', 'food')
+
+        self.assertIn('mom', [tag.name for tag in userfeed.tags.all()])
+        self.assertIn('politics', [tag.name for tag in userfeed.tags.all()])
+        self.assertNotIn('food', [tag.name for tag in userfeed.tags.all()])
+
+        tagged = UserFeed.objects.filter(tags__name__in=['mom'])
+        self.assertEquals(len(tagged), 2)
+
+        userfeed.tags.set("test")
+        self.assertEquals(len(userfeed.tags.all()), 1)
+        self.assertNotIn('mom', [tag.name for tag in userfeed.tags.all()])
+
+        # API claims we can do this safely without raising an exception
+        userfeed.tags.remove('mom')
+
+        userfeed.tags.clear()
+        self.assertEquals(len(userfeed.tags.all()), 0)
+
+
 class FeedItemTest(TestCase):
     '''Tests for the FeedItem model.'''
 
@@ -154,3 +238,54 @@ class UserFeedItemTest(TestCase):
         user_feed_item.save()
 
         self.assertEqual(user.feeditems.count(), 1)
+
+    def test_tagging(self):
+        user = User()
+        user.email = 'Bob'
+        user.save()
+
+        feed = Feed()
+        feed.title = 'BoingBoing'
+        feed.save()
+
+        item = FeedItem()
+        item.title = 'Octopus v. Platypus'
+        item.description = 'A fight to the death.'
+        item.link = item.guid = 'http://www.example.com/rss/post'
+        item.published = datetime.now()
+        item.feed = feed
+        item.save()
+
+        item2 = FeedItem()
+        item2.title = 'Cute bunny rabbit video'
+        item2.description = 'They die at the end.'
+        item2.link = item.guid = 'http://www.example.com/rss/post'
+        item2.published = datetime.now()
+        item2.feed = feed
+        item2.save()
+
+        feed.add_subscriber(user)
+
+        userfeeditem = UserFeedItem.objects.get(user=user, item=item)
+        userfeeditem.tags.add("cute", "platypus")
+
+        userfeeditem2 = UserFeedItem.objects.get(user=user, item=item2)
+        userfeeditem2.tags.add("bunny", "cute")
+
+        self.assertIn('cute', [tag.name for tag in userfeeditem.tags.all()])
+        self.assertIn('platypus', [tag.name for tag in userfeeditem.tags.all()])
+        self.assertNotIn('bunny', [tag.name for tag in userfeeditem.tags.all()])
+
+        tagged = UserFeedItem.objects.filter(tags__name__in=['cute'])
+
+        self.assertEquals(len(tagged), 2)
+
+        userfeeditem.tags.set("test")
+        self.assertEquals(len(userfeeditem.tags.all()), 1)
+        self.assertNotIn('cute', [tag.name for tag in userfeeditem.tags.all()])
+
+        # API claims we can do this safely without raising an exception
+        userfeeditem.tags.remove('cute')
+
+        userfeeditem.tags.clear()
+        self.assertEquals(len(userfeeditem.tags.all()), 0)

@@ -123,6 +123,7 @@ INSTALLED_APPS = (
     'djcelery',
     #'south',
     'payments',
+    'taggit',
 
     'raven',
     'usher',

@@ -6,6 +6,8 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
 
+from taggit.managers import TaggableManager
+
 import feedparser
 
 logger = logging.getLogger('django')
@@ -28,6 +30,7 @@ class UserFeed(models.Model):
     feed = models.ForeignKey('Feed', related_name='userfeeds')
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, related_name='userfeeds')
+    tags = TaggableManager()
 
 
 class UserFeedItem(models.Model):
@@ -45,6 +48,7 @@ class UserFeedItem(models.Model):
         settings.AUTH_USER_MODEL, related_name='userfeeditems')
 
     read = models.BooleanField(default=False)
+    tags = TaggableManager()
 
 
 class FeedManager(models.Manager):

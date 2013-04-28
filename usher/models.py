@@ -3,6 +3,10 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 
 from oauth2client.django_orm import FlowField, CredentialsField
+from south.modelsinspector import add_introspection_rules
+
+add_introspection_rules([], ["^oauth2client\.django_orm\.FlowField"])
+add_introspection_rules([], ["^oauth2client\.django_orm\.CredentialsField"])
 
 
 class UserManager(BaseUserManager):

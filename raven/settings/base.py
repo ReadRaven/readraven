@@ -121,7 +121,7 @@ INSTALLED_APPS = (
 
     'djangosecure',
     'djcelery',
-    #'south',
+    'south',
     'payments',
     'taggit',
 

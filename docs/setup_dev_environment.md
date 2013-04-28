@@ -24,3 +24,14 @@ hook up readraven to postgres
 	createdb readraven
 	echo "CREATE USER readraven WITH ENCRYPTED PASSWORD 'readraven';" | psql -U postgres
 	echo "ALTER USER readraven WITH CREATEDB CREATEUSER;" | psql -U postgres
+
+
+south migrations
+================
+There is a dependency between usher and raven, and we should always
+migrate the usher app before migrating the raven app.
+
+        python manage.py schemamigration usher --auto
+        python manage.py schemamigration raven --auto
+        python manage.py migrate usher
+        python manage.py migrate raven

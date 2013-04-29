@@ -17,7 +17,7 @@ SECURE_FILE = os.path.join(THIS_DIR, '..', '..', 'secure')
 User = get_user_model()
 
 __all__ = [
-    'UpdateFeedTaskTest', 'ImportOPMLTaskTest', 'ImportFromReaderAPITaskTest']
+    'UpdateFeedTaskTest', 'ImportOPMLTaskTest', 'SyncFromReaderAPITaskTest']
 
 
 class UpdateFeedTaskTest(TestCase):
@@ -77,8 +77,8 @@ class ImportOPMLTaskTest(TestCase):
         self.assertEqual(owner.feeds.count(), total_feeds-1)
 
 
-class ImportFromReaderAPITaskTest(TestCase):
-    '''Test ImportFromReaderAPITask.'''
+class SyncFromReaderAPITaskTest(TestCase):
+    '''Test SyncFromReaderAPITask.'''
 
     @unittest.skipUnless(network_available(), 'Network unavailable')
     @unittest.skipUnless(os.path.exists(SECURE_FILE), 'password unavailable')
@@ -100,7 +100,7 @@ class ImportFromReaderAPITaskTest(TestCase):
         other_feed.save()
         other_owner.subscribe(other_feed)
 
-        task = tasks.ImportFromReaderAPITask()
+        task = tasks.SyncFromReaderAPITask()
         result = task.delay(owner, 'alex@chizang.net', secure)
 
         self.assertTrue(result.successful())

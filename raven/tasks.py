@@ -3,7 +3,7 @@ import os
 import zipfile
 
 from celery.task import Task, PeriodicTask
-import libgreader
+from libgreader import ClientAuthMethod, OAuth2Method, GoogleReader
 import opml
 
 from raven.models import Feed
@@ -49,13 +49,21 @@ class ImportOPMLTask(Task):
             return False
 
 
-class ImportFromReaderAPITask(Task):
-    '''A task for importing feeds from a Google Reader-compatible API.'''
+class SyncFromReaderAPITask(Task):
+    '''A task for sync'ing data from a Google Reader-compatible API.'''
 
-    def run(self, user, username, passwd, *args, **kwargs):
-        # TODO: we should support the more complex auth methods
-        auth = libgreader.ClientAuthMethod(username, passwd)
-        reader = libgreader.GoogleReader(auth)
+    def run(self, user, *args, **kwargs):
+        # user.credential should always be valid when doing oauth2
+        if user.credential:
+            credential = user.credential
+            auth = OAuth2Method(credential.client_id, credential.client_secret)
+            auth.authFromAccessToken(credential.access_token)
+            auth.setActionToken()
+        # username/password auth method, should only be used by our tests
+        elif len(args) == 2:
+            auth = ClientAuthMethod(args[0], args[1])
+
+        reader = GoogleReader(auth)
 
         if not reader.buildSubscriptionList():
             # XXX: better error recovery here?

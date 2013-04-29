@@ -39,6 +39,8 @@ class User(AbstractBaseUser):
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
 
+    sync_task_id = models.CharField(max_length=255, unique=True, null=True)
+
     objects = UserManager()
 
     USERNAME_FIELD = 'email'

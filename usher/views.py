@@ -11,6 +11,7 @@ from oauth2client.client import flow_from_clientsecrets
 
 import stripe
 from payments.models import Customer
+from raven import tasks
 
 
 User = get_user_model()
@@ -58,6 +59,11 @@ def sign_up(request):
     else:
         if request.user.is_customer():
             return HttpResponseRedirect("/")
+
+    task = tasks.SyncFromReaderAPITask()
+    result = task.delay(request.user)
+    request.user.sync_task_id = result.task_id
+    request.user.save()
 
     return render_to_response(
         'usher/sign_up.html',

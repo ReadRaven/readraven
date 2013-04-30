@@ -177,11 +177,7 @@ LOGGING = {
 import djcelery
 djcelery.setup_loader()
 
-BROKER_HOST = 'localhost'
-BROKER_PORT = 5672
-BROKER_USER = 'readraven'
-BROKER_PASSWORD = 'readraven'
-BROKER_VHOST = 'readraven'
+BROKER_URL = 'amqp://readraven:readraven@localhost:5672/readraven'
 
 # Use this for testing celery tasks
 TEST_RUNNER = 'djcelery.contrib.test_runner.CeleryTestSuiteRunner'

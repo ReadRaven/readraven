@@ -31,12 +31,14 @@ class FeedTest(TestCase):
 
         feed = Feed()
         feed.title = 'Some Political Bullshit'
+        feed.link = 'http://bs.com'
         feed.save()
         feed.add_subscriber(bob)
         feed.add_subscriber(steve)
 
         other_feed = Feed()
         other_feed.title = 'Mom\'s recipe blog'
+        other_feed.link = 'http://yourmom.com'
         other_feed.save()
         other_feed.add_subscriber(steve)
 
@@ -50,6 +52,7 @@ class FeedTest(TestCase):
 
         feed = Feed()
         feed.title = 'BoingBoing'
+        feed.link = 'http://boingboing.net'
         feed.save()
 
         item = FeedItem()
@@ -71,6 +74,25 @@ class FeedTest(TestCase):
         feed.add_subscriber(user)
 
         self.assertEqual(feed.subscribers.count(), 1)
+
+    def test_duplicates(self):
+        '''Ensure that we can't create duplicate feeds using create_basic()'''
+        user = User()
+        user.email = 'Bob'
+        user.save()
+
+        feed = Feed()
+        feed.title = 'BoingBoing'
+        feed.link = 'http://boingboing.net'
+        f = Feed.create_basic(feed.title, feed.link, user)
+
+        feed2 = Feed()
+        feed2.title = 'BoingBoing'
+        feed2.link = 'http://boingboing.net'
+        # XXX: TODO: we need to add/test duplicate checks save() too :(
+        f2 = Feed.create_basic(feed2.title, feed2.link, user)
+
+        self.assertEqual(f.pk, f2.pk)
 
     @unittest.skipUnless(network_available(), 'Network unavailable')
     @override_settings(CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
@@ -111,10 +133,12 @@ class UserFeedTest(TestCase):
 
         feed = Feed()
         feed.title = 'Some Political Bullshit'
+        feed.link = 'http://bs.com'
         feed.save()
 
         other_feed = Feed()
         other_feed.title = 'Mom\'s recipe blog'
+        other_feed.link = 'http://yourmom.com'
         other_feed.save()
 
         user_feed = UserFeed()
@@ -145,11 +169,13 @@ class UserFeedTest(TestCase):
 
         feed = Feed()
         feed.title = 'Some Political Bullshit'
+        feed.link = 'http://bs.com'
         feed.save()
         feed.add_subscriber(bob)
 
         other_feed = Feed()
         other_feed.title = 'Mom\'s recipe blog'
+        other_feed.link = 'http://yourmom.com'
         other_feed.save()
         other_feed.add_subscriber(bob)
 
@@ -216,6 +242,7 @@ class UserFeedItemTest(TestCase):
     def test_basics(self):
         feed = Feed()
         feed.title = 'BoingBoing'
+        feed.link = 'http://boingboing.net'
         feed.save()
 
         item = FeedItem()
@@ -246,6 +273,7 @@ class UserFeedItemTest(TestCase):
 
         feed = Feed()
         feed.title = 'BoingBoing'
+        feed.link = 'http://boingboing.net'
         feed.save()
 
         item = FeedItem()

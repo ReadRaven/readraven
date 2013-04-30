@@ -5,6 +5,7 @@ import time
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.core.exceptions import ValidationError
 
 from taggit.managers import TaggableManager
 
@@ -69,7 +70,7 @@ class Feed(models.Model):
 
     # Required properties
     description = models.TextField()
-    link = models.URLField(max_length=500)
+    link = models.URLField(max_length=500, unique=True)
     title = models.CharField(max_length=200)
 
     # Optional metadata
@@ -108,11 +109,16 @@ class Feed(models.Model):
         feed = Class()
         feed.title = title
         feed.link = link
-        feed.save()  # Save so that Feed has a key
 
-        feed.add_subscriber(subscriber)
-
-        return feed
+        try:
+            feed.validate_unique()
+        except ValidationError:
+            feed = Feed.objects.get(link=link)
+        else:
+            feed.save()  # Save so that Feed has a key
+            feed.add_subscriber(subscriber)
+        finally:
+            return feed
 
     @classmethod
     def create_from_url(Class, url, subscriber):

@@ -111,7 +111,6 @@ class Feed(models.Model):
         feed.save()  # Save so that Feed has a key
 
         feed.add_subscriber(subscriber)
-        feed.save()
 
         return feed
 

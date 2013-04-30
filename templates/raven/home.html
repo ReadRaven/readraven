@@ -52,6 +52,8 @@
   <script src="{% static 'js/jquery-1.9.1.js' %}"></script>
   <script src="{% static 'js/ember-1.0.0-rc.2.js' %}"></script>
   <script src="{% static 'js/ember-data-latest.js' %}"></script>
+  <script src="{% static 'js/tastypie_serializer.js' %}"></script>
+  <script src="{% static 'js/tastypie_adapter.js' %}"></script>
   <script src="{% static 'js/raven.js' %}"></script>
   {% handlebars %}
   <script type="text/x-handlebars">
@@ -66,9 +68,8 @@
           <a class="brand" href="#">ReadRaven</a>
           <div class="nav-collapse collapse">
             <p class="navbar-text pull-right">
-            {{ user.email }} |
 {% endhandlebars %}
-            <a href="{% url 'django.contrib.auth.views.logout' %}">Log out</a>
+            {{ user.email }} | <a href="{% url 'django.contrib.auth.views.logout' %}">Log out</a>
 {% handlebars %}
             </p>
             <ul class="nav">

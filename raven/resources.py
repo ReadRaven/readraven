@@ -12,6 +12,7 @@ class FeedResource(ModelResource):
     '''A resource representing Feeds.'''
     class Meta:
         allowed_methods = ('get', 'post', 'delete',)
+        always_return_data = True
         authentication = SessionAuthentication()
         default_format = 'application/json'
         fields = ['description', 'title', 'link']
@@ -47,6 +48,7 @@ class FeedItemResource(ModelResource):
     '''A resource representing FeedItems.'''
     class Meta:
         allowed_methods = ('get', 'put',)
+        always_return_data = True
         authentication = SessionAuthentication()
         default_format = 'application/json'
         fields = ['description', 'link', 'published', 'title']

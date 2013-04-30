@@ -124,7 +124,6 @@ class Feed(models.Model):
         feed.add_subscriber(subscriber)
         feed.save()
 
-        feed.update(data)
         return feed
 
     def save(self, *args, **kwargs):

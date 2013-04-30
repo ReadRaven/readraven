@@ -106,7 +106,7 @@ class ImportFromReaderAPITaskTest(TestCase):
         self.assertTrue(result.successful())
 
         feeds = Feed.objects.all()
-        self.assertEqual(feeds.count(), 83)
+        self.assertEqual(feeds.count(), 123)
 
         total_feeds = Feed.objects.all().count()
         owner = User.objects.get(pk=owner.pk)

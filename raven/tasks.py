@@ -62,7 +62,7 @@ class ImportFromReaderAPITask(Task):
             return False
 
         for f in reader.feeds:
-            Feed.create_from_url(f.feedUrl, user)
+            Feed.create_basic(f.title, f.feedUrl, user)
 
         # TODO: here, we should suck in all the other metadata
 

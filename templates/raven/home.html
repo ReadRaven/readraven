@@ -51,10 +51,18 @@
   <script src="{% static 'js/handlebars-1.0.0-rc.3.js' %}"></script>
   <script src="{% static 'js/jquery-1.9.1.js' %}"></script>
   <script src="{% static 'js/ember-1.0.0-rc.2.js' %}"></script>
+  {% comment %}
+  Latest ember is disabled because it's currently incompatible with
+  the tastypie serializer's pagination code.
   <script src="{% static 'js/ember-data-latest.js' %}"></script>
+  {% endcomment %}
+  <script src="{% static 'js/ember-data.js' %}"></script>
   <script src="{% static 'js/tastypie_serializer.js' %}"></script>
   <script src="{% static 'js/tastypie_adapter.js' %}"></script>
+  <script src="{% static 'js/csrftoken.js' %}"></script>
   <script src="{% static 'js/raven.js' %}"></script>
+  <script>
+  </script>
   {% handlebars %}
   <script type="text/x-handlebars">
     <div class="navbar navbar-inverse navbar-fixed-top">

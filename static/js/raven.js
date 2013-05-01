@@ -30,6 +30,11 @@ App.Router.map(function() {
 });
 
 App.ApplicationRoute = Ember.Route.extend({
+    setupController: function(controller) {
+    }
+});
+
+App.IndexRoute = Ember.Route.extend({
     events: {
         addFeed: function(url) {
             var urlregex = new RegExp(
@@ -38,17 +43,13 @@ App.ApplicationRoute = Ember.Route.extend({
                 var feed = App.Feed.createRecord({
                     link: url
                 });
+                feed.get('transaction').commit()
             } else {
                 // TODO: handle the error
                 console.log('not a url');
             }
         }
     },
-    setupController: function(controller) {
-    }
-});
-
-App.IndexRoute = Ember.Route.extend({
     setupController: function(controller) {
         controller.set('feeds', App.Feed.find());
         controller.set('feeditems', App.Item.find());

@@ -3,6 +3,7 @@ import json
 from django.core.exceptions import ObjectDoesNotExist
 from tastypie import fields
 from tastypie.authentication import SessionAuthentication
+from tastypie.authorization import Authorization
 from tastypie.resources import ModelResource
 
 from raven import models
@@ -14,6 +15,7 @@ class FeedResource(ModelResource):
         allowed_methods = ('get', 'post', 'delete',)
         always_return_data = True
         authentication = SessionAuthentication()
+        authorization = Authorization()
         default_format = 'application/json'
         fields = ['description', 'title', 'link']
         queryset = models.Feed.objects.all()
@@ -34,7 +36,12 @@ class FeedResource(ModelResource):
         except ObjectDoesNotExist:
             feed = models.Feed(link=data['link'])
             feed.save()
+            feed.update()
         feed.add_subscriber(bundle.request.user)
+
+        bundle.obj = feed
+
+        return bundle
 
     def obj_delete(self, bundle=None, **kwargs):
         try:
@@ -50,6 +57,7 @@ class FeedItemResource(ModelResource):
         allowed_methods = ('get', 'put',)
         always_return_data = True
         authentication = SessionAuthentication()
+        authorization = Authorization()
         default_format = 'application/json'
         fields = ['description', 'link', 'published', 'title']
         queryset = models.FeedItem.objects.all()

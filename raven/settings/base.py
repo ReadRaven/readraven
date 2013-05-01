@@ -176,7 +176,6 @@ LOGGING = {
 # RabbitMQ/Celery settings
 import djcelery
 djcelery.setup_loader()
-
 BROKER_URL = 'amqp://readraven:readraven@localhost:5672/readraven'
 
 # Use this for testing celery tasks

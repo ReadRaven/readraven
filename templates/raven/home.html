@@ -15,6 +15,18 @@
       body {
         padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
       }
+      div.feeditem {
+        margin: 0 5px 15px 5px;
+        border: 3px solid #ddd;
+        padding: 5px 15px;
+        border-radius: 15px;
+      }
+      div.feeditem div.subtitle {
+        margin-top: -20px;
+        margin-bottom: 10px;
+        font-size: 90%;
+        font-weight: bold;
+      }
     </style>
     <link href="{% static 'css/bootstrap-responsive.css' %}" rel="stylesheet">
 
@@ -39,7 +51,18 @@
   <script src="{% static 'js/handlebars-1.0.0-rc.3.js' %}"></script>
   <script src="{% static 'js/jquery-1.9.1.js' %}"></script>
   <script src="{% static 'js/ember-1.0.0-rc.2.js' %}"></script>
+  {% comment %}
+  Latest ember is disabled because it's currently incompatible with
+  the tastypie serializer's pagination code.
+  <script src="{% static 'js/ember-data-latest.js' %}"></script>
+  {% endcomment %}
+  <script src="{% static 'js/ember-data.js' %}"></script>
+  <script src="{% static 'js/tastypie_serializer.js' %}"></script>
+  <script src="{% static 'js/tastypie_adapter.js' %}"></script>
+  <script src="{% static 'js/csrftoken.js' %}"></script>
   <script src="{% static 'js/raven.js' %}"></script>
+  <script>
+  </script>
   {% handlebars %}
   <script type="text/x-handlebars">
     <div class="navbar navbar-inverse navbar-fixed-top">
@@ -53,9 +76,8 @@
           <a class="brand" href="#">ReadRaven</a>
           <div class="nav-collapse collapse">
             <p class="navbar-text pull-right">
-            {{ email }} |
 {% endhandlebars %}
-            <a href="{% url 'django.contrib.auth.views.logout' %}">Log out</a>
+            {{ user.email }} | <a href="{% url 'django.contrib.auth.views.logout' %}">Log out</a>
 {% handlebars %}
             </p>
             <ul class="nav">
@@ -71,18 +93,42 @@
     </div>
   </script>
   <script type="text/x-handlebars" id="index">
-    <div class="row">
-      <div class="span3">
-        <h3>Feeds</h3>
-        <ul>
-        {{#each model}}
-          <li>{{ title }}</li>
-        {{/each}}
+    <div class="row-fluid">
+      <div class="span3 column">
+{% endhandlebars %}
+{% comment %}
+        We should really have search, but holy shit that's a lot of work.
+        <form class="form-search">
+          <input type="text" class="input-medium search-query" />
+          <button type="submit" class="btn">Search</button>
+        </form>
+{% endcomment %}
+{% handlebars %}
+        <form class="form-search">
+          <input type="text" class="input-medium" id="add-feed"/>
+          {{view App.AddFeedView}}
+        </form>
+        <ul class="unstyled">
+          {{#each feeds}}
+          <li>{{repr}}</li>
+          {{/each}}
         </ul>
       </div>
 
-      <div class="span9">
-        <h3>Posts</h3>
+      <div class="span9 column">
+        {{#each feeditems}}
+        <div class="row">
+          <div class="feeditem">
+            <h3>{{ title }}</h3>
+            <div class="subtitle">
+              from <a href="#">{{ feed.title }}</a>
+            </div>
+            <div class="content">
+              {{{ description }}}
+            </div>
+          </div>
+        </div>
+        {{/each}}
       </div>
     </div>
   </script>

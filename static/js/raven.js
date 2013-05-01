@@ -1,14 +1,27 @@
 App = Ember.Application.create();
 
-App.User = Ember.Object.extend({
-    fullName: '',
-    email: '',
+App.store = DS.Store.create({
+    revision: 12,
+    adapter: DS.DjangoTastypieAdapter.extend({
+      namespace: 'api/0.9'
+    })
 });
 
-App.Post = Ember.Object.extend({
-    title: '',
-    description: '',
-    published: ''
+App.Feed = DS.Model.extend({
+    title: DS.attr('string'),
+    link: DS.attr('string'),
+    description: DS.attr('string'),
+    items: DS.hasMany('App.FeedItem'),
+    repr: function() {
+        return this.get('title') || this.get('link');
+    }.property()
+});
+
+App.Item = DS.Model.extend({
+    title: DS.attr('string'),
+    description: DS.attr('string'),
+    feed: DS.belongsTo('App.Feed'),
+    published: DS.attr('string')
 });
 
 App.Router.map(function() {
@@ -17,21 +30,39 @@ App.Router.map(function() {
 });
 
 App.ApplicationRoute = Ember.Route.extend({
-    model: function() {
-        return App.User.create({
-            email: 'paul@eventuallyanyway.com'
-        });
+    setupController: function(controller) {
     }
 });
 
 App.IndexRoute = Ember.Route.extend({
-    model: function() {
-        return [{
-            title: 'Title 1',
-            description: 'This is the description for the first post.'
-        }, {
-            title: 'Post Numbah 2',
-            description: 'The second post has a different description'
-        }];
+    events: {
+        addFeed: function(url) {
+            var urlregex = new RegExp(
+                "^(http:\/\/|https:\/\/|ftp:\/\/){1}([0-9A-Za-z]+\.)");
+            if (urlregex.test(url)) {
+                var feed = App.Feed.createRecord({
+                    link: url
+                });
+                feed.get('transaction').commit()
+            } else {
+                // TODO: handle the error
+                console.log('not a url');
+            }
+        }
+    },
+    setupController: function(controller) {
+        controller.set('feeds', App.Feed.find());
+        controller.set('feeditems', App.Item.find());
     }
+});
+
+App.AddFeedView = Ember.View.extend({
+    classNames: ['btn'],
+    click: function(e) {
+        e.preventDefault();
+        this.get('controller').send('addFeed', $('#add-feed').val());
+        $('#add-feed').val('');
+    },
+    tagName: 'button',
+    template: Ember.Handlebars.compile('Add Feed')
 });

@@ -33,5 +33,15 @@ migrate the usher app before migrating the raven app.
 
         python manage.py schemamigration usher --auto
         python manage.py schemamigration raven --auto
+        python manage.py migrate taggit
+        python manage.py migrate djcelery
         python manage.py migrate usher
         python manage.py migrate raven
+
+
+rabbitmq
+========
+$ sudo apt-get install rabbitmq-server
+$ sudo rabbitmqctl add_user readraven readraven
+$ sudo rabbitmqctl add_vhost /readraven
+$ sudo rabbitmqctl set_permissions -p /readraven readraven ".*" ".*" ".*"

@@ -9,7 +9,7 @@ User = get_user_model()
 
 
 def index(request):
-    if request.user.is_authenticated():
+    if request.user.is_authenticated() and request.user.is_customer():
         return HttpResponseRedirect(reverse('raven.views.home'))
     return render_to_response(
         'raven/index.html',

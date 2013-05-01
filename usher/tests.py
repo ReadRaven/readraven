@@ -79,6 +79,7 @@ class UserTest(TestCase):
 
         feed = Feed()
         feed.title = 'BoingBoing'
+        feed.link = 'http://boingboing.net'
         feed.save()
 
         unused = Feed()

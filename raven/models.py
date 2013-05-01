@@ -5,6 +5,7 @@ import time
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.core.exceptions import ValidationError
 
 from taggit.managers import TaggableManager
 
@@ -69,7 +70,7 @@ class Feed(models.Model):
 
     # Required properties
     description = models.TextField()
-    link = models.URLField(max_length=500)
+    link = models.URLField(max_length=500, unique=True)
     title = models.CharField(max_length=200)
 
     # Optional metadata
@@ -104,28 +105,28 @@ class Feed(models.Model):
         return userfeed
 
     @classmethod
+    def create_basic(Class, title, link, subscriber):
+        feed = Class()
+        feed.title = title
+        feed.link = link
+
+        try:
+            feed.validate_unique()
+        except ValidationError:
+            feed = Feed.objects.get(link=link)
+        else:
+            feed.save()  # Save so that Feed has a key
+            feed.add_subscriber(subscriber)
+        finally:
+            return feed
+
+    @classmethod
     def create_from_url(Class, url, subscriber):
         data = feedparser.parse(url)
         if data.bozo is not 0 or data.status == 301:
             return None
-        feed = Class()
-        feed.title = data.feed.title
-        feed.link = data.feed.link
-        try:
-            feed.description = data.feed.description
-        except AttributeError:
-            logger.debug('Feed missing a description at %s' % data.feed.link)
-        try:
-            feed.generator = data.feed.generator
-        except AttributeError:
-            pass
-        feed.save()  # Save so that Feed has a key
 
-        feed.add_subscriber(subscriber)
-        feed.save()
-
-        feed.update(data)
-        return feed
+        return Class.create_basic(data.feed.title, data.feed.link, subscriber)
 
     def save(self, *args, **kwargs):
         is_new = False
@@ -159,14 +160,31 @@ class Feed(models.Model):
             logger.debug('Potential problem with feed id: %s' % self.pk)
             if data.bozo == 1:
                 logger.debug('Exception is %s' % data.bozo_exception)
+        try:
+            if self.generator is not data.feed.generator:
+                self.generator = data.feed.generator
+                updated = True
+        except AttributeError:
+            pass
         if updated:
             self.save()
 
         for entry in data.entries:
             item = FeedItem()
             item.feed = self
-            item.description = entry.summary
-            item.guid = entry.link
+            try:
+                item.description = entry.summary
+            except AttributeError:
+                logger.debug('Potential problem with feed id: %s' % self.pk)
+                if data.bozo == 1:
+                    logger.debug('Exception is %s' % data.bozo_exception)
+            try:
+                item.guid = entry.link
+                item.link = entry.link
+            except AttributeError:
+                logger.debug('Potential problem with feed id: %s' % self.pk)
+                if data.bozo == 1:
+                    logger.debug('Exception is %s' % data.bozo_exception)
             try:
                 if entry.published_parsed is None:
                     # In this case, there's a "date", but it's unparseable,
@@ -186,7 +204,6 @@ class Feed(models.Model):
             except AttributeError:
                 # Fuck you LiveJournal.
                 item.title = u'(none)'
-            item.link = entry.link
             item.save()
 
             for user in self.subscribers.all():

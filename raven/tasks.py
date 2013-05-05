@@ -2,11 +2,13 @@ from datetime import datetime, timedelta
 import os
 import zipfile
 
+from django.core.exceptions import ObjectDoesNotExist
+
 from celery.task import Task, PeriodicTask
 from libgreader import ClientAuthMethod, OAuth2Method, GoogleReader
 import opml
 
-from raven.models import Feed
+from raven.models import Feed, FeedItem, UserFeedItem
 
 
 class UpdateFeedTask(PeriodicTask):
@@ -69,8 +71,37 @@ class SyncFromReaderAPITask(Task):
             # XXX: better error recovery here?
             return False
 
+        feeds = {}
+        # First loop quickly creates Feed objects... for speedier UI?
         for f in reader.feeds:
-            Feed.create_basic(f.title, f.feedUrl, user)
+            feed = Feed.create_basic(f.title, f.feedUrl, user)
+            feeds[f.feedUrl] = feed
+
+        for f in reader.feeds:
+            feed = feeds[f.feedUrl]
+
+            f.loadItems(loadLimit=5)
+            for e in f.items:
+                if e.url is None:
+                    continue
+                try:
+                    item = FeedItem.objects.get(reader_guid=e.id)
+                except ObjectDoesNotExist:
+                    item = FeedItem()
+                    item.feed = feed
+                    item.title = e.title
+                    item.link = e.url
+                    item.description = e.content
+
+                    item.atom_id = ''
+                    item.reader_guid = e.id
+                    item.published = datetime.utcfromtimestamp(e.time)
+                    item.guid = item.calculate_guid()
+                    item.save()
+
+                user_item = item.userfeeditem(user)
+                user_item.read = e.read
+                user_item.save()
 
         # TODO: here, we should suck in all the other metadata
 

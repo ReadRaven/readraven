@@ -251,6 +251,10 @@ class FeedItem(models.Model):
     guid = models.CharField(max_length=128, unique=True)
     atom_id = models.CharField(max_length=500, null=True)
 
+    # Legacy google reader longform unique id
+    # https://code.google.com/p/google-reader-api/wiki/ItemId
+    reader_guid = models.CharField(max_length=48, unique=True, null=True)
+
     # Optional metadata
     published = models.DateTimeField(db_index=True)
 

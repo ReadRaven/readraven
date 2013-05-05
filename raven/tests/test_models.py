@@ -114,6 +114,49 @@ class FeedTest(TestCase):
         self.assertEqual(feed.title, 'Dapper as...')
         self.assertTrue(feed.description.startswith('Bike rider'))
 
+    @unittest.skipUnless(network_available(), 'Network unavailable')
+    @override_settings(CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
+                       CELERY_ALWAYS_EAGER=True,
+                       BROKER_BACKEND='memory',)
+    def test_malformed(self):
+        owner = User()
+        owner.email = 'Bob'
+        owner.save()
+
+        other_owner = User()
+        other_owner.email = 'Mike'
+        other_owner.save()
+        other_feed = Feed()
+        other_feed.save()
+        other_owner.subscribe(other_feed)
+
+        # Lack of title
+        title = u'rockmnkey'
+        link = u'http://rockmnkey.livejournal.com/data/rss'
+        feed = Feed.create_basic(title, link, owner)
+
+        # Duplicate entries
+        title = u'Canonical Voices'
+        link = u'http://voices.canonical.com/feed/atom/'
+        feed = Feed.create_basic(title, link, owner)
+
+        # Lack of atom_id
+        title = u'aw\'s blog'
+        link = u'http://aw.lackof.org/~awilliam/blog/index.rss'
+        feed = Feed.create_basic(title, link, owner)
+
+        # Dead feed
+        title = u'Clayton - MySpace Blog'
+        link = u'http://blog.myspace.com/blog/rss.cfm?friendID=73367402'
+        feed = Feed.create_basic(title, link, owner)
+
+        feeds = Feed.objects.all()
+        self.assertEqual(feeds.count(), 5)
+
+        total_feeds = Feed.objects.all().count()
+        owner = User.objects.get(pk=owner.pk)
+        self.assertEqual(owner.feeds.count(), total_feeds-1)
+
 
 class UserFeedTest(TestCase):
     '''Test the UserFeed model.'''

@@ -10,6 +10,7 @@ from django.core.exceptions import ValidationError
 from taggit.managers import TaggableManager
 
 import feedparser
+import hashlib
 
 logger = logging.getLogger('django')
 User = get_user_model()
@@ -187,9 +188,16 @@ class Feed(models.Model):
                 if data.bozo == 1:
                     logger.debug('Exception is %s' % data.bozo_exception)
             try:
-                item.guid = entry.link
                 item.link = entry.link
             except AttributeError:
+                logger.debug('Potential problem with feed id: %s' % self.pk)
+                if data.bozo == 1:
+                    logger.debug('Exception is %s' % data.bozo_exception)
+            try:
+                item.atom_id = entry.id
+            except AttributeError:
+                # Set this to empty string so calculate_guid() doesn't die
+                item.atom_id = ''
                 logger.debug('Potential problem with feed id: %s' % self.pk)
                 if data.bozo == 1:
                     logger.debug('Exception is %s' % data.bozo_exception)
@@ -212,7 +220,14 @@ class Feed(models.Model):
             except AttributeError:
                 # Fuck you LiveJournal.
                 item.title = u'(none)'
-            item.save()
+
+            item.guid = item.calculate_guid()
+            try:
+                item.validate_unique()
+            except ValidationError:
+                item = FeedItem.objects.get(guid=item.guid)
+            else:
+                item.save()
 
             for user in self.subscribers.all():
                 user_item = UserFeedItem()
@@ -276,14 +291,32 @@ class FeedItem(models.Model):
     link = models.URLField(max_length=500)
     title = models.CharField(max_length=200)
 
+    # Various GUIDs
+    #   guid        - internally calculated
+    #   atom_id     - supplied by feedparser, optional
+    guid = models.CharField(max_length=128, unique=True)
+    atom_id = models.CharField(max_length=500, null=True)
+
     # Optional metadata
-    guid = models.CharField(max_length=500)
     published = models.DateTimeField(db_index=True)
 
     def userfeeditem(self, user):
         userfeeditem = UserFeedItem.objects.get(
             user=user, item=self)
         return userfeeditem
+
+    def calculate_guid(self):
+        # guid is the sha256 of:
+        #   parent feed.link
+        #   entry.link
+        #   entry.id
+        #   entry.title
+        guid = hashlib.sha256()
+        guid.update(self.feed.link)
+        guid.update(self.link)
+        guid.update(self.atom_id)
+        guid.update(self.title.encode('utf-8'))
+        return guid.hexdigest()
 
     # Currently unused RSS (optional) properties:
     # author: <author>bob@example.com</author>

@@ -63,6 +63,17 @@ class FeedTest(TestCase):
         item.feed = feed
         item.save()
 
+        # Note carefully... we can safely call add_subscriber at any
+        # point after User and Feed creation and be confident that we'll
+        # never create duplicate UserFeedItem join table entries.
+        #
+        # All existing items *before* add_subscriber are added to user
+        # during add_subscriber time
+        #
+        # All new items *after* subscription are added to user during
+        # FeedItem post_save() signal
+        feed.add_subscriber(user)
+
         item2 = FeedItem()
         item2.title = 'Cute bunny rabbit video'
         item2.description = 'They die at the end.'
@@ -71,9 +82,8 @@ class FeedTest(TestCase):
         item2.feed = feed
         item2.save()
 
-        feed.add_subscriber(user)
-
         self.assertEqual(feed.subscribers.count(), 1)
+        self.assertEqual(user.feeditems.count(), 2)
 
     def test_duplicates(self):
         '''Ensure that we can't create duplicate feeds using create_basic()'''
@@ -98,7 +108,7 @@ class FeedTest(TestCase):
     @override_settings(CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
                        CELERY_ALWAYS_EAGER=True,
                        BROKER_BACKEND='memory',)
-    def test_save(self):
+    def test_update(self):
         user = User()
         user.email = 'Bob'
         user.save()
@@ -106,6 +116,7 @@ class FeedTest(TestCase):
         feed = Feed()
         feed.link = 'http://paulhummer.org/rss'
         feed.save()
+        feed.update()
 
         # Re-fetch the feed
         feed = Feed.objects.get(pk=feed.pk)
@@ -113,6 +124,49 @@ class FeedTest(TestCase):
         self.assertEqual(feed.items.count(), 20)
         self.assertEqual(feed.title, 'Dapper as...')
         self.assertTrue(feed.description.startswith('Bike rider'))
+
+    @unittest.skipUnless(network_available(), 'Network unavailable')
+    @override_settings(CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
+                       CELERY_ALWAYS_EAGER=True,
+                       BROKER_BACKEND='memory',)
+    def test_malformed(self):
+        owner = User()
+        owner.email = 'Bob'
+        owner.save()
+
+        other_owner = User()
+        other_owner.email = 'Mike'
+        other_owner.save()
+        other_feed = Feed()
+        other_feed.save()
+        other_owner.subscribe(other_feed)
+
+        # Lack of title
+        title = u'rockmnkey'
+        link = u'http://rockmnkey.livejournal.com/data/rss'
+        feed = Feed.create_basic(title, link, owner)
+
+        # Duplicate entries
+        title = u'Canonical Voices'
+        link = u'http://voices.canonical.com/feed/atom/'
+        feed = Feed.create_basic(title, link, owner)
+
+        # Lack of atom_id
+        title = u'aw\'s blog'
+        link = u'http://aw.lackof.org/~awilliam/blog/index.rss'
+        feed = Feed.create_basic(title, link, owner)
+
+        # Dead feed
+        title = u'Clayton - MySpace Blog'
+        link = u'http://blog.myspace.com/blog/rss.cfm?friendID=73367402'
+        feed = Feed.create_basic(title, link, owner)
+
+        feeds = Feed.objects.all()
+        self.assertEqual(feeds.count(), 5)
+
+        total_feeds = Feed.objects.all().count()
+        owner = User.objects.get(pk=owner.pk)
+        self.assertEqual(owner.feeds.count(), total_feeds-1)
 
 
 class UserFeedTest(TestCase):
@@ -213,7 +267,7 @@ class FeedItemTest(TestCase):
     def test_for_user(self):
         '''Test FeedItemManager.for_user.'''
         user = User()
-        user.email = 'abc@123.come'
+        user.email = 'abc@123.com'
         user.save()
 
         feed = Feed()
@@ -235,15 +289,89 @@ class FeedItemTest(TestCase):
             userfeeditems.count(),
             feed.items.count() + other_feed.items.count())
 
+    @unittest.skipUnless(network_available(), 'Network unavailable')
+    @override_settings(CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
+                       CELERY_ALWAYS_EAGER=True,
+                       BROKER_BACKEND='memory',)
+    def test_malformed(self):
+        '''Test nasty feeds that we've discovered in the wild'''
+        owner = User()
+        owner.email = 'Bob'
+        owner.save()
+
+        # Really long titles.
+        title = u'minimal linux'
+        link = u'http://minimallinux.com/rss'
+        feed = Feed.create_basic(title, link, owner)
+
+        # This feed is dead, so we don't expect any items downloaded.
+        userfeeditems = FeedItem.objects.for_user(owner)
+        self.assertEqual(userfeeditems.count(), 0)
+
+        # Discovered while trying to import from google reader.
+        # >>> len(e.title)
+        # 857
+        item = FeedItem()
+        item.feed = feed
+        item.title = u'This isn\'t a question but more of a submission for your "enough" poll-type thing.<br>\r\n<br>\r\nI would go with Arch as my main distro. It\u2019s the simplest and easiest to setup of any distro I\u2019ve used.<br>\r\n<br>\r\nMy window manager of choice would be dwm. Amazingly simple and very customizable.<br>\r\n<br>\r\nI would use vim for any text editing I would need to do (which mostly involves programming)<br>\r\n<br>\r\nI would be able to get away with using feh as my image viewer, since I never really need to do any image editing.<br>\r\n<br>\r\nChromium, of course.<br>\r\n<br>\r\nI would use dmenu as my app launcher. Another suckless creation, very simple and very fast.<br>\r\n<br>\r\nDropbox for file syncing.<br>\r\n<br>\r\nPidgin (haven\'t looked that much for something simpler) for AIM.<br>\r\n<br>\r\nI would also need a few programming related things such as ruby, gcc, make, etc.'
+        item.link = u'http://minimallinux.com/post/7031884799'
+        item.description = u'<p>Nice\u2014good stuff here. I really dig dmenu.</p>'
+        item.published = datetime.utcfromtimestamp(1309319839)
+        item.atom_id = ''
+        item.reader_guid = u'tag:google.com,2005:reader/item/022fe5bb1abdb67a'
+        item.guid = item.calculate_guid()
+        item.save()
+
+        userfeeditems = FeedItem.objects.for_user(owner)
+        self.assertEqual(userfeeditems.count(), 1)
+
+        # Feed with deleted, then republished items. Testing that
+        # calculate_guid() is hashing on enough fields to allow us to
+        # add these FeedItems to the database in this valid but
+        # confusing scenario.
+        title = u'Jeff Vyduna'
+        link = u'http://invalid.invalid'
+        feed = Feed.create_basic(title, link, owner)
+
+        item = FeedItem()
+        item.feed = feed
+        item.title = u'Does anyone know Hebrew so I can access Facebook?'
+        item.link = u'http://blog.jeffvyduna.com/does-anyone-know-hebrew-so-i-can-access-faceb'
+        item.description = u'<p>\n          <img src="https://phaven-prod.s3.amazonaws.com/files/image_part/asset/54170/TCyYxjMjvRBb-BqvaoscWjl5G7s/medium_photo.jpg">\n        </p>'
+        item.published = datetime.utcfromtimestamp(1367035858)
+        item.atom_id = ''
+        item.reader_guid = u'tag:google.com,2005:reader/item/2646bc2232535aa2'
+        item.guid = item.calculate_guid()
+        item.save()
+
+        item2 = FeedItem()
+        item2.feed = feed
+        item2.title = u'Does anyone know Hebrew so I can access Facebook?'
+        item2.link = u'http://blog.jeffvyduna.com/does-anyone-know-hebrew-so-i-can-access-faceb'
+        item2.description = u'<p>\n\t<div>\n<a href="http://getfile4.posterous.com/getfile/files.posterous.com/jeff/nNppFvf3RyxHnzrzEv2qh0MZjTvm60DFWhmtgZX6YoSiwwrc6GEoWKaJyIt2/photo.jpg"><img alt="Photo" height="334" src="http://getfile5.posterous.com/getfile/files.posterous.com/jeff/QRSlKVXdpkNzSm5sw49bGvBzcnczXh2eMiRRrX4GyrFLp1N7v1vSlAUWtHQp/photo.jpg.scaled.500.jpg" width="500"></a>\n</div>\n\n\t\n</p>\n\n<p><a href="http://blog.jeffvyduna.com/does-anyone-know-hebrew-so-i-can-access-faceb">Permalink</a> \n\n\t| <a href="http://blog.jeffvyduna.com/does-anyone-know-hebrew-so-i-can-access-faceb#comment">Leave a comment\xa0\xa0\xbb</a>\n\n</p>'
+        item2.published = datetime.utcfromtimestamp(1323637539)
+        item2.atom_id = ''
+        item2.reader_guid = u'tag:google.com,2005:reader/item/b9e84d464361f1ac'
+        item2.guid = item2.calculate_guid()
+        item2.save()
+
+        userfeeditems = FeedItem.objects.for_user(owner)
+        self.assertEqual(userfeeditems.count(), 3)
+
 
 class UserFeedItemTest(TestCase):
     '''Test the UserFeedItem model.'''
 
     def test_basics(self):
+        user = User()
+        user.email = 'Bob'
+        user.save()
+
         feed = Feed()
         feed.title = 'BoingBoing'
         feed.link = 'http://boingboing.net'
         feed.save()
+        feed.add_subscriber(user)
 
         item = FeedItem()
         item.title = 'Octopus v. Platypus'
@@ -253,17 +381,8 @@ class UserFeedItemTest(TestCase):
         item.feed = feed
         item.save()
 
-        user = User()
-        user.email = 'Bob'
-        user.save()
-
-        # Okay, finally we can do the test.
-        user_feed_item = UserFeedItem()
-        user_feed_item.user = user
-        user_feed_item.item = item
-        user_feed_item.feed = feed
-        user_feed_item.save()
-
+        # Saving an item in a feed should automatically result in
+        # subscribed users seeing all those new items.
         self.assertEqual(user.feeditems.count(), 1)
 
     def test_tagging(self):
@@ -275,6 +394,7 @@ class UserFeedItemTest(TestCase):
         feed.title = 'BoingBoing'
         feed.link = 'http://boingboing.net'
         feed.save()
+        feed.add_subscriber(user)
 
         item = FeedItem()
         item.title = 'Octopus v. Platypus'
@@ -291,8 +411,6 @@ class UserFeedItemTest(TestCase):
         item2.published = datetime.now()
         item2.feed = feed
         item2.save()
-
-        feed.add_subscriber(user)
 
         userfeeditem = UserFeedItem.objects.get(user=user, item=item)
         userfeeditem.tags.add("cute", "platypus")

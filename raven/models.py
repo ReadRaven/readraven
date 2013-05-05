@@ -5,51 +5,17 @@ import time
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.core.exceptions import ValidationError
 
 from taggit.managers import TaggableManager
 
 import feedparser
+import hashlib
 
 logger = logging.getLogger('django')
 User = get_user_model()
-
-
-# UserFeed and UserFeedItem are hand-rolled intermediate join tables
-# instead of using django's ManyToManyField. We use these because we
-# wish to store metadata about the relationship between Users and
-# Feeds and FeedItems, such as tags and read state.
-class UserFeed(models.Model):
-    '''A model for user metadata on a feed.'''
-
-    class Meta:
-        unique_together = ('user', 'feed')
-        index_together = [
-            ['user', 'feed'],
-        ]
-
-    feed = models.ForeignKey('Feed', related_name='userfeeds')
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, related_name='userfeeds')
-    tags = TaggableManager()
-
-
-class UserFeedItem(models.Model):
-    '''A model for user metadata on a post.'''
-
-    class Meta:
-        unique_together = ('user', 'item',)
-        index_together = [
-            ['user', 'feed', 'read', 'item'],
-        ]
-
-    item = models.ForeignKey('FeedItem', related_name='userfeeditems')
-    feed = models.ForeignKey('Feed', related_name='feeditems')
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, related_name='userfeeditems')
-
-    read = models.BooleanField(default=False)
-    tags = TaggableManager()
 
 
 class FeedManager(models.Manager):
@@ -91,6 +57,11 @@ class Feed(models.Model):
         userfeed = UserFeed()
         userfeed.feed = self
         userfeed.user = subscriber
+        try:
+            userfeed.validate_unique()
+        except ValidationError:
+            return
+
         userfeed.save()
 
         for item in self.items.all():
@@ -136,17 +107,6 @@ class Feed(models.Model):
 
         return Class.create_basic(data.feed.title, data.feed.link, subscriber)
 
-    def save(self, *args, **kwargs):
-        is_new = False
-        if not self.pk:
-            is_new = True
-        super(Feed, self).save(*args, **kwargs)
-
-        if is_new:
-            from raven.tasks import UpdateFeedTask
-            task = UpdateFeedTask()
-            task.delay([self])
-
     def update(self, data=None):
         if data is None:
             data = feedparser.parse(self.link)
@@ -187,9 +147,16 @@ class Feed(models.Model):
                 if data.bozo == 1:
                     logger.debug('Exception is %s' % data.bozo_exception)
             try:
-                item.guid = entry.link
                 item.link = entry.link
             except AttributeError:
+                logger.debug('Potential problem with feed id: %s' % self.pk)
+                if data.bozo == 1:
+                    logger.debug('Exception is %s' % data.bozo_exception)
+            try:
+                item.atom_id = entry.id
+            except AttributeError:
+                # Set this to empty string so calculate_guid() doesn't die
+                item.atom_id = ''
                 logger.debug('Potential problem with feed id: %s' % self.pk)
                 if data.bozo == 1:
                     logger.debug('Exception is %s' % data.bozo_exception)
@@ -212,14 +179,16 @@ class Feed(models.Model):
             except AttributeError:
                 # Fuck you LiveJournal.
                 item.title = u'(none)'
-            item.save()
 
-            for user in self.subscribers.all():
-                user_item = UserFeedItem()
-                user_item.user = user
-                user_item.item = item
-                user_item.feed = self
-                user_item.save()
+            item.guid = item.calculate_guid()
+            try:
+                item.validate_unique()
+            except ValidationError:
+                item = FeedItem.objects.get(guid=item.guid)
+            else:
+                item.save()
+
+            UserFeedItem.add_to_users(self, item)
 
     # Currently unused RSS (optional) properties:
     # category: <category>Filthy pornography</category>
@@ -274,16 +243,37 @@ class FeedItem(models.Model):
     # It's possible to have longer urls, but anything longer than 2083
     # characters will break in IE.
     link = models.URLField(max_length=500)
-    title = models.CharField(max_length=200)
+    title = models.TextField()
+
+    # Various GUIDs
+    #   guid        - internally calculated
+    #   atom_id     - supplied by feedparser, optional
+    guid = models.CharField(max_length=128, unique=True)
+    atom_id = models.CharField(max_length=500, null=True)
 
     # Optional metadata
-    guid = models.CharField(max_length=500)
     published = models.DateTimeField(db_index=True)
 
     def userfeeditem(self, user):
         userfeeditem = UserFeedItem.objects.get(
             user=user, item=self)
         return userfeeditem
+
+    def calculate_guid(self):
+        # guid is the sha256 of:
+        #   parent feed.link
+        #   entry.link
+        #   entry.id
+        #   entry.title
+        guid = hashlib.sha256()
+        guid.update(self.feed.link)
+        guid.update(self.link)
+        guid.update(self.atom_id)
+        guid.update(self.title.encode('utf-8'))
+
+        epoch = datetime(1970, 1, 1)
+        guid.update(str(int((self.published - epoch).total_seconds())))
+        return guid.hexdigest()
 
     # Currently unused RSS (optional) properties:
     # author: <author>bob@example.com</author>
@@ -311,3 +301,55 @@ def feeditems(self):
         userfeeditems__in=userfeeditems).order_by('published')
     return feeditems
 User.feeditems = feeditems
+
+
+# UserFeed and UserFeedItem are hand-rolled intermediate join tables
+# instead of using django's ManyToManyField. We use these because we
+# wish to store metadata about the relationship between Users and
+# Feeds and FeedItems, such as tags and read state.
+class UserFeed(models.Model):
+    '''A model for user metadata on a feed.'''
+
+    class Meta:
+        unique_together = ('user', 'feed')
+        index_together = [
+            ['user', 'feed'],
+        ]
+
+    feed = models.ForeignKey(Feed, related_name='userfeeds')
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, related_name='userfeeds')
+    tags = TaggableManager()
+
+
+class UserFeedItem(models.Model):
+    '''A model for user metadata on a post.'''
+
+    class Meta:
+        unique_together = ('user', 'item',)
+        index_together = [
+            ['user', 'feed', 'read', 'item'],
+        ]
+
+    item = models.ForeignKey(FeedItem, related_name='userfeeditems')
+    feed = models.ForeignKey(Feed, related_name='feeditems')
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, related_name='userfeeditems')
+
+    read = models.BooleanField(default=False)
+    tags = TaggableManager()
+
+    @classmethod
+    def add_to_users(Class, feed, item):
+        for user in feed.subscribers.all():
+            ufi = UserFeedItem()
+            ufi.user = user
+            ufi.feed = feed
+            ufi.item = item
+            ufi.save()
+
+    @receiver(post_save, sender=FeedItem)
+    def feeditem_callback(sender, **kwargs):
+        item = kwargs['instance']
+        feed = item.feed
+        UserFeedItem.add_to_users(feed, item)

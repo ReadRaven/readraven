@@ -90,7 +90,7 @@ class SyncFromReaderAPITaskTest(TestCase):
             secure = f.read()
 
         owner = User()
-        owner.email = 'Bob'
+        owner.email = 'Alex'
         owner.save()
 
         other_owner = User()
@@ -111,3 +111,14 @@ class SyncFromReaderAPITaskTest(TestCase):
         total_feeds = Feed.objects.all().count()
         owner = User.objects.get(pk=owner.pk)
         self.assertEqual(owner.feeds.count(), total_feeds-1)
+
+        # Ensure create_basic() won't create a duplicate feed
+        title = u'A Softer World'
+        link = u'http://www.rsspect.com/rss/asw.xml'
+
+        feed = Feed.objects.get(link=link)
+        duplicate = Feed.create_basic(title, link, owner)
+        self.assertEqual(feed.pk, duplicate.pk)
+
+        # Testing that subscribing a second time doesn't blow up.
+        duplicate.add_subscriber(owner)

@@ -137,17 +137,6 @@ class Feed(models.Model):
 
         return Class.create_basic(data.feed.title, data.feed.link, subscriber)
 
-    def save(self, *args, **kwargs):
-        is_new = False
-        if not self.pk:
-            is_new = True
-        super(Feed, self).save(*args, **kwargs)
-
-        if is_new:
-            from raven.tasks import UpdateFeedTask
-            task = UpdateFeedTask()
-            task.delay([self])
-
     def update(self, data=None):
         if data is None:
             data = feedparser.parse(self.link)

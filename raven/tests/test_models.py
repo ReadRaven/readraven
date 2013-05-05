@@ -98,7 +98,7 @@ class FeedTest(TestCase):
     @override_settings(CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
                        CELERY_ALWAYS_EAGER=True,
                        BROKER_BACKEND='memory',)
-    def test_save(self):
+    def test_update(self):
         user = User()
         user.email = 'Bob'
         user.save()
@@ -106,6 +106,7 @@ class FeedTest(TestCase):
         feed = Feed()
         feed.link = 'http://paulhummer.org/rss'
         feed.save()
+        feed.update()
 
         # Re-fetch the feed
         feed = Feed.objects.get(pk=feed.pk)

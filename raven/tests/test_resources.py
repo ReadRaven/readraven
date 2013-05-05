@@ -166,6 +166,7 @@ class FeedItemResourceTest(TestCase):
         feed = Feed()
         feed.link = 'http://www.paulhummer.org/rss'
         feed.save()
+        feed.update()
         self.user.subscribe(feed)
 
         response = self.client.get('/api/0.9/item/')
@@ -189,12 +190,14 @@ class FeedItemResourceTest(TestCase):
         feed = Feed()
         feed.link = 'http://www.paulhummer.org/rss'
         feed.save()
+        feed.update()
         self.user.subscribe(feed)
 
         #Create another feed that the user isn't subscribed to.
         unused_feed = Feed()
         unused_feed.link = 'http://www.chizang.net/alex/blog/feed/'
         unused_feed.save()
+        unused_feed.update()
 
         response = self.client.get('/api/0.9/item/')
         self.assertEqual(response.status_code, 200)
@@ -230,6 +233,7 @@ class FeedItemResourceTest(TestCase):
         feed = Feed()
         feed.link = 'http://www.paulhummer.org/rss'
         feed.save()
+        feed.update()
         feed.add_subscriber(self.user)
 
         response = self.client.get('/api/0.9/item/')
@@ -269,6 +273,7 @@ class FeedItemResourceTest(TestCase):
         unused_feed = Feed()
         unused_feed.link = 'http://xkcd.com/atom.xml'
         unused_feed.save()
+        unused_feed.update()
         feeditem_id = unused_feed.items.all()[0].pk
 
         response = self.client.get(
@@ -281,6 +286,7 @@ class FeedItemResourceTest(TestCase):
         feed = Feed()
         feed.link = 'http://www.paulhummer.org/rss'
         feed.save()
+        feed.update()
         feed.add_subscriber(self.user)
 
         response = self.client.get('/api/0.9/item/')

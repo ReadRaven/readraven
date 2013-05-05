@@ -92,6 +92,11 @@ class Feed(models.Model):
         userfeed = UserFeed()
         userfeed.feed = self
         userfeed.user = subscriber
+        try:
+            userfeed.validate_unique()
+        except ValidationError:
+            return
+
         userfeed.save()
 
         for item in self.items.all():

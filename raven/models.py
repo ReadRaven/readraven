@@ -5,6 +5,8 @@ import time
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.core.exceptions import ValidationError
 
 from taggit.managers import TaggableManager
@@ -14,43 +16,6 @@ import hashlib
 
 logger = logging.getLogger('django')
 User = get_user_model()
-
-
-# UserFeed and UserFeedItem are hand-rolled intermediate join tables
-# instead of using django's ManyToManyField. We use these because we
-# wish to store metadata about the relationship between Users and
-# Feeds and FeedItems, such as tags and read state.
-class UserFeed(models.Model):
-    '''A model for user metadata on a feed.'''
-
-    class Meta:
-        unique_together = ('user', 'feed')
-        index_together = [
-            ['user', 'feed'],
-        ]
-
-    feed = models.ForeignKey('Feed', related_name='userfeeds')
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, related_name='userfeeds')
-    tags = TaggableManager()
-
-
-class UserFeedItem(models.Model):
-    '''A model for user metadata on a post.'''
-
-    class Meta:
-        unique_together = ('user', 'item',)
-        index_together = [
-            ['user', 'feed', 'read', 'item'],
-        ]
-
-    item = models.ForeignKey('FeedItem', related_name='userfeeditems')
-    feed = models.ForeignKey('Feed', related_name='feeditems')
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, related_name='userfeeditems')
-
-    read = models.BooleanField(default=False)
-    tags = TaggableManager()
 
 
 class FeedManager(models.Manager):
@@ -223,12 +188,7 @@ class Feed(models.Model):
             else:
                 item.save()
 
-            for user in self.subscribers.all():
-                user_item = UserFeedItem()
-                user_item.user = user
-                user_item.item = item
-                user_item.feed = self
-                user_item.save()
+            UserFeedItem.add_to_users(self, item)
 
     # Currently unused RSS (optional) properties:
     # category: <category>Filthy pornography</category>
@@ -341,3 +301,55 @@ def feeditems(self):
         userfeeditems__in=userfeeditems).order_by('published')
     return feeditems
 User.feeditems = feeditems
+
+
+# UserFeed and UserFeedItem are hand-rolled intermediate join tables
+# instead of using django's ManyToManyField. We use these because we
+# wish to store metadata about the relationship between Users and
+# Feeds and FeedItems, such as tags and read state.
+class UserFeed(models.Model):
+    '''A model for user metadata on a feed.'''
+
+    class Meta:
+        unique_together = ('user', 'feed')
+        index_together = [
+            ['user', 'feed'],
+        ]
+
+    feed = models.ForeignKey(Feed, related_name='userfeeds')
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, related_name='userfeeds')
+    tags = TaggableManager()
+
+
+class UserFeedItem(models.Model):
+    '''A model for user metadata on a post.'''
+
+    class Meta:
+        unique_together = ('user', 'item',)
+        index_together = [
+            ['user', 'feed', 'read', 'item'],
+        ]
+
+    item = models.ForeignKey(FeedItem, related_name='userfeeditems')
+    feed = models.ForeignKey(Feed, related_name='feeditems')
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, related_name='userfeeditems')
+
+    read = models.BooleanField(default=False)
+    tags = TaggableManager()
+
+    @classmethod
+    def add_to_users(Class, feed, item):
+        for user in feed.subscribers.all():
+            ufi = UserFeedItem()
+            ufi.user = user
+            ufi.feed = feed
+            ufi.item = item
+            ufi.save()
+
+    @receiver(post_save, sender=FeedItem)
+    def feeditem_callback(sender, **kwargs):
+        item = kwargs['instance']
+        feed = item.feed
+        UserFeedItem.add_to_users(feed, item)

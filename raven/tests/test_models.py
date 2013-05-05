@@ -63,6 +63,17 @@ class FeedTest(TestCase):
         item.feed = feed
         item.save()
 
+        # Note carefully... we can safely call add_subscriber at any
+        # point after User and Feed creation and be confident that we'll
+        # never create duplicate UserFeedItem join table entries.
+        #
+        # All existing items *before* add_subscriber are added to user
+        # during add_subscriber time
+        #
+        # All new items *after* subscription are added to user during
+        # FeedItem post_save() signal
+        feed.add_subscriber(user)
+
         item2 = FeedItem()
         item2.title = 'Cute bunny rabbit video'
         item2.description = 'They die at the end.'
@@ -71,9 +82,8 @@ class FeedTest(TestCase):
         item2.feed = feed
         item2.save()
 
-        feed.add_subscriber(user)
-
         self.assertEqual(feed.subscribers.count(), 1)
+        self.assertEqual(user.feeditems.count(), 2)
 
     def test_duplicates(self):
         '''Ensure that we can't create duplicate feeds using create_basic()'''
@@ -310,8 +320,10 @@ class FeedItemTest(TestCase):
         item.atom_id = ''
         item.reader_guid = u'tag:google.com,2005:reader/item/022fe5bb1abdb67a'
         item.guid = item.calculate_guid()
-
         item.save()
+
+        userfeeditems = FeedItem.objects.for_user(owner)
+        self.assertEqual(userfeeditems.count(), 1)
 
         # Feed with deleted, then republished items. Testing that
         # calculate_guid() is hashing on enough fields to allow us to
@@ -343,15 +355,23 @@ class FeedItemTest(TestCase):
         item2.guid = item2.calculate_guid()
         item2.save()
 
+        userfeeditems = FeedItem.objects.for_user(owner)
+        self.assertEqual(userfeeditems.count(), 3)
+
 
 class UserFeedItemTest(TestCase):
     '''Test the UserFeedItem model.'''
 
     def test_basics(self):
+        user = User()
+        user.email = 'Bob'
+        user.save()
+
         feed = Feed()
         feed.title = 'BoingBoing'
         feed.link = 'http://boingboing.net'
         feed.save()
+        feed.add_subscriber(user)
 
         item = FeedItem()
         item.title = 'Octopus v. Platypus'
@@ -361,17 +381,8 @@ class UserFeedItemTest(TestCase):
         item.feed = feed
         item.save()
 
-        user = User()
-        user.email = 'Bob'
-        user.save()
-
-        # Okay, finally we can do the test.
-        user_feed_item = UserFeedItem()
-        user_feed_item.user = user
-        user_feed_item.item = item
-        user_feed_item.feed = feed
-        user_feed_item.save()
-
+        # Saving an item in a feed should automatically result in
+        # subscribed users seeing all those new items.
         self.assertEqual(user.feeditems.count(), 1)
 
     def test_tagging(self):
@@ -383,6 +394,7 @@ class UserFeedItemTest(TestCase):
         feed.title = 'BoingBoing'
         feed.link = 'http://boingboing.net'
         feed.save()
+        feed.add_subscriber(user)
 
         item = FeedItem()
         item.title = 'Octopus v. Platypus'
@@ -399,8 +411,6 @@ class UserFeedItemTest(TestCase):
         item2.published = datetime.now()
         item2.feed = feed
         item2.save()
-
-        feed.add_subscriber(user)
 
         userfeeditem = UserFeedItem.objects.get(user=user, item=item)
         userfeeditem.tags.add("cute", "platypus")

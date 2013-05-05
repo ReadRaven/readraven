@@ -256,7 +256,7 @@ class FeedItemTest(TestCase):
     def test_for_user(self):
         '''Test FeedItemManager.for_user.'''
         user = User()
-        user.email = 'abc@123.come'
+        user.email = 'abc@123.com'
         user.save()
 
         feed = Feed()
@@ -277,6 +277,41 @@ class FeedItemTest(TestCase):
         self.assertEqual(
             userfeeditems.count(),
             feed.items.count() + other_feed.items.count())
+
+    @unittest.skipUnless(network_available(), 'Network unavailable')
+    @override_settings(CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
+                       CELERY_ALWAYS_EAGER=True,
+                       BROKER_BACKEND='memory',)
+    def test_malformed(self):
+        '''Test nasty feeds that we've discovered in the wild'''
+        owner = User()
+        owner.email = 'Bob'
+        owner.save()
+
+        # Really long titles.
+        title = u'minimal linux'
+        link = u'http://minimallinux.com/rss'
+        feed = Feed.create_basic(title, link, owner)
+
+        # This feed is dead, so we don't expect any items downloaded.
+        userfeeditems = FeedItem.objects.for_user(owner)
+        self.assertEqual(userfeeditems.count(), 0)
+
+        # Discovered while trying to import from google reader.
+        # >>> len(e.title)
+        # 857
+        item = FeedItem()
+        item.feed = feed
+        item.title = u'This isn\'t a question but more of a submission for your "enough" poll-type thing.<br>\r\n<br>\r\nI would go with Arch as my main distro. It\u2019s the simplest and easiest to setup of any distro I\u2019ve used.<br>\r\n<br>\r\nMy window manager of choice would be dwm. Amazingly simple and very customizable.<br>\r\n<br>\r\nI would use vim for any text editing I would need to do (which mostly involves programming)<br>\r\n<br>\r\nI would be able to get away with using feh as my image viewer, since I never really need to do any image editing.<br>\r\n<br>\r\nChromium, of course.<br>\r\n<br>\r\nI would use dmenu as my app launcher. Another suckless creation, very simple and very fast.<br>\r\n<br>\r\nDropbox for file syncing.<br>\r\n<br>\r\nPidgin (haven\'t looked that much for something simpler) for AIM.<br>\r\n<br>\r\nI would also need a few programming related things such as ruby, gcc, make, etc.'
+        item.link = u'http://minimallinux.com/post/7031884799'
+        item.description = u'<p>Nice\u2014good stuff here. I really dig dmenu.</p>'
+        item.published = datetime.utcfromtimestamp(1309319839)
+        item.atom_id = ''
+        item.reader_guid = u'tag:google.com,2005:reader/item/022fe5bb1abdb67a'
+        item.guid = item.calculate_guid()
+
+        item.save()
+
 
 
 class UserFeedItemTest(TestCase):

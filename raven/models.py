@@ -289,7 +289,7 @@ class FeedItem(models.Model):
     # It's possible to have longer urls, but anything longer than 2083
     # characters will break in IE.
     link = models.URLField(max_length=500)
-    title = models.CharField(max_length=200)
+    title = models.TextField()
 
     # Various GUIDs
     #   guid        - internally calculated

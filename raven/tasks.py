@@ -104,6 +104,8 @@ class SyncFromReaderAPITask(Task):
 
                 user_item = item.userfeeditem(user)
                 user_item.read = e.read
+                for t in e.tags:
+                    user_item.tags.add(t)
                 user_item.save()
 
         # TODO: here, we should suck in all the other metadata

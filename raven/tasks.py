@@ -76,6 +76,9 @@ class SyncFromReaderAPITask(Task):
         for f in reader.feeds:
             feed = Feed.create_basic(f.title, f.feedUrl, user)
             feeds[f.feedUrl] = feed
+            userfeed = feed.userfeed(user)
+            for c in f.categories:
+                userfeed.tags.add(c.label)
 
         for f in reader.feeds:
             feed = feeds[f.feedUrl]

@@ -270,9 +270,10 @@ class FeedItem(models.Model):
         guid.update(self.link)
         guid.update(self.atom_id)
         guid.update(self.title.encode('utf-8'))
-
         epoch = datetime(1970, 1, 1)
         guid.update(str(int((self.published - epoch).total_seconds())))
+        if self.reader_guid:
+            guid.update(self.reader_guid)
         return guid.hexdigest()
 
     # Currently unused RSS (optional) properties:

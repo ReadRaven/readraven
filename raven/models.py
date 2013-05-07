@@ -342,6 +342,7 @@ class UserFeedItem(models.Model):
         settings.AUTH_USER_MODEL, related_name='userfeeditems')
 
     read = models.BooleanField(default=False)
+    starred = models.BooleanField(default=False)
     tags = TaggableManager()
 
     @classmethod

@@ -55,6 +55,31 @@ class SyncFromReaderAPITask(Task):
     '''A task for sync'ing data from a Google Reader-compatible API.'''
 
     def run(self, user, *args, **kwargs):
+        def _new_user_item(user, entry):
+            try:
+                item = FeedItem.objects.get(reader_guid=entry.id)
+            except ObjectDoesNotExist:
+                item = FeedItem()
+                item.feed = feed
+                item.title = entry.title
+                item.link = entry.url
+                item.description = entry.content
+
+                item.atom_id = ''
+                item.reader_guid = entry.id
+                item.published = datetime.utcfromtimestamp(entry.time)
+                item.guid = item.calculate_guid()
+                item.save()
+
+            user_item = item.userfeeditem(user)
+            user_item.read = entry.read
+            user_item.starred = entry.starred
+            for t in entry.tags:
+                user_item.tags.add(t)
+            user_item.save()
+
+            return user_item
+
         # user.credential should always be valid when doing oauth2
         if user.credential:
             credential = user.credential
@@ -80,34 +105,38 @@ class SyncFromReaderAPITask(Task):
             for c in f.categories:
                 userfeed.tags.add(c.label)
 
+        # Next, import all the items from the feeds
         for f in reader.feeds:
             feed = feeds[f.feedUrl]
 
-            f.loadItems(loadLimit=5)
+            f.loadItems(loadLimit=150)
             for e in f.items:
                 if e.url is None:
                     continue
-                try:
-                    item = FeedItem.objects.get(reader_guid=e.id)
-                except ObjectDoesNotExist:
-                    item = FeedItem()
-                    item.feed = feed
-                    item.title = e.title
-                    item.link = e.url
-                    item.description = e.content
+                _new_user_item(user, e)
 
-                    item.atom_id = ''
-                    item.reader_guid = e.id
-                    item.published = datetime.utcfromtimestamp(e.time)
-                    item.guid = item.calculate_guid()
-                    item.save()
+        # Finally, import the special items
+        reader.makeSpecialFeeds()
+        special = reader.specialFeeds.keys()
+        special.remove('read')
+        special.remove('reading-list')
+        for sf in special:
+            f = reader.specialFeeds[sf]
+            f.loadItems(loadLimit=150)
+            for e in f.items:
+                user_item = _new_user_item(user, e)
 
-                user_item = item.userfeeditem(user)
-                user_item.read = e.read
-                for t in e.tags:
-                    user_item.tags.add(t)
+                if sf == 'like':
+                    user_item.tags.add('imported', 'liked')
+                elif sf == 'post' or sf == 'created':
+                    user_item.tags.add('imported', 'notes')
+                elif sf == 'broadcast':
+                    user_item.tags.add('imported', 'shared')
+                elif sf == 'broadcast-friends':
+                    user_item.tags.add('imported', 'shared-with-you')
+                elif sf == 'starred':
+                    user_item.tags.add('imported')
+
                 user_item.save()
-
-        # TODO: here, we should suck in all the other metadata
 
         return True

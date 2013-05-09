@@ -122,3 +122,8 @@ class SyncFromReaderAPITaskTest(TestCase):
 
         # Testing that subscribing a second time doesn't blow up.
         duplicate.add_subscriber(owner)
+
+        # Uncomment for manual checking of ephemeral data sets
+        #from raven.models import FeedItem
+        #total_items = FeedItem.objects.all().count()
+        #print total_items

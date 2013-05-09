@@ -251,6 +251,10 @@ class FeedItem(models.Model):
     guid = models.CharField(max_length=128, unique=True)
     atom_id = models.CharField(max_length=500, null=True)
 
+    # Legacy google reader longform unique id
+    # https://code.google.com/p/google-reader-api/wiki/ItemId
+    reader_guid = models.CharField(max_length=48, unique=True, null=True)
+
     # Optional metadata
     published = models.DateTimeField(db_index=True)
 
@@ -270,9 +274,10 @@ class FeedItem(models.Model):
         guid.update(self.link)
         guid.update(self.atom_id)
         guid.update(self.title.encode('utf-8'))
-
         epoch = datetime(1970, 1, 1)
         guid.update(str(int((self.published - epoch).total_seconds())))
+        if self.reader_guid:
+            guid.update(self.reader_guid)
         return guid.hexdigest()
 
     # Currently unused RSS (optional) properties:
@@ -337,6 +342,7 @@ class UserFeedItem(models.Model):
         settings.AUTH_USER_MODEL, related_name='userfeeditems')
 
     read = models.BooleanField(default=False)
+    starred = models.BooleanField(default=False)
     tags = TaggableManager()
 
     @classmethod

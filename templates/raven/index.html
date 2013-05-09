@@ -6,31 +6,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link media="screen" rel="stylesheet" href="{% static 'css/bootstrap.css' %}" />
     <link media="screen" rel="stylesheet" href="{% static 'css/style.css' %}" />
-    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300,600' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,600,300|Crimson+Text:400,600,700' rel='stylesheet' type='text/css'>
   </head>
   <body id="index">
     <div class="page-wrapper">
       <div class="container-fluid">
         <div class="row">
-          <div class="span9">
+          <div class="span10 offset1">
             <h1>Welcome to Readraven</h1>
           </div>
         </div>
         <div class="row">
-          <div class="span5">
-            <p>Google Reader is shutting down July 1.</p>
-            <hr>
-            <p>Readraven has a 100% perfect importer for your Google Reader
-            feeds. Import now before it's too late.</p>
-            <hr>
-            <p>$5 a month. For evermore.</p>
-          </div>
-        </div>
-        <div class="row">
-          <div class="span3 offset9">
-            <a href="{% url 'usher.views.sign_up' %}"><button class="btn btn-large btn-primary" type="button">Sign Up</button></a>
+          <div class="span6 offset1">
+	    <p>
+	    <ul>
+	    <li><b>A world class feed reader forever.
+	    <li>Absolute respect for you and your data.</b>
+	    </ul>
+	    </p>
+	    <p>
+	    <ul>
+	    <li>
+
+	    Your reading habits are intimately yours, and they should stay that
+	    way. <b>Readraven</b> is a long-term project designed and built to
+	    help you read the feeds you love, forever.
+
+	    </ul>
+	    <ul>
+	    <li>
+
+	    Import your existing data today, before Google Reader closes on
+	    July 1.
+
+	    </ul>
+
+	    <ul>
+	    <li>
+
+	    No exit strategy, never ads. Just $5 a month, for evermore.
+
+	    </ul>
+	    <br>
+	    <ul>
+            <li><a href="{% url 'usher.views.sign_up' %}"><button class="btn btn-large btn-primary" type="button">Start a free two-week trial</button></a>
             &nbsp; or &nbsp;
-            <a href="{% url 'raven.views.home' %}">login</a>
+            <a href="{% url 'raven.views.home' %}"><b>login</b></a>
+	    </ul>
+	    </p>
           </div>
         </div>
       </div>

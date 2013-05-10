@@ -13,6 +13,7 @@ urlpatterns = patterns(
     '',
     url(r'api/', include(v09.urls)),
     url(r'^home', 'raven.views.home'),
+    url(r'^values', 'raven.views.values'),
     url(r'^logout/$', 'django.contrib.auth.views.logout', {'next_page': '/'}),
     url(r'^$', 'raven.views.index'),
     url(r'^usher/sign_up', 'usher.views.sign_up'),

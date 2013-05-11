@@ -6,16 +6,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link media="screen" rel="stylesheet" href="{% static 'css/bootstrap.css' %}" />
     <link media="screen" rel="stylesheet" href="{% static 'css/usher.css' %}" />
-    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300,600' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,600,300|Crimson+Text:400,600,700' rel='stylesheet' type='text/css'>
   </head>
   <body id="index">
     <div class="page-wrapper">
       <div class="container-fluid">
         <div class="row">
-          <div class="span8">
-            <h1>step 1...</h1>
-            <p>Hi. We'd like your permission to import your existing Google
-            Reader data.</p>
+          <div class="span6 offset1">
+            <h1>May we import your data?</h1>
+            <p>Hi! Thanks for considering Readraven, the forever reader. We'd
+	    like to begin by importing your old data from Google Reader.</p>
+	    <p>If you say yes, we will begin importing your data
+	    <b>immediately</b>, like <b>right now</b>. If you don't want us to
+	    look at your Google Reader data, <i>this is your chance to
+	    bail!</i>
+	    <br>
+	    <br>
+	    <br>
             <div class="googleauth">
               <a class="googleauth button" href="{% url 'usher.views.google_auth' %}"></a>
             </div>

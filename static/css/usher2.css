@@ -1,0 +1,32 @@
+body#index {
+    background: url(../img/danbo.jpg) no-repeat center center fixed;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    background-size: cover;
+    font-family: 'Open Sans';
+}
+    body#index h1 {
+        font-family: 'Crimson Text', serif;
+    }
+    body#index div.page-wrapper {
+        position: static;
+        left: -2px;
+        top: 0px;
+        background-color: rgba(240,240,240,0.2);
+        margin-top: 5%;
+        padding: 50px 40px;
+    }
+        body#index div.page-wrapper div.container-fluid {
+            padding-right: 20px;
+            padding-left: 20px;
+        }
+    body#index legend {
+	font-size: 14px;
+    }
+    body#index .control-group {
+      display: inline-block;
+      vertical-align: top;
+    }
+    body#index label {
+	font-size: 12px;
+	}

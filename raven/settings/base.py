@@ -173,15 +173,6 @@ LOGGING = {
     }
 }
 
-# RabbitMQ/Celery settings
-import djcelery
-djcelery.setup_loader()
-BROKER_URL = 'amqp://readraven:readraven@localhost:5672/readraven'
-
-# Use this for testing celery tasks
-TEST_RUNNER = 'djcelery.contrib.test_runner.CeleryTestSuiteRunner'
-
-
 # Security shit
 SESSION_COOKIE_SECURE = True
 SECURE_FRAME_DENY = True

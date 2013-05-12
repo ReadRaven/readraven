@@ -1,5 +1,15 @@
 from .base import *
 
+# RabbitMQ/Celery settings
+import djcelery
+djcelery.setup_loader()
+BROKER_URL = os.environ.get('CLOUDAMQP_URL', '')
+# Only set to 1 for staging/free heroku
+BROKER_POOL = 1
+
+# Use this for testing celery tasks
+TEST_RUNNER = 'djcelery.contrib.test_runner.CeleryTestSuiteRunner'
+
 # URL prefix for static files.
 # Example: "http://example.com/static/", "http://static.example.com/"
 STATIC_URL = 'https://s3.amazonaws.com/readraven/static/'

@@ -1,23 +1,18 @@
-@font-face {
-    font-family: 'Special Elite';
-    src: url(../font/SpecialElite.ttf),
-         url('https://s3.amazonaws.com/readraven/static/font/SpecialElite.ttf');
-}
-
 body#index {
+    background: url(../img/pipe.jpg) no-repeat center center fixed;
     -webkit-background-size: cover;
     -moz-background-size: cover;
     background-size: cover;
     font-family: 'Open Sans';
 }
     body#index h1 {
-        font-family: 'Special Elite', cursive;
+        font-family: 'Crimson Text', serif;
     }
     body#index div.page-wrapper {
         position: static;
         left: -2px;
         top: 0px;
-        background-color: rgba(240,240,240,0.5);
+        background-color: rgba(240,240,240,0.1);
         margin-top: 5%;
         padding: 50px 40px;
     }
@@ -26,7 +21,7 @@ body#index {
             padding-left: 20px;
         }
     body#index div.googleauth {
-        margin-top: 105px;
+        /* margin-top: 105px; */
     }
     body#index a.googleauth {
         display: inline-block;

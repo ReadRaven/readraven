@@ -15,6 +15,10 @@ def index(request):
         'raven/index.html',
         context_instance=RequestContext(request))
 
+def values(request):
+    return render_to_response(
+        'raven/values.html',
+        context_instance=RequestContext(request))
 
 @login_required
 @user_passes_test(lambda u: u.is_customer(), login_url='/usher/sign_up')

@@ -43,28 +43,7 @@
   </head>
 
   <body>
-  </body>
-  {% comment %}
-  This causes a javascript error. FuckifIknow...
-  <script src="{% static 'js/bootstrap.js' %}"></script>
-  {% endcomment %}
-  <script src="{% static 'js/handlebars-1.0.0-rc.3.js' %}"></script>
-  <script src="{% static 'js/jquery-1.9.1.js' %}"></script>
-  <script src="{% static 'js/ember-1.0.0-rc.2.js' %}"></script>
-  {% comment %}
-  Latest ember is disabled because it's currently incompatible with
-  the tastypie serializer's pagination code.
-  <script src="{% static 'js/ember-data-latest.js' %}"></script>
-  {% endcomment %}
-  <script src="{% static 'js/ember-data.js' %}"></script>
-  <script src="{% static 'js/tastypie_serializer.js' %}"></script>
-  <script src="{% static 'js/tastypie_adapter.js' %}"></script>
-  <script src="{% static 'js/csrftoken.js' %}"></script>
-  <script src="{% static 'js/raven.js' %}"></script>
-  <script>
-  </script>
-  {% handlebars %}
-  <script type="text/x-handlebars">
+
     <div class="navbar navbar-inverse navbar-fixed-top">
       <div class="navbar-inner">
         <div class="container">
@@ -76,64 +55,113 @@
           <a class="brand" href="#">ReadRaven</a>
           <div class="nav-collapse collapse">
             <p class="navbar-text pull-right">
-{% endhandlebars %}
             {{ user.email }} | <a href="{% url 'django.contrib.auth.views.logout' %}">Log out</a>
-{% handlebars %}
             </p>
             <ul class="nav">
-              <li>{{#linkTo 'index'}}Home{{/linkTo}}</li>
-              <li>{{#linkTo 'help'}}Help{{/linkTo}}</li>
+              <li><a href="">Home</a></li>
+              <li><a href="">Help</a></li>
             </ul>
           </div>
         </div>
       </div>
     </div>
     <div class="container">
-    {{outlet}}
-    </div>
-  </script>
-  <script type="text/x-handlebars" id="index">
-    <div class="row-fluid">
-      <div class="span3 column">
-{% endhandlebars %}
-{% comment %}
-        We should really have search, but holy shit that's a lot of work.
-        <form class="form-search">
-          <input type="text" class="input-medium search-query" />
-          <button type="submit" class="btn">Search</button>
-        </form>
-{% endcomment %}
-{% handlebars %}
-        <form class="form-search">
-          <input type="text" class="input-medium" id="add-feed"/>
-          {{view App.AddFeedView}}
-        </form>
-        <ul class="unstyled">
-          {{#each feeds}}
-          <li>{{repr}}</li>
-          {{/each}}
-        </ul>
+      <div id="main" class="row-fluid">
       </div>
+    </div>
+  </body>
 
-      <div class="span9 column">
-        {{#each feeditems}}
-        <div class="row">
-          <div class="feeditem">
-            <h3>{{ title }}</h3>
-            <div class="subtitle">
-              from <a href="#">{{ feed.title }}</a>
-            </div>
-            <div class="content">
-              {{{ description }}}
-            </div>
-          </div>
+  {% comment %}
+  This causes a javascript error. FuckifIknow...
+  <script src="{% static 'js/bootstrap.js' %}"></script>
+  {% endcomment %}
+  {% comment %}
+  <script src="{% static 'js/ember-1.0.0-rc.2.js' %}"></script>
+  Latest ember is disabled because it's currently incompatible with
+  the tastypie serializer's pagination code.
+  <script src="{% static 'js/ember-data-latest.js' %}"></script>
+  <script src="{% static 'js/ember-data.js' %}"></script>
+  <script src="{% static 'js/tastypie_serializer.js' %}"></script>
+  <script src="{% static 'js/tastypie_adapter.js' %}"></script>
+  <script src="{% static 'js/raven.js' %}"></script>
+  {% endcomment %}
+
+  {% handlebars %}
+  <script type="text/x-handlebars" id="index">
+    {{#each item in items}}
+    <div class="row">
+      <div class="feeditem">
+        <h3><a {{bindAttr href="item.link"}} target="blank">{{item.title}}</a></h3>
+        <div class="subtitle">
+          from {{#linkTo 'feed' item.feed.id}}{{item.feed.title}}{{/linkTo}}
         </div>
-        {{/each}}
+        <div class="content">
+          {{{ item.description }}}
+        </div>
       </div>
     </div>
+    {{/each}}
+  </script>
+  <script type="text/x-handlebars" id="feed">
+    {{#each item in items}}
+    <div class="row">
+      <div class="feeditem">
+        <h3><a {{bindAttr href="item.link"}} target="blank">{{item.title}}</a></h3>
+        <div class="subtitle">
+          from {{#linkTo 'feed' item.feed.id}}{{item.feed.title}}{{/linkTo}}
+        </div>
+        <div class="content">
+          {{{ item.description }}}
+        </div>
+      </div>
+    </div>
+    {{/each}}
   </script>
   <script type="text/x-handlebars" id="help">
     This is the help page.
   </script>
+
+
+  <script type="text/x-handlebars" id="index-template">
+    <div class="span3 column">
+    {% endhandlebars %}{% comment %}
+    We should really have search, but holy shit that's a lot of work.
+      <form class="form-search">
+        <input type="text" class="input-medium search-query" />
+        <button type="submit" class="btn">Search</button>
+      </form>
+    {% endcomment %}{% handlebars %}
+      <form class="form-search">
+        <input type="text" class="input-medium" id="add-feed"/>
+        <button class="btn" id="add-feed">Add Feed</button>
+      </form>
+      <ul id="feed-list" class="unstyled">
+      </ul>
+    </div>
+    <div class="span9 column">
+      Feed items go here!
+    </div>
+  </script>
+  <script type="text/x-handlebars" id="feed-listing-template">
+    <li><a href="{{link}}">
+    {{#if title}}
+      {{title}}
+    {{else}}
+      {{link}}
+    {{/if}}
+    </a></li>
+  </script>
+
   {% endhandlebars %}
+
+  <script src="{% static 'js/handlebars-1.0.0-rc.3.js' %}"></script>
+  <script src="{% static 'js/jquery-1.9.1.js' %}"></script>
+  <script src="{% static 'js/underscore.js' %}"></script>
+  <script src="{% static 'js/backbone.js' %}"></script>
+  <script src="{% static 'js/csrftoken.js' %}"></script>
+
+  <script src="{% static 'js/backbone-tastypie.js' %}"></script>
+  <script src="{% static 'js/reader.js' %}"></script>
+
+
 </html>

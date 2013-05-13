@@ -1,23 +1,29 @@
 App = Ember.Application.create();
 
+
+var adapter = DS.DjangoTastypieAdapter.extend({
+    namespace: 'api/0.9'
+});
+adapter.map('App.Item', {
+    feed: {embedded: 'load', key: 'feed'}
+});
 App.store = DS.Store.create({
     revision: 12,
-    adapter: DS.DjangoTastypieAdapter.extend({
-      namespace: 'api/0.9'
-    })
+    adapter: adapter
 });
 
 App.Feed = DS.Model.extend({
     title: DS.attr('string'),
     link: DS.attr('string'),
     description: DS.attr('string'),
-    items: DS.hasMany('App.FeedItem'),
+    items: DS.hasMany('App.Item'),
     repr: function() {
         return this.get('title') || this.get('link');
     }.property()
 });
 
 App.Item = DS.Model.extend({
+    link: DS.attr('string'),
     title: DS.attr('string'),
     description: DS.attr('string'),
     feed: DS.belongsTo('App.Feed'),
@@ -25,12 +31,15 @@ App.Item = DS.Model.extend({
 });
 
 App.Router.map(function() {
+    this.resource('feed', { path: '/feed/:id' });
+
     this.resource('account');
     this.resource('help');
 });
 
 App.ApplicationRoute = Ember.Route.extend({
-    setupController: function(controller) {
+    setupController: function(controller, model) {
+        controller.set('all_feeds', App.Feed.find());
     }
 });
 
@@ -51,8 +60,26 @@ App.IndexRoute = Ember.Route.extend({
         }
     },
     setupController: function(controller) {
-        controller.set('feeds', App.Feed.find());
-        controller.set('feeditems', App.Item.find());
+        controller.set('items', App.Item.find());
+    }
+});
+
+App.FeedRoute = Ember.Route.extend({
+    model: function(params) {
+        return App.Feed.find(params.id);
+    },
+    setupController: function(controller, model) {
+            debugger;
+        if (typeof(model) == "string") {
+            controller.set('items', App.Item.find({feed: model}));
+        } else {
+            controller.set('items', App.Item.find({feed: model.id}));
+        }
+        //var items = model.get('items');
+        //var items = App.Item.find({feed: model});
+        //controller.set('items', items);
+        //controller.set('items', App.Item.find({feed: model}));
+        //controller.set('items', model.get('items'));
     }
 });
 

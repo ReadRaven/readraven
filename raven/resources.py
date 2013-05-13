@@ -4,7 +4,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from tastypie import fields
 from tastypie.authentication import SessionAuthentication
 from tastypie.authorization import Authorization
-from tastypie.resources import ModelResource
+from tastypie.resources import ALL, ALL_WITH_RELATIONS, ModelResource
 
 from raven import models
 
@@ -17,7 +17,7 @@ class FeedResource(ModelResource):
         authentication = SessionAuthentication()
         authorization = Authorization()
         default_format = 'application/json'
-        fields = ['description', 'title', 'link']
+        fields = ['description', 'title', 'link', 'id']
         queryset = models.Feed.objects.all()
         resource_name = 'feed'
 
@@ -59,11 +59,15 @@ class FeedItemResource(ModelResource):
         authentication = SessionAuthentication()
         authorization = Authorization()
         default_format = 'application/json'
-        fields = ['description', 'link', 'published', 'title']
+        fields = ['description', 'link', 'published', 'title', 'id']
+        filtering = {
+            'read': ALL,
+            'feed': ALL_WITH_RELATIONS
+        }
         queryset = models.FeedItem.objects.all()
         resource_name = 'item'
 
-    feed = fields.ForeignKey(FeedResource, 'feed')
+    feed = fields.ForeignKey(FeedResource, 'feed', full=True)
     read = fields.BooleanField()
 
     def get_object_list(self, request):

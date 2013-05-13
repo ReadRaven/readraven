@@ -7,6 +7,14 @@ SECURE_SSL_REDIRECT = False
 SESSION_COOKIE_SECURE = False
 SECURE_PROXY_SSL_HEADER = ()
 
+# RabbitMQ/Celery settings
+import djcelery
+djcelery.setup_loader()
+BROKER_URL = 'amqp://readraven:readraven@localhost:5672/readraven'
+
+# Use this for testing celery tasks
+TEST_RUNNER = 'djcelery.contrib.test_runner.CeleryTestSuiteRunner'
+
 # URL prefix for static files.
 # Example: "http://example.com/static/", "http://static.example.com/"
 STATIC_URL = '/static/'

@@ -21,6 +21,10 @@ Some quick commands are:
 A DANGEROUS command is:
   - heroku pg:reset DATABASE_URL	# this, verbatim, will drop the remotedb
 
+After running it, you must:
+  - heroku run python manage.py syncdb
+  - heroku run python manage.py migrate
+
 A useful command is:
   - heroku run python manage.py help
 
@@ -199,6 +203,7 @@ Addons we use
 =============
     heroku addons:add heroku-postgresql:dev
     heroku addons:add cloudamqp
+    heroku addons:add newrelic
 
 
 References

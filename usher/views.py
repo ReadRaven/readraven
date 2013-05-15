@@ -4,12 +4,13 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, get_user_model
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect, HttpResponseBadRequest
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
 from oauth2client import xsrfutil
-from oauth2client.client import flow_from_clientsecrets
+from oauth2client.client import flow_from_clientsecrets, FlowExchangeError
 
 import stripe
 from payments.models import Customer
@@ -109,7 +110,11 @@ def google_auth_callback(request):
                                    request.user):
         return HttpResponseBadRequest()
 
-    credential = FLOW.step2_exchange(request.REQUEST)
+    try:
+        credential = FLOW.step2_exchange(request.REQUEST)
+    except FlowExchangeError:
+        return HttpResponseRedirect(reverse('raven.views.values'))
+
     email = credential.id_token['email']
     try:
         user = User.objects.get(email=email)

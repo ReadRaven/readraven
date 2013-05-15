@@ -1,13 +1,16 @@
+from datetime import datetime, timedelta
+
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, get_user_model
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect, HttpResponseBadRequest
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
 from oauth2client import xsrfutil
-from oauth2client.client import flow_from_clientsecrets
+from oauth2client.client import flow_from_clientsecrets, FlowExchangeError
 
 import stripe
 from payments.models import Customer
@@ -49,7 +52,14 @@ def sign_up(request):
             except ObjectDoesNotExist:
                 customer = Customer.create(request.user)
             customer.update_card(request.POST.get("stripeToken"))
-            customer.subscribe('monthly', trial_days=14)
+
+            # Free trial until 7/4/2013
+            free_until = datetime(2013, 7, 4)
+            now = datetime.utcnow()
+            trial = free_until - now
+            if trial < 14:
+                trial = 14
+            customer.subscribe('monthly', trial_days=trial)
         except stripe.StripeError:
             # hmm... not sure.
             print "ERROR"
@@ -65,9 +75,26 @@ def sign_up(request):
     request.user.sync_task_id = result.task_id
     request.user.save()
 
-    return render_to_response(
-        'usher/sign_up.html',
-        context_instance=RequestContext(request))
+    whitelist = set([
+        'alex@chizang.net',
+        'paul@eventuallyanyway.com',
+        'garrytan@gmail.com',
+        'vyduna@gmail.com',
+        'jacklevy@gmail.com',
+        'lenchiang@gmail.com',
+        'vicchiang@gmail.com',
+        'bwbovee@gmail.com',
+        'lindsayvail@gmail.com',
+        'joe.ferrari@gmail.com',])
+
+    if request.user.email not in whitelist:
+        return render_to_response(
+            'usher/not_yet.html',
+            context_instance=RequestContext(request))
+    else:
+        return render_to_response(
+            'usher/sign_up.html',
+            context_instance=RequestContext(request))
 
 
 def google_auth(request):
@@ -83,7 +110,11 @@ def google_auth_callback(request):
                                    request.user):
         return HttpResponseBadRequest()
 
-    credential = FLOW.step2_exchange(request.REQUEST)
+    try:
+        credential = FLOW.step2_exchange(request.REQUEST)
+    except FlowExchangeError:
+        return HttpResponseRedirect(reverse('raven.views.values'))
+
     email = credential.id_token['email']
     try:
         user = User.objects.get(email=email)

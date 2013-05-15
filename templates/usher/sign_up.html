@@ -52,6 +52,9 @@
 	    built to last and built to protect your privacy.</p>
 
 	    <p><a href="{%url 'raven.views.values' %}"><b>Read more about our values »</b></a></p>
+        <br>
+        <p>Or <a href="{% url 'django.contrib.auth.views.logout' %}">log out</a></p>
+
           </div>
 	<!--
 	</div>
@@ -59,34 +62,39 @@
 	-->
           <div class="span6 offset1">
           <h1>&nbsp;</h1>
-          <form action="/usher/sign_up" method="post" id="signup-form" class="well">
+          <form action="/usher/sign_up" method="post" id="signup-form" class="well well-small">
             {% csrf_token %}
             <span class="payment-errors"></span>
 
 	    <div class="controls controls-row">
 	       <div class="control-group">
-	         <label>Card Number</label>
-                 <input class="span4" type="text" data-stripe="number"/>
+                 <input class="span4" placeholder="Card Number" type="text" data-stripe="number"/>
 	       </div>
 	       <div class="control-group">
-	         <label>CVC</label>
-                 <input class="span1" type="text" data-stripe="cvc"/>
+                 <input class="span1" placeholder="CVC" type="text" data-stripe="cvc"/>
 	       </div>
             </div>
 
             <div class="controls controls-row">
 	      <div class="control-group">
-		<label>Month (MM)</label>
-                <input class="span2" type="text" data-stripe="exp-month"/>
+                <input class="span2" placeholder="Month (MM)" type="text" data-stripe="exp-month"/>
 	      </div>
 	      <div class="control-group">
-		<label>Year (YYYY)</label>
-                <input class="span3" type="text" data-stripe="exp-year"/>
+                <input class="span3" placeholder="Year (YYYY)" type="text" data-stripe="exp-year"/>
 	      </div>
             </div>
 
 	    <div class="controls">
-            <button type="submit" class="btn btn-primary btn-large">Start my free trial</button>
+            <button type="submit" class="btn btn-primary btn-large">Start your free trial</button>
+
+            <br>
+            <br>
+
+            <label>Readraven is free until July 4, 2013. Then we'll
+            start billing you $5 per month. You can cancel any time and we are
+            happy to refund your payment if you're dissatisfied with
+            your service for any reason.</label>
+
 	    </div>
           </form>
           </div>

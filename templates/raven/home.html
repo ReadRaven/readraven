@@ -138,7 +138,7 @@
       <ul id="feed-list" class="unstyled">
       </ul>
     </div>
-    <div class="span9 column">
+    <div class="span9 column" id="item-list">
       Feed items go here!
     </div>
   </script>
@@ -151,6 +151,19 @@
     {{/if}}
     </a></li>
   </script>
+  <script type="text/x-handlebars" id="feed-item-template">
+    <div class="row">
+      <div class="feeditem">
+        <h3><a href="#">{{title}}</a></h3>
+        <div class="subtitle">
+          from <a href="#">Feed title</a>
+        </div>
+        <div class="content">
+          {{{description}}}
+        </div>
+      </div>
+    </div>
+  </script>
 
   {% endhandlebars %}
 
@@ -161,6 +174,8 @@
   <script src="{% static 'js/csrftoken.js' %}"></script>
 
   <script src="{% static 'js/backbone-tastypie.js' %}"></script>
+  <script src="{% static 'js/models.js' %}"></script>
+  <script src="{% static 'js/views.js' %}"></script>
   <script src="{% static 'js/reader.js' %}"></script>
 
 

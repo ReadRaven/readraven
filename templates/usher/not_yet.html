@@ -1,0 +1,33 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>The House of Usher</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link media="screen" rel="stylesheet" href="{% static 'css/bootstrap.css' %}" />
+    <link media="screen" rel="stylesheet" href="{% static 'css/usher2.css' %}" />
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,600,300|Crimson+Text:400,600,700' rel='stylesheet' type='text/css'>
+  </head>
+  <body id="index">
+    <div class="page-wrapper">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="span7 offset1">
+            <h1>Thanks! But we're still testing...</h1>
+            <p>We're still training up our super importing squirrels to make
+            sure everything works great for you.</p>
+            <p>Thanks for your interest. We'll send you a mail when we're
+            ready for you!</p>
+
+	        <p>In the mean time, <a href="{%url 'raven.views.values' %}"><b>read more about our values »</b></a></p>
+            <br>
+            <p>Or <a href="{% url 'django.contrib.auth.views.logout' %}">log out</a></p>
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </body>
+  <script src="{% static 'js/bootstrap.js' %}"></script>
+</html>

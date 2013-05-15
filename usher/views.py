@@ -74,9 +74,26 @@ def sign_up(request):
     request.user.sync_task_id = result.task_id
     request.user.save()
 
-    return render_to_response(
-        'usher/sign_up.html',
-        context_instance=RequestContext(request))
+    whitelist = set([
+        'alex@chizang.net',
+        'paul@eventuallyanyway.com',
+        'garrytan@gmail.com',
+        'vyduna@gmail.com',
+        'jacklevy@gmail.com',
+        'lenchiang@gmail.com',
+        'vicchiang@gmail.com',
+        'bwbovee@gmail.com',
+        'lindsayvail@gmail.com',
+        'joe.ferrari@gmail.com',])
+
+    if request.user.email not in whitelist:
+        return render_to_response(
+            'usher/not_yet.html',
+            context_instance=RequestContext(request))
+    else:
+        return render_to_response(
+            'usher/sign_up.html',
+            context_instance=RequestContext(request))
 
 
 def google_auth(request):

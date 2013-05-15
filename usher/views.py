@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, get_user_model
@@ -49,7 +51,14 @@ def sign_up(request):
             except ObjectDoesNotExist:
                 customer = Customer.create(request.user)
             customer.update_card(request.POST.get("stripeToken"))
-            customer.subscribe('monthly', trial_days=14)
+
+            # Free trial until 7/4/2013
+            free_until = datetime(2013, 7, 4)
+            now = datetime.utcnow()
+            trial = free_until - now
+            if trial < 14:
+                trial = 14
+            customer.subscribe('monthly', trial_days=trial)
         except stripe.StripeError:
             # hmm... not sure.
             print "ERROR"

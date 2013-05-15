@@ -55,7 +55,7 @@
           <a class="brand" href="#">ReadRaven</a>
           <div class="nav-collapse collapse">
             <p class="navbar-text pull-right">
-            {{ user.email }} | <a href="{% url 'django.contrib.auth.views.logout' %}">Log out</a>
+            <a href="{% url 'usher.views.dashboard' %}">{{ user.email }}</a> | <a href="{% url 'django.contrib.auth.views.logout' %}">Log out</a>
             </p>
             <ul class="nav">
               <li><a href="">Home</a></li>

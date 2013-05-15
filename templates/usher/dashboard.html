@@ -1,0 +1,75 @@
+{% load handlebars %}
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Readraven : Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <link href="{% static 'css/bootstrap.css' %}" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    <style>
+      body {
+        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+      }
+    </style>
+    <link href="{% static 'css/bootstrap-responsive.css' %}" rel="stylesheet">
+
+    <!--[if lt IE 9]>
+      <script src="{% static 'js/html5shiv.js' %}"></script>
+    <![endif]-->
+
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="{% static 'ico/apple-touch-icon-144-precomposed.png' %}">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="{% static 'ico/apple-touch-icon-114-precomposed.png' %}">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="{% static 'ico/apple-touch-icon-72-precomposed.png' %}">
+    <link rel="apple-touch-icon-precomposed" href="{% static 'ico/apple-touch-icon-57-precomposed.png' %}">
+    <link rel="shortcut icon" href="{% static 'ico/favicon.png' %}">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,600,300|Crimson+Text:400,600,700' rel='stylesheet' type='text/css'>
+  </head>
+  <body id="dashboard">
+
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="brand" href="/"><b>ReadRaven</b></a>
+          <div class="nav-collapse collapse">
+            <p class="navbar-text pull-right">
+            <a href="{% url 'usher.views.dashboard' %}">{{ user.email }}</a> | <a href="{% url 'django.contrib.auth.views.logout' %}">Log out</a>
+            </p>
+            <ul class="nav">
+              <li><a href="">Home</a></li>
+              <li><a href="">Help</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div id="main" class="row-fluid">
+        <div class="row">
+          <div class="span2 offset1">
+            <ul class="nav nav-tabs nav-stacked">
+              <li class="active"><a href="#">Google Sync</a></li>
+              <li><a href="#">Payment Info</a></li>
+            </ul>
+          </div>
+          <div class="span8">
+            <p>If you had a hiccup during your initial Google Reader import,
+            let's try again!</p>
+            <br>
+            <button class="btn btn-medium btn-success" type="button">Sync from Google Reader</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

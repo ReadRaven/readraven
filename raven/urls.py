@@ -18,6 +18,7 @@ urlpatterns = patterns(
     url(r'^$', 'raven.views.index'),
     url(r'^usher/sign_up', 'usher.views.sign_up'),
     url(r'^usher/sign_in', 'usher.views.sign_in'),
+    url(r'^usher/dashboard', 'usher.views.dashboard'),
     url(r'^usher/google_auth', 'usher.views.google_auth'),
     url(r'^google_auth_callback', 'usher.views.google_auth_callback'),
 )

@@ -16,7 +16,6 @@ import stripe
 from payments.models import Customer
 from raven import tasks
 
-
 User = get_user_model()
 
 CLIENT_SECRETS = settings.GOOGLE_API_SECRETS
@@ -30,6 +29,13 @@ FLOW = flow_from_clientsecrets(
     CLIENT_SECRETS,
     scope=SCOPE,
     redirect_uri=settings.GOOGLE_OAUTH2_CALLBACK)
+
+
+@login_required
+def dashboard(request):
+    return render_to_response(
+        'usher/dashboard.html',
+        context_instance=RequestContext(request))
 
 
 def sign_in(request):

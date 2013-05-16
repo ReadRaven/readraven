@@ -57,9 +57,9 @@ def sign_up(request):
             free_until = datetime(2013, 7, 4)
             now = datetime.utcnow()
             trial = free_until - now
-            if trial < 14:
-                trial = 14
-            customer.subscribe('monthly', trial_days=trial)
+            if trial.days < 14:
+                trial.days = 14
+            customer.subscribe('monthly', trial_days=trial.days)
         except stripe.StripeError:
             # hmm... not sure.
             print "ERROR"
@@ -77,6 +77,7 @@ def sign_up(request):
 
     whitelist = set([
         'alex@chizang.net',
+        'alex@readraven.com',
         'paul@eventuallyanyway.com',
         'garrytan@gmail.com',
         'vyduna@gmail.com',

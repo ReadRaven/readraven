@@ -165,6 +165,7 @@ class FeedItemResourceTest(TestCase):
     def test_single_resource_list(self):
         feed = Feed()
         feed.link = 'http://www.paulhummer.org/rss'
+        feed.site = 'http://www.paulhummer.org/'
         feed.save()
         feed.update()
         self.user.subscribe(feed)
@@ -189,6 +190,7 @@ class FeedItemResourceTest(TestCase):
     def test_single_resource(self):
         feed = Feed()
         feed.link = 'http://www.paulhummer.org/rss'
+        feed.site = 'http://www.paulhummer.org/'
         feed.save()
         feed.update()
         self.user.subscribe(feed)
@@ -196,6 +198,7 @@ class FeedItemResourceTest(TestCase):
         #Create another feed that the user isn't subscribed to.
         unused_feed = Feed()
         unused_feed.link = 'http://www.chizang.net/alex/blog/feed/'
+        unused_feed.site = 'http://www.chizang.net/alex/blog/'
         unused_feed.save()
         unused_feed.update()
 
@@ -272,6 +275,7 @@ class FeedItemResourceTest(TestCase):
         #Create another feed that the user isn't subscribed to.
         unused_feed = Feed()
         unused_feed.link = 'http://xkcd.com/atom.xml'
+        unused_feed.site = 'http://xkcd.com/'
         unused_feed.save()
         unused_feed.update()
         feeditem_id = unused_feed.items.all()[0].pk

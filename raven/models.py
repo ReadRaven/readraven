@@ -36,7 +36,11 @@ class Feed(models.Model):
 
     # Required properties
     description = models.TextField()
+
+    # link is the RSS feed link
+    # site is the "real" web page (not required!)
     link = models.URLField(max_length=500, unique=True)
+    site = models.URLField(max_length=500, unique=True, null=True)
     title = models.CharField(max_length=200)
 
     # Optional metadata
@@ -84,10 +88,11 @@ class Feed(models.Model):
         return userfeed
 
     @classmethod
-    def create_basic(Class, title, link, subscriber):
+    def create_basic(Class, title, link, site, subscriber):
         feed = Class()
         feed.title = title
         feed.link = link
+        feed.site = site
 
         try:
             feed.validate_unique()
@@ -105,7 +110,7 @@ class Feed(models.Model):
         if data.bozo is not 0 or data.status == 301:
             return None
 
-        return Class.create_basic(data.feed.title, data.feed.link, subscriber)
+        return Class.create_basic(data.feed.title, data.href, data.feed.link, subscriber)
 
     def update(self, data=None):
         if data is None:

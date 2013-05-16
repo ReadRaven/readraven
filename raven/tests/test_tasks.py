@@ -115,9 +115,10 @@ class SyncFromReaderAPITaskTest(TestCase):
         # Ensure create_basic() won't create a duplicate feed
         title = u'A Softer World'
         link = u'http://www.rsspect.com/rss/asw.xml'
+        site = u'http://www.asofterworld.com'
 
         feed = Feed.objects.get(link=link)
-        duplicate = Feed.create_basic(title, link, owner)
+        duplicate = Feed.create_basic(title, link, site, owner)
         self.assertEqual(feed.pk, duplicate.pk)
 
         # Testing that subscribing a second time doesn't blow up.

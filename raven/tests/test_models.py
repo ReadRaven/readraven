@@ -31,14 +31,16 @@ class FeedTest(TestCase):
 
         feed = Feed()
         feed.title = 'Some Political Bullshit'
-        feed.link = 'http://bs.com'
+        feed.link = 'http://bs.com/rss'
+        feed.site = 'http://bs.com'
         feed.save()
         feed.add_subscriber(bob)
         feed.add_subscriber(steve)
 
         other_feed = Feed()
         other_feed.title = 'Mom\'s recipe blog'
-        other_feed.link = 'http://yourmom.com'
+        other_feed.site = 'http://yourmom.com'
+        other_feed.link = 'http://yourmom.com/rss'
         other_feed.save()
         other_feed.add_subscriber(steve)
 
@@ -93,14 +95,16 @@ class FeedTest(TestCase):
 
         feed = Feed()
         feed.title = 'BoingBoing'
-        feed.link = 'http://boingboing.net'
-        f = Feed.create_basic(feed.title, feed.link, user)
+        feed.link = 'http://boingboing.net/atom.xml'
+        feed.site = 'http://boingboing.net'
+        f = Feed.create_basic(feed.title, feed.link, feed.site, user)
 
         feed2 = Feed()
         feed2.title = 'BoingBoing'
-        feed2.link = 'http://boingboing.net'
+        feed2.link = 'http://boingboing.net/atom.xml'
+        feed2.site = 'http://boingboing.net'
         # XXX: TODO: we need to add/test duplicate checks save() too :(
-        f2 = Feed.create_basic(feed2.title, feed2.link, user)
+        f2 = Feed.create_basic(feed2.title, feed2.link, feed2.site, user)
 
         self.assertEqual(f.pk, f2.pk)
 
@@ -144,22 +148,26 @@ class FeedTest(TestCase):
         # Lack of title
         title = u'rockmnkey'
         link = u'http://rockmnkey.livejournal.com/data/rss'
-        feed = Feed.create_basic(title, link, owner)
+        site = u'http://rockmnkey.livejournal.com/'
+        feed = Feed.create_basic(title, link, site, owner)
 
         # Duplicate entries
         title = u'Canonical Voices'
         link = u'http://voices.canonical.com/feed/atom/'
-        feed = Feed.create_basic(title, link, owner)
+        site = u'http://voices.canonical.com/'
+        feed = Feed.create_basic(title, link, site, owner)
 
         # Lack of atom_id
         title = u'aw\'s blog'
         link = u'http://aw.lackof.org/~awilliam/blog/index.rss'
-        feed = Feed.create_basic(title, link, owner)
+        site = u'http://aw.lackof.org/~awilliam/blog/'
+        feed = Feed.create_basic(title, link, site, owner)
 
         # Dead feed
         title = u'Clayton - MySpace Blog'
         link = u'http://blog.myspace.com/blog/rss.cfm?friendID=73367402'
-        feed = Feed.create_basic(title, link, owner)
+        site = None
+        feed = Feed.create_basic(title, link, site, owner)
 
         feeds = Feed.objects.all()
         self.assertEqual(feeds.count(), 5)
@@ -187,12 +195,14 @@ class UserFeedTest(TestCase):
 
         feed = Feed()
         feed.title = 'Some Political Bullshit'
-        feed.link = 'http://bs.com'
+        feed.link = 'http://bs.com/rss'
+        feed.site = 'http://bs.com'
         feed.save()
 
         other_feed = Feed()
         other_feed.title = 'Mom\'s recipe blog'
-        other_feed.link = 'http://yourmom.com'
+        other_feed.link = 'http://yourmom.com/rss'
+        other_feed.site = 'http://yourmom.com'
         other_feed.save()
 
         user_feed = UserFeed()
@@ -223,13 +233,15 @@ class UserFeedTest(TestCase):
 
         feed = Feed()
         feed.title = 'Some Political Bullshit'
-        feed.link = 'http://bs.com'
+        feed.link = 'http://bs.com/rss'
+        feed.site = 'http://bs.com'
         feed.save()
         feed.add_subscriber(bob)
 
         other_feed = Feed()
         other_feed.title = 'Mom\'s recipe blog'
-        other_feed.link = 'http://yourmom.com'
+        other_feed.link = 'http://yourmom.com/rss'
+        other_feed.site = 'http://yourmom.com'
         other_feed.save()
         other_feed.add_subscriber(bob)
 
@@ -272,11 +284,13 @@ class FeedItemTest(TestCase):
 
         feed = Feed()
         feed.link = 'http://paulhummer.org/rss'
+        feed.site = 'http://paulhummer.org/'
         feed.save()
         user.subscribe(feed)
 
         other_feed = Feed()
         other_feed.link = 'http://www.chizang.net/alex/blog/feed/'
+        other_feed.site = 'http://www.chizang.net/alex/blog/'
         other_feed.save()
 
         userfeeditems = FeedItem.objects.for_user(user)
@@ -302,7 +316,8 @@ class FeedItemTest(TestCase):
         # Really long titles.
         title = u'minimal linux'
         link = u'http://minimallinux.com/rss'
-        feed = Feed.create_basic(title, link, owner)
+        site = u'http://minimallinux.com/'
+        feed = Feed.create_basic(title, link, site, owner)
 
         # This feed is dead, so we don't expect any items downloaded.
         userfeeditems = FeedItem.objects.for_user(owner)
@@ -331,7 +346,8 @@ class FeedItemTest(TestCase):
         # confusing scenario.
         title = u'Jeff Vyduna'
         link = u'http://invalid.invalid'
-        feed = Feed.create_basic(title, link, owner)
+        site = u'http://invalid.invalid'
+        feed = Feed.create_basic(title, link, site, owner)
 
         item = FeedItem()
         item.feed = feed

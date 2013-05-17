@@ -9,6 +9,9 @@ from django.http import HttpResponseRedirect, HttpResponseBadRequest
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
+from django import forms
+
+
 from oauth2client import xsrfutil
 from oauth2client.client import flow_from_clientsecrets, FlowExchangeError
 
@@ -30,6 +33,26 @@ FLOW = flow_from_clientsecrets(
     scope=SCOPE,
     redirect_uri=settings.GOOGLE_OAUTH2_CALLBACK)
 
+
+class UploadFileForm(forms.Form):
+    zipfile = forms.FileField()
+
+@login_required
+def import_takeout(request):
+    if request.method == 'POST':
+        form = UploadFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            f = request.FILES['zipfile']
+            z = '/tmp/' + str(f)
+            with open(z, 'wb+') as dest:
+                # XXX: we need to defend against huge file upload attack
+                for chunk in f.chunks():
+                    dest.write(chunk)
+
+            task = tasks.ImportOPMLTask()
+            result = task.delay(request.user, z)
+
+    return HttpResponseRedirect(reverse('usher.views.dashboard'))
 
 @login_required
 def dashboard(request):

@@ -37,7 +37,11 @@ class ImportOPMLTask(Task):
                 name = os.path.join(
                     os.path.splitext(os.path.basename(filename))[0],
                     'Reader', 'subscriptions.xml')
-                subscriptions = opml.from_string(z.open(name).read())
+                try:
+                    subscriptions = opml.from_string(z.open(name).read())
+                except KeyError:
+                    return False
+
                 for sub in subscriptions:
                     if hasattr(sub, 'type'):
                         Feed.create_from_url(sub.xmlUrl, user)

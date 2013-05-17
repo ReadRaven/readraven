@@ -28,6 +28,12 @@
     <link rel="apple-touch-icon-precomposed" href="{% static 'ico/apple-touch-icon-57-precomposed.png' %}">
     <link rel="shortcut icon" href="{% static 'ico/favicon.png' %}">
     <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,600,300|Crimson+Text:400,600,700' rel='stylesheet' type='text/css'>
+    <link href="{% static 'css/bootstrap-fileupload.css' %}" rel="stylesheet">
+    <script src="{% static 'js/jquery-1.9.1.js' %}"></script>
+    <script src="{% static 'js/bootstrap-fileupload.js' %}"></script>
+    <script type="text/javascript">
+        $('.fileupload').fileupload({uploadtype: 'file'});
+    </script>
   </head>
   <body id="dashboard">
 
@@ -55,19 +61,24 @@
 
     <div class="container">
       <div id="main" class="row-fluid">
-        <div class="row">
-          <div class="span2 offset1">
-            <ul class="nav nav-tabs nav-stacked">
-              <li class="active"><a href="#">Google Sync</a></li>
-              <li><a href="#">Payment Info</a></li>
-            </ul>
-          </div>
-          <div class="span8">
-            <p>If you had a hiccup during your initial Google Reader import,
-            let's try again!</p>
-            <br>
-            <button class="btn btn-medium btn-success" type="button">Sync from Google Reader</button>
-          </div>
+        <div class="span3 column">
+          <ul class="nav nav-tabs nav-stacked">
+            <li class="active"><a href="#">Import From Google</a></li>
+          </ul>
+        </div>
+        <div class="span5 column">
+         <p>Upload your Google Takeout zip file to import and preserve all
+         your historical Google Reader data.</p>
+         <br>
+         <form action="/usher/import_takeout" method="post" enctype="multipart/form-data">
+         {% csrf_token %}
+         <div class="fileupload fileupload-new" data-provides="fileupload">
+           <div class="input-append">
+             <div class="uneditable-input span3"><i class="icon-file fileupload-exists"></i> <span class="fileupload-preview"></span></div><span class="btn btn-file"><span class="fileupload-new">Select file</span><span class="fileupload-exists">Change</span><input name="zipfile" type="file" /></span><a href="#" class="btn fileupload-exists" data-dismiss="fileupload">Remove</a>
+           </div>
+         </div>
+         <button type="submit" class="btn btn-success">Import!</button>
+        </form>
         </div>
       </div>
     </div>

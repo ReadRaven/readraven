@@ -19,6 +19,7 @@ urlpatterns = patterns(
     url(r'^usher/sign_up', 'usher.views.sign_up'),
     url(r'^usher/sign_in', 'usher.views.sign_in'),
     url(r'^usher/dashboard', 'usher.views.dashboard'),
+    url(r'^usher/import_takeout', 'usher.views.import_takeout'),
     url(r'^usher/google_auth', 'usher.views.google_auth'),
     url(r'^google_auth_callback', 'usher.views.google_auth_callback'),
 )

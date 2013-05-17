@@ -176,6 +176,23 @@ class FeedTest(TestCase):
         owner = User.objects.get(pk=owner.pk)
         self.assertEqual(owner.feeds.count(), total_feeds-1)
 
+    @unittest.skipUnless(network_available(), 'Network unavailable')
+    def test_autodiscovery(self):
+        # Test discovery
+        url = 'http://boingboing.net'
+        feed = Feed.autodiscover(url)
+        self.assertEqual(feed, 'http://boingboing.net/atom.xml')
+
+        # Ensure passing an RSS link returns itself
+        url = 'http://www.rsspect.com/rss/asw.xml'
+        feed = Feed.autodiscover(url)
+        self.assertEqual(feed, url)
+
+        # Bogus url
+        url = 'http://'
+        feed = Feed.autodiscover(url)
+        self.assertEqual(feed, None)
+
 
 class UserFeedTest(TestCase):
     '''Test the UserFeed model.'''

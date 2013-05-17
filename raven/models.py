@@ -112,6 +112,16 @@ class Feed(models.Model):
 
         return Class.create_raw(data.feed.title, data.href, data.feed.link, subscriber)
 
+    @classmethod
+    def autodiscover(Class, url):
+        '''Caution: this goes out to the network and also parses a bunch of
+        html, so it may be slow...'''
+        import raven.feedfinder as feedfinder
+
+        # TODO: consider logging every time this is None, so we can go
+        # build some manual workarounds?
+        return feedfinder.feed(url)
+
     def update(self, data=None):
         if data is None:
             data = feedparser.parse(self.link)

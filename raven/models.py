@@ -88,7 +88,7 @@ class Feed(models.Model):
         return userfeed
 
     @classmethod
-    def create_basic(Class, title, link, site, subscriber):
+    def create_raw(Class, title, link, site, subscriber):
         feed = Class()
         feed.title = title
         feed.link = link
@@ -110,7 +110,7 @@ class Feed(models.Model):
         if data.bozo is not 0 or data.status == 301:
             return None
 
-        return Class.create_basic(data.feed.title, data.href, data.feed.link, subscriber)
+        return Class.create_raw(data.feed.title, data.href, data.feed.link, subscriber)
 
     def update(self, data=None):
         if data is None:

@@ -99,7 +99,7 @@ class SyncFromReaderAPITask(Task):
         feeds = {}
         # First loop quickly creates Feed objects... for speedier UI?
         for f in reader.feeds:
-            feed = Feed.create_basic(f.title, f.feedUrl, f.siteUrl, user)
+            feed = Feed.create_raw(f.title, f.feedUrl, f.siteUrl, user)
             feeds[f.feedUrl] = feed
             userfeed = feed.userfeed(user)
             for c in f.categories:

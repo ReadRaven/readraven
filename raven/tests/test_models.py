@@ -88,7 +88,7 @@ class FeedTest(TestCase):
         self.assertEqual(user.feeditems.count(), 2)
 
     def test_duplicates(self):
-        '''Ensure that we can't create duplicate feeds using create_basic()'''
+        '''Ensure that we can't create duplicate feeds using create_raw()'''
         user = User()
         user.email = 'Bob'
         user.save()
@@ -97,14 +97,14 @@ class FeedTest(TestCase):
         feed.title = 'BoingBoing'
         feed.link = 'http://boingboing.net/atom.xml'
         feed.site = 'http://boingboing.net'
-        f = Feed.create_basic(feed.title, feed.link, feed.site, user)
+        f = Feed.create_raw(feed.title, feed.link, feed.site, user)
 
         feed2 = Feed()
         feed2.title = 'BoingBoing'
         feed2.link = 'http://boingboing.net/atom.xml'
         feed2.site = 'http://boingboing.net'
         # XXX: TODO: we need to add/test duplicate checks save() too :(
-        f2 = Feed.create_basic(feed2.title, feed2.link, feed2.site, user)
+        f2 = Feed.create_raw(feed2.title, feed2.link, feed2.site, user)
 
         self.assertEqual(f.pk, f2.pk)
 
@@ -149,25 +149,25 @@ class FeedTest(TestCase):
         title = u'rockmnkey'
         link = u'http://rockmnkey.livejournal.com/data/rss'
         site = u'http://rockmnkey.livejournal.com/'
-        feed = Feed.create_basic(title, link, site, owner)
+        feed = Feed.create_raw(title, link, site, owner)
 
         # Duplicate entries
         title = u'Canonical Voices'
         link = u'http://voices.canonical.com/feed/atom/'
         site = u'http://voices.canonical.com/'
-        feed = Feed.create_basic(title, link, site, owner)
+        feed = Feed.create_raw(title, link, site, owner)
 
         # Lack of atom_id
         title = u'aw\'s blog'
         link = u'http://aw.lackof.org/~awilliam/blog/index.rss'
         site = u'http://aw.lackof.org/~awilliam/blog/'
-        feed = Feed.create_basic(title, link, site, owner)
+        feed = Feed.create_raw(title, link, site, owner)
 
         # Dead feed
         title = u'Clayton - MySpace Blog'
         link = u'http://blog.myspace.com/blog/rss.cfm?friendID=73367402'
         site = None
-        feed = Feed.create_basic(title, link, site, owner)
+        feed = Feed.create_raw(title, link, site, owner)
 
         feeds = Feed.objects.all()
         self.assertEqual(feeds.count(), 5)
@@ -317,7 +317,7 @@ class FeedItemTest(TestCase):
         title = u'minimal linux'
         link = u'http://minimallinux.com/rss'
         site = u'http://minimallinux.com/'
-        feed = Feed.create_basic(title, link, site, owner)
+        feed = Feed.create_raw(title, link, site, owner)
 
         # This feed is dead, so we don't expect any items downloaded.
         userfeeditems = FeedItem.objects.for_user(owner)
@@ -347,7 +347,7 @@ class FeedItemTest(TestCase):
         title = u'Jeff Vyduna'
         link = u'http://invalid.invalid'
         site = u'http://invalid.invalid'
-        feed = Feed.create_basic(title, link, site, owner)
+        feed = Feed.create_raw(title, link, site, owner)
 
         item = FeedItem()
         item.feed = feed

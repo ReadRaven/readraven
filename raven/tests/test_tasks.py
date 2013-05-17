@@ -76,6 +76,23 @@ class ImportOPMLTaskTest(TestCase):
         owner = User.objects.get(pk=owner.pk)
         self.assertEqual(owner.feeds.count(), total_feeds-1)
 
+    @override_settings(CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
+                       CELERY_ALWAYS_EAGER=True,
+                       BROKER_BACKEND='memory',)
+    def test_nasty(self):
+        owner = User()
+        owner.email = 'Bob'
+        owner.save()
+
+        # A zip bomb
+        task = tasks.ImportOPMLTask()
+        result = task.delay(owner, os.path.join(TESTDATA_DIR, '42.zip'))
+
+        # Tricksy! The celery task should succeed in running, but should
+        # return a Failed (False) result
+        self.assertTrue(result.successful())
+        self.assertFalse(result.result)
+
 
 class SyncFromReaderAPITaskTest(TestCase):
     '''Test SyncFromReaderAPITask.'''

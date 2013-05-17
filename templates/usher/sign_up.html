@@ -45,46 +45,43 @@
           <div class="span6 offset1">
             <h1>Almost done!</h1>
             <p>Our squirrels are importing your Google Reader feeds as we speak.</p>
-	    <p><b>Why are you charging money?</b></p>
+            <p><b>Why are you charging money?</b></p>
 
-	    <p>Your most precious resources are your time and attention. By
-	    paying for Readraven, you are signing up for a service that is
-	    built to last and built to protect your privacy.</p>
+            <p>Your most precious resources are your time and attention. By
+            paying for Readraven, you are signing up for a service that is
+            built to last and built to protect your privacy.</p>
 
-	    <p><a href="{%url 'raven.views.values' %}"><b>Read more about our values »</b></a></p>
-        <br>
-        <p>Or <a href="{% url 'django.contrib.auth.views.logout' %}">log out</a></p>
+            <p><a href="{%url 'raven.views.values' %}"><b>Read more about our values »</b></a></p>
+            <br>
+            <p>Or <a href="{% url 'django.contrib.auth.views.logout' %}">log out</a></p>
 
           </div>
-	<!--
-	</div>
-	<div class="row">
-	-->
+
           <div class="span6 offset1">
           <h1>&nbsp;</h1>
           <form action="/usher/sign_up" method="post" id="signup-form" class="well well-small">
             {% csrf_token %}
             <span class="payment-errors"></span>
 
-	    <div class="controls controls-row">
-	       <div class="control-group">
+            <div class="controls controls-row">
+               <div class="control-group">
                  <input class="span4" placeholder="Card Number" type="text" data-stripe="number"/>
-	       </div>
-	       <div class="control-group">
+               </div>
+               <div class="control-group">
                  <input class="span1" placeholder="CVC" type="text" data-stripe="cvc"/>
-	       </div>
+               </div>
             </div>
 
             <div class="controls controls-row">
-	      <div class="control-group">
+              <div class="control-group">
                 <input class="span2" placeholder="Month (MM)" type="text" data-stripe="exp-month"/>
-	      </div>
-	      <div class="control-group">
+              </div>
+              <div class="control-group">
                 <input class="span3" placeholder="Year (YYYY)" type="text" data-stripe="exp-year"/>
-	      </div>
+              </div>
             </div>
 
-	    <div class="controls">
+            <div class="controls">
             <button type="submit" class="btn btn-primary btn-large">Start your free trial</button>
 
             <br>
@@ -95,7 +92,7 @@
             happy to refund your payment if you're dissatisfied with
             your service for any reason.</label>
 
-	    </div>
+            </div>
           </form>
           </div>
         </div>

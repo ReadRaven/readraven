@@ -11,6 +11,49 @@ import opml
 from raven.models import Feed, FeedItem, UserFeedItem
 
 
+def _new_user_item(user, feed, entry):
+    try:
+        item = FeedItem.objects.get(reader_guid=entry.id)
+    except ObjectDoesNotExist:
+        item = FeedItem()
+        item.feed = feed
+        item.title = entry.title
+        item.link = entry.url
+        item.description = entry.content
+
+        item.atom_id = ''
+        item.reader_guid = entry.id
+        item.published = datetime.utcfromtimestamp(entry.time)
+        item.guid = item.calculate_guid()
+        item.save()
+
+    try:
+        user_item = item.userfeeditem(user)
+    except ObjectDoesNotExist:
+        # Nasty. The above only works if a user is actually
+        # subscribed to a feed. However, it can be the case
+        # where we're trying to import Google Reader, and we're
+        # processing items that have been shared with us. In
+        # this case, we probably won't be subscribed to the
+        # feed, and more, we probably don't want to subscribe to
+        # the feed. So manually create a UserFeedItem so the
+        # Item can be accessed by the User. We can pull it out
+        # of the db later by searching for the 'shared-with-you'
+        # tag.
+        user_item = UserFeedItem()
+        user_item.item = item
+        user_item.user = user
+        user_item.feed = feed
+        user_item.save()
+
+    user_item.read = entry.read
+    user_item.starred = entry.starred
+    for t in entry.tags:
+        user_item.tags.add(t)
+    user_item.save()
+
+    return user_item
+
 class UpdateFeedTask(PeriodicTask):
     '''A task for updating a set of feeds.'''
 
@@ -76,49 +119,6 @@ class SyncFromReaderAPITask(Task):
     '''A task for sync'ing data from a Google Reader-compatible API.'''
 
     def run(self, user, loadLimit, *args, **kwargs):
-        def _new_user_item(user, feed, entry):
-            try:
-                item = FeedItem.objects.get(reader_guid=entry.id)
-            except ObjectDoesNotExist:
-                item = FeedItem()
-                item.feed = feed
-                item.title = entry.title
-                item.link = entry.url
-                item.description = entry.content
-
-                item.atom_id = ''
-                item.reader_guid = entry.id
-                item.published = datetime.utcfromtimestamp(entry.time)
-                item.guid = item.calculate_guid()
-                item.save()
-
-            try:
-                user_item = item.userfeeditem(user)
-            except ObjectDoesNotExist:
-                # Nasty. The above only works if a user is actually
-                # subscribed to a feed. However, it can be the case
-                # where we're trying to import Google Reader, and we're
-                # processing items that have been shared with us. In
-                # this case, we probably won't be subscribed to the
-                # feed, and more, we probably don't want to subscribe to
-                # the feed. So manually create a UserFeedItem so the
-                # Item can be accessed by the User. We can pull it out
-                # of the db later by searching for the 'shared-with-you'
-                # tag.
-                user_item = UserFeedItem()
-                user_item.item = item
-                user_item.user = user
-                user_item.feed = feed
-                user_item.save()
-
-            user_item.read = entry.read
-            user_item.starred = entry.starred
-            for t in entry.tags:
-                user_item.tags.add(t)
-            user_item.save()
-
-            return user_item
-
         # user.credential should always be valid when doing oauth2
         if user.credential:
             credential = user.credential

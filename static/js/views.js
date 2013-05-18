@@ -83,6 +83,12 @@ APP.Views.FeedItemListView = Backbone.View.extend({
         var el = this.$el;
         el.children().remove();
         _.each(this.items.models, _.bind(function(item) {
+            /* This is a hack. For some reason, when the feed is loaded
+             * directly as the first view, the first item is a collection.
+             * We use 'return true' instead of 'continue' because jQuery.
+             */
+            if (item.get('title') === undefined) { return true; }
+
             var view = new APP.Views.FeedItemView({item: item});
             el.append(view.render().el);
         }, this));
@@ -93,11 +99,14 @@ APP.Views.FeedItemListView = Backbone.View.extend({
 APP.Views.FeedItemView = Backbone.View.extend({
     initialize: function(options) {
         this.item = options.item;
-        console.log('feeditem initialize');
     },
     render: function() {
         var template = Handlebars.compile($('#feed-item-template').html());
-        this.$el.html(template(this.item.attributes));
+        var context = {
+            feed: this.item.get('feed').attributes,
+            item: this.item.attributes
+        };
+        this.$el.html(template(context));
         return this;
     }
 });

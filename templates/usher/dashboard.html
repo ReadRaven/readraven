@@ -37,7 +37,7 @@
   </head>
   <body id="dashboard">
 
-    <div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar navbar-fixed-top">
       <div class="navbar-inner">
         <div class="container">
           <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
@@ -51,8 +51,7 @@
             <a href="{% url 'usher.views.dashboard' %}">{{ user.email }}</a> | <a href="{% url 'django.contrib.auth.views.logout' %}">Log out</a>
             </p>
             <ul class="nav">
-              <li><a href="">Home</a></li>
-              <li><a href="">Help</a></li>
+              <li><a href="{% url 'raven.views.home' %}">Home</a></li>
             </ul>
           </div>
         </div>

@@ -10,7 +10,6 @@ APP.Models.Feed = Backbone.RelationalModel.extend({
         key: 'items',
         relatedModel: 'APP.Models.FeedItem',
         collectionType: 'APP.Collections.FeedItems',
-        autoFetch: true,
         reverseRelation: {
             key: 'feed',
             includeInJSON: 'resource_uri'

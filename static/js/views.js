@@ -29,8 +29,20 @@ APP.Views.Reader = Backbone.View.extend({
         }
         $('#add-feed').val('');
     },
+    deleteFeed: function(e) {
+        e.preventDefault();
+        var actualTarget = e.target.parentNode.parentNode,
+            feedID = actualTarget.getAttribute('data-feedid'),
+            feed = this.feeds.where({id: parseInt(feedID, 10)})[0];
+        feed.destroy({
+            success: function(model, response) {
+                actualTarget.remove();
+            }
+        });
+    },
     events: {
-        'click button#add-feed': 'addFeed'
+        'click button#add-feed': 'addFeed',
+        'click div.delete-feed': 'deleteFeed'
     },
     initialize: function(options) {
         this.feeds = options.feeds;

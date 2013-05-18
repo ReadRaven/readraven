@@ -100,20 +100,22 @@
         <input type="text" class="input-medium" id="add-feed"/>
         <button class="btn" id="add-feed">Add Feed</button>
       </form>
-      <ul id="feed-list" class="unstyled">
-      </ul>
+      <div id="feed-list"></div>
     </div>
     <div class="span9 column" id="item-list">
     </div>
   </script>
   <script type="text/x-handlebars" id="feed-listing-template">
-    <li><a href="#/feed/{{id}}">
+    <a href="#/feed/{{id}}" data-feedid="{{id}}">
     {{#if title}}
       {{title}}
     {{else}}
       {{link}}
     {{/if}}
-    </a></li>
+      <div class="pull-right delete-feed">
+        <i class="icon-trash icon-black"></i>
+      </div>
+    </a>
   </script>
   <script type="text/x-handlebars" id="feed-item-template">
     <div class="row">

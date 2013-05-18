@@ -17,12 +17,13 @@ class FeedResource(ModelResource):
         authentication = SessionAuthentication()
         authorization = Authorization()
         default_format = 'application/json'
-        fields = ['description', 'title', 'link', 'id']
+        fields = ['description', 'title', 'link', 'id', 'items']
         queryset = models.Feed.objects.all()
         resource_name = 'feed'
+    items = fields.ToManyField('raven.resources.FeedItemResource', 'items')
 
     def get_object_list(self, request):
-        return models.Feed.objects.for_user(request.user)
+        return models.Feed.objects.for_user(request.user).order_by('title')
 
     def obj_get(self, bundle=None, **kwargs):
         bundle.obj = models.Feed.objects.get(pk=kwargs['pk'])
@@ -71,7 +72,7 @@ class FeedItemResource(ModelResource):
     read = fields.BooleanField()
 
     def get_object_list(self, request):
-        return models.FeedItem.objects.for_user(request.user)
+        return models.FeedItem.objects.for_user(request.user).order_by('-published')
 
     def obj_get(self, bundle=None, request=None, **kwargs):
         bundle.obj = models.FeedItem.objects.get(pk=kwargs['pk'])

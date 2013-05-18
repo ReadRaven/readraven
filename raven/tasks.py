@@ -31,35 +31,43 @@ class UpdateFeedTask(PeriodicTask):
 class ImportOPMLTask(Task):
     '''A task for importing feeds from OPML files.'''
 
+    def _import_subscriptions(self):
+        name = os.path.join(
+            os.path.splitext(os.path.basename(self.filename))[0],
+            'Reader', 'subscriptions.xml')
+        try:
+            subscriptions = opml.from_string(self.z.open(name).read())
+        except KeyError:
+            return False
+
+        for sub in subscriptions:
+            if hasattr(sub, 'type'):
+                title = sub.title
+                link = sub.xmlUrl
+                site = sub.htmlUrl
+                Feed.create_raw(title, link, site, self.user)
+            else:
+                # In this case, it's a 'group' of feeds.
+                folder = sub
+                for sub in folder:
+                    title = sub.title
+                    link = sub.xmlUrl
+                    site = sub.htmlUrl
+                    feed = Feed.create_raw(title, link, site, self.user)
+
+                    userfeed = feed.userfeed(self.user)
+                    userfeed.tags.add(folder.title)
+        return True
+
     def run(self, user, filename, *args, **kwargs):
         if zipfile.is_zipfile(filename):
             with zipfile.ZipFile(filename, 'r') as z:
-                name = os.path.join(
-                    os.path.splitext(os.path.basename(filename))[0],
-                    'Reader', 'subscriptions.xml')
-                try:
-                    subscriptions = opml.from_string(z.open(name).read())
-                except KeyError:
-                    return False
+                self.z = z
+                self.user = user
+                self.filename = filename
 
-                for sub in subscriptions:
-                    if hasattr(sub, 'type'):
-                        title = sub.title
-                        link = sub.xmlUrl
-                        site = sub.htmlUrl
-                        Feed.create_raw(title, link, site, user)
-                    else:
-                        # In this case, it's a 'group' of feeds.
-                        folder = sub
-                        for sub in folder:
-                            title = sub.title
-                            link = sub.xmlUrl
-                            site = sub.htmlUrl
-                            feed = Feed.create_raw(title, link, site, user)
-
-                            userfeed = feed.userfeed(user)
-                            userfeed.tags.add(folder.title)
-            return True
+                did_sub = self._import_subscriptions()
+            return did_sub
         else:
             return False
 

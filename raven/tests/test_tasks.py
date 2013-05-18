@@ -74,6 +74,7 @@ class ImportOPMLTaskTest(TestCase):
 
         total_feeds = Feed.objects.all().count()
         owner = User.objects.get(pk=owner.pk)
+        self.assertEqual(total_feeds, 123)
         self.assertEqual(owner.feeds.count(), total_feeds-1)
 
     @override_settings(CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,

@@ -77,6 +77,12 @@ class ImportOPMLTaskTest(TestCase):
         self.assertEqual(total_feeds, 123)
         self.assertEqual(owner.feeds.count(), total_feeds-1)
 
+        starred = UserFeedItem.objects.filter(starred=True)
+        self.assertEqual(len(starred), 9)
+
+        imported = UserFeedItem.objects.filter(tags__name__in=['imported'])
+        self.assertEqual(len(imported), 9)
+
     @override_settings(CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
                        CELERY_ALWAYS_EAGER=True,
                        BROKER_BACKEND='memory',)

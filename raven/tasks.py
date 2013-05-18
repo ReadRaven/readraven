@@ -6,10 +6,23 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from celery.task import Task, PeriodicTask
 from libgreader import ClientAuthMethod, OAuth2Method, GoogleReader
+import json
 import opml
 
 from raven.models import Feed, FeedItem, UserFeedItem
 
+
+class FakeEntry(object):
+    def __init__(self, item):
+        self.read = False
+        self.starred = False
+        self.tags = []
+
+        self.id = item['id']
+        self.title = item['title']
+        self.url = item['url']
+        self.content = item['content']
+        self.time = item['time']
 
 def _new_user_item(user, feed, entry):
     try:
@@ -102,6 +115,68 @@ class ImportOPMLTask(Task):
                     userfeed.tags.add(folder.title)
         return True
 
+    def _import_starred(self):
+        name = os.path.join(
+            os.path.splitext(os.path.basename(self.filename))[0],
+            'Reader', 'starred.json')
+        try:
+            starred = json.loads(self.z.open(name).read(), strict=False)
+        except KeyError:
+            return False
+
+        try:
+            # This is like, weak sauce verification, hoping that we're
+            # not about to get bogus data. Still, a carefully crafted
+            # attack file could make it past this check.
+            id = starred['id']
+            if not id.endswith('starred'):
+                return False
+        except KeyError:
+            return False
+
+        for i in starred['items']:
+            title = i['origin']['title']
+            site = i['origin']['htmlUrl']
+            link = i['origin']['streamId']
+            if link.startswith('feed/'):
+                link = link.replace('feed/', '', 1)
+            # These are some weird bullshit links created by google
+            # reader. Try and discover a real link instead.
+            elif link.startswith('user/'):
+                maybe = Feed.autodiscover(site)
+                if maybe:
+                    link = maybe
+
+            feed = Feed.create_raw(title, link, site)
+
+            item = {}
+            item['id'] = i['id']
+            item['title'] = i['title']
+            item['url'] = i.get('canonical', i.get('alternate', ''))[0]['href']
+            try:
+                item['content'] = i['content']['content']
+            except KeyError:
+                try:
+                    item['content'] = i['summary']['content']
+                except KeyError:
+                    # No idea if this is even possible, we should squawk
+                    item['content'] = ''
+            item['time'] = i['published']
+            entry = FakeEntry(item)
+
+            for c in i.get('categories', []):
+                if c.startswith('user/') and c.endswith('/read'):
+                    entry.read = True
+                elif c.startswith('user/') and c.endswith('/starred'):
+                    entry.starred = True
+                elif c.startswith('user/') and ('label' in c):
+                    tag = c.split('/')[-1]
+                    entry.tags.append(tag)
+
+            user_item = _new_user_item(self.user, feed, entry)
+            user_item.tags.add('imported')
+            user_item.save()
+
     def run(self, user, filename, *args, **kwargs):
         if zipfile.is_zipfile(filename):
             with zipfile.ZipFile(filename, 'r') as z:
@@ -110,6 +185,7 @@ class ImportOPMLTask(Task):
                 self.filename = filename
 
                 did_sub = self._import_subscriptions()
+                did_star = self._import_starred()
             return did_sub
         else:
             return False

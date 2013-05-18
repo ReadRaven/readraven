@@ -87,41 +87,6 @@
   {% endcomment %}
 
   {% handlebars %}
-  <script type="text/x-handlebars" id="index">
-    {{#each item in items}}
-    <div class="row">
-      <div class="feeditem">
-        <h3><a {{bindAttr href="item.link"}} target="blank">{{item.title}}</a></h3>
-        <div class="subtitle">
-          from {{#linkTo 'feed' item.feed.id}}{{item.feed.title}}{{/linkTo}}
-        </div>
-        <div class="content">
-          {{{ item.description }}}
-        </div>
-      </div>
-    </div>
-    {{/each}}
-  </script>
-  <script type="text/x-handlebars" id="feed">
-    {{#each item in items}}
-    <div class="row">
-      <div class="feeditem">
-        <h3><a {{bindAttr href="item.link"}} target="blank">{{item.title}}</a></h3>
-        <div class="subtitle">
-          from {{#linkTo 'feed' item.feed.id}}{{item.feed.title}}{{/linkTo}}
-        </div>
-        <div class="content">
-          {{{ item.description }}}
-        </div>
-      </div>
-    </div>
-    {{/each}}
-  </script>
-  <script type="text/x-handlebars" id="help">
-    This is the help page.
-  </script>
-
-
   <script type="text/x-handlebars" id="index-template">
     <div class="span3 column">
     {% endhandlebars %}{% comment %}
@@ -139,11 +104,10 @@
       </ul>
     </div>
     <div class="span9 column" id="item-list">
-      Feed items go here!
     </div>
   </script>
   <script type="text/x-handlebars" id="feed-listing-template">
-    <li><a href="{{link}}">
+    <li><a href="#/feed/{{id}}">
     {{#if title}}
       {{title}}
     {{else}}
@@ -154,12 +118,12 @@
   <script type="text/x-handlebars" id="feed-item-template">
     <div class="row">
       <div class="feeditem">
-        <h3><a href="#">{{title}}</a></h3>
+        <h3><a href="{{item.link}}" target="blank">{{item.title}}</a></h3>
         <div class="subtitle">
-          from <a href="#">Feed title</a>
+          from <a href="#/feed/{{feed.id}}">{{feed.title}}</a>
         </div>
         <div class="content">
-          {{{description}}}
+          {{{item.description}}}
         </div>
       </div>
     </div>
@@ -174,6 +138,7 @@
   <script src="{% static 'js/csrftoken.js' %}"></script>
 
   <script src="{% static 'js/backbone-tastypie.js' %}"></script>
+  <script src="{% static 'js/backbone-relational.js' %}"></script>
   <script src="{% static 'js/models.js' %}"></script>
   <script src="{% static 'js/views.js' %}"></script>
   <script src="{% static 'js/reader.js' %}"></script>

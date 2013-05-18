@@ -23,7 +23,7 @@ APP.Routers.ReaderRouter = Backbone.Router.extend({
                     feeds: feeds,
                     items: items
                 });
-                $('#main').html(this.currentView.render().el);
+                this.currentView.render();
             }, this));
         }, this));
     },
@@ -41,7 +41,7 @@ APP.Routers.ReaderRouter = Backbone.Router.extend({
                     feeds: feeds,
                     items: feed.get('items')
                 });
-                $('#main').html(this.currentView.render().el);
+                this.currentView.render();
             }, this));
         }, this));
     }

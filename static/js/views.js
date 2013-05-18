@@ -40,6 +40,7 @@ APP.Views.Reader = Backbone.View.extend({
             }
         });
     },
+    el: '#main',
     events: {
         'click button#add-feed': 'addFeed',
         'click div.delete-feed': 'deleteFeed'

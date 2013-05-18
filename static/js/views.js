@@ -46,24 +46,39 @@ APP.Views.Reader = Backbone.View.extend({
         'click div.delete-feed': 'deleteFeed'
     },
     initialize: function(options) {
-        this.feeds = options.feeds;
-        this.items = options.items;
-
+        if (options.feedID) {
+            this.feeds = options.feeds;
+            this.feedID = options.feedID;
+        } else {
+            this.feeds = options.feeds;
+            this.items = options.items;
+        }
     },
     render: function() {
         var template = Handlebars.compile($('#index-template').html());
         this.$el.html(template);
 
-        this.feeds.on('reset', function() {
-            this._renderLeftBar();
-        }, this);
-        this.feeds.fetch({reset: true});
+        if (this.feedID) {
 
-        this.items.on('reset', function() {
-            this._renderRightBar();
-        }, this);
-        this.items.fetch({reset: true});
+            this.feeds.on('reset', function() {
+                this._renderLeftBar();
+                this.feed = this.feeds.where({id: parseInt(this.feedID, 10)})[0];
+                this.feed.fetchRelated('items');
+                this.items = this.feed.get('items');
+                this._renderRightBar();
+            }, this);
+            this.feeds.fetch({reset: true});
+        } else {
+            this.feeds.on('reset', function() {
+                this._renderLeftBar();
+            }, this);
+            this.feeds.fetch({reset: true});
 
+            this.items.on('reset', function() {
+                this._renderRightBar();
+            }, this);
+            this.items.fetch({reset: true});
+        }
         return this;
     }
 });
@@ -104,12 +119,6 @@ APP.Views.FeedItemListView = Backbone.View.extend({
         var el = this.$el;
         el.children().remove();
         _.each(this.items.models, _.bind(function(item) {
-            /* This is a hack. For some reason, when the feed is loaded
-             * directly as the first view, the first item is a collection.
-             * We use 'return true' instead of 'continue' because jQuery.
-             */
-            if (item.get('title') === undefined) { return true; }
-
             var view = new APP.Views.FeedItemView({item: item});
             el.append(view.render().el);
         }, this));
@@ -118,16 +127,26 @@ APP.Views.FeedItemListView = Backbone.View.extend({
 });
 
 APP.Views.FeedItemView = Backbone.View.extend({
-    initialize: function(options) {
-        this.item = options.item;
-    },
-    render: function() {
+    _render: function() {
         var template = Handlebars.compile($('#feed-item-template').html());
         var context = {
             feed: this.item.get('feed').attributes,
             item: this.item.attributes
         };
         this.$el.html(template(context));
+    },
+    initialize: function(options) {
+        this.item = options.item;
+    },
+    render: function() {
+        if (this.item.get('title') !== undefined) {
+            this._render();
+        } else {
+            this.item.on('change', function() {
+                this._render();
+            }, this);
+            this.item.fetch();
+        }
         return this;
     }
 });

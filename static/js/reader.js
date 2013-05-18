@@ -23,21 +23,12 @@ APP.Routers.ReaderRouter = Backbone.Router.extend({
     },
     feed: function(id) {
         var feeds = this.feeds || new APP.Collections.Feeds();
-        feeds.fetch().then(_.bind(function(args) {
-            if (this.feeds == undefined) {
-                this.feeds = feeds;
-            }
-            var feed = feeds.where({id: parseInt(id, 10)})[0];
-            var items = new APP.Collections.FeedItems(feed.get('items'));
-            items.fetch().then(_.bind(function(args) {
-                this.currentView = new APP.Views.Reader({
-                    feed: feed,
-                    feeds: feeds,
-                    items: feed.get('items')
-                });
-                this.currentView.render();
-            }, this));
-        }, this));
+
+        this.currentView = new APP.Views.Reader({
+            feedID: id,
+            feeds: feeds,
+        });
+        this.currentView.render();
     }
 });
 

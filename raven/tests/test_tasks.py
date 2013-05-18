@@ -7,7 +7,7 @@ from django.test import TestCase
 from django.test.utils import override_settings
 
 from raven import tasks
-from raven.models import Feed
+from raven.models import Feed, UserFeedItem
 from raven.test_utils import network_available
 
 THIS_DIR = os.path.dirname(__file__)
@@ -74,7 +74,14 @@ class ImportOPMLTaskTest(TestCase):
 
         total_feeds = Feed.objects.all().count()
         owner = User.objects.get(pk=owner.pk)
+        self.assertEqual(total_feeds, 123)
         self.assertEqual(owner.feeds.count(), total_feeds-1)
+
+        starred = UserFeedItem.objects.filter(starred=True)
+        self.assertEqual(len(starred), 9)
+
+        imported = UserFeedItem.objects.filter(tags__name__in=['imported'])
+        self.assertEqual(len(imported), 9)
 
     @override_settings(CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
                        CELERY_ALWAYS_EAGER=True,
@@ -118,16 +125,22 @@ class SyncFromReaderAPITaskTest(TestCase):
         other_owner.subscribe(other_feed)
 
         task = tasks.SyncFromReaderAPITask()
-        result = task.delay(owner, 'alex@chizang.net', secure)
+        result = task.delay(owner, 10, 'alex@chizang.net', secure)
 
         self.assertTrue(result.successful())
 
         feeds = Feed.objects.all()
-        self.assertEqual(feeds.count(), 123)
+        # Tricky. We are subscribed to 122 feeds
+        # We create another feed above, to get to 123
+        # But 3 feeds in the import were "shared-with-you" so the total
+        # number of feeds should be 126
+        self.assertEqual(feeds.count(), 126)
 
         total_feeds = Feed.objects.all().count()
         owner = User.objects.get(pk=owner.pk)
-        self.assertEqual(owner.feeds.count(), total_feeds-1)
+        # Verify that we do not get subscribed to feeds when items are
+        # 'shared-with-you'.
+        self.assertEqual(owner.feeds.count(), 122)
 
         # Ensure create_raw() won't create a duplicate feed
         title = u'A Softer World'
@@ -135,11 +148,16 @@ class SyncFromReaderAPITaskTest(TestCase):
         site = u'http://www.asofterworld.com'
 
         feed = Feed.objects.get(link=link)
-        duplicate = Feed.create_raw(title, link, site, owner)
+        duplicate = Feed.create_raw(title, link, site)
+        duplicate.add_subscriber(owner)
         self.assertEqual(feed.pk, duplicate.pk)
 
         # Testing that subscribing a second time doesn't blow up.
-        duplicate.add_subscriber(owner)
+        duplicate2 = Feed.create_and_subscribe(title, link, site, owner)
+        self.assertEqual(feed.pk, duplicate2.pk)
+
+        tagged = UserFeedItem.objects.filter(tags__name__in=['shared-with-you'])
+        self.assertEqual(len(tagged), 10)
 
         # Uncomment for manual checking of ephemeral data sets
         #from raven.models import FeedItem

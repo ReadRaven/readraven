@@ -136,11 +136,13 @@ class SyncFromReaderAPITaskTest(TestCase):
         site = u'http://www.asofterworld.com'
 
         feed = Feed.objects.get(link=link)
-        duplicate = Feed.create_raw(title, link, site, owner)
+        duplicate = Feed.create_raw(title, link, site)
+        duplicate.add_subscriber(owner)
         self.assertEqual(feed.pk, duplicate.pk)
 
         # Testing that subscribing a second time doesn't blow up.
-        duplicate.add_subscriber(owner)
+        duplicate2 = Feed.create_and_subscribe(title, link, site, owner)
+        self.assertEqual(feed.pk, duplicate2.pk)
 
         # Uncomment for manual checking of ephemeral data sets
         #from raven.models import FeedItem

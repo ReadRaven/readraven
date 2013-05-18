@@ -88,7 +88,7 @@ class Feed(models.Model):
         return userfeed
 
     @classmethod
-    def create_raw(Class, title, link, site, subscriber):
+    def create_raw(Class, title, link, site):
         feed = Class()
         feed.title = title
         feed.link = link
@@ -100,9 +100,14 @@ class Feed(models.Model):
             feed = Feed.objects.get(link=link)
         else:
             feed.save()  # Save so that Feed has a key
-            feed.add_subscriber(subscriber)
         finally:
             return feed
+
+    @classmethod
+    def create_and_subscribe(Class, title, link, site, subscriber):
+        feed = Class.create_raw(title, link, site)
+        feed.add_subscriber(subscriber)
+        return feed
 
     @classmethod
     def create_from_url(Class, url, subscriber):
@@ -110,7 +115,7 @@ class Feed(models.Model):
         if data.bozo is not 0 or data.status == 301:
             return None
 
-        return Class.create_raw(data.feed.title, data.href, data.feed.link, subscriber)
+        return Class.create_and_subscribe(data.feed.title, data.href, data.feed.link, subscriber)
 
     @classmethod
     def autodiscover(Class, url):

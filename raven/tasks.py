@@ -76,7 +76,7 @@ class SyncFromReaderAPITask(Task):
     '''A task for sync'ing data from a Google Reader-compatible API.'''
 
     def run(self, user, *args, **kwargs):
-        def _new_user_item(user, entry):
+        def _new_user_item(user, feed, entry):
             try:
                 item = FeedItem.objects.get(reader_guid=entry.id)
             except ObjectDoesNotExist:
@@ -92,7 +92,25 @@ class SyncFromReaderAPITask(Task):
                 item.guid = item.calculate_guid()
                 item.save()
 
-            user_item = item.userfeeditem(user)
+            try:
+                user_item = item.userfeeditem(user)
+            except ObjectDoesNotExist:
+                # Nasty. The above only works if a user is actually
+                # subscribed to a feed. However, it can be the case
+                # where we're trying to import Google Reader, and we're
+                # processing items that have been shared with us. In
+                # this case, we probably won't be subscribed to the
+                # feed, and more, we probably don't want to subscribe to
+                # the feed. So manually create a UserFeedItem so the
+                # Item can be accessed by the User. We can pull it out
+                # of the db later by searching for the 'shared-with-you'
+                # tag.
+                user_item = UserFeedItem()
+                user_item.item = item
+                user_item.user = user
+                user_item.feed = feed
+                user_item.save()
+
             user_item.read = entry.read
             user_item.starred = entry.starred
             for t in entry.tags:
@@ -134,7 +152,7 @@ class SyncFromReaderAPITask(Task):
             for e in f.items:
                 if e.url is None:
                     continue
-                _new_user_item(user, e)
+                _new_user_item(user, feed, e)
 
         # Finally, import the special items
         reader.makeSpecialFeeds()
@@ -145,7 +163,19 @@ class SyncFromReaderAPITask(Task):
             f = reader.specialFeeds[sf]
             f.loadItems(loadLimit=150)
             for e in f.items:
-                user_item = _new_user_item(user, e)
+                try:
+                    feed = feeds[e.feed.feedUrl]
+                except KeyError:
+                    # Dammit, google. WTF are these beasties?
+                    # u'user/00109242490472324272/source/com.google/link'
+                    if e.feed.feedUrl.startswith('user/'):
+                        link = Feed.autodiscover(e.feed.siteUrl)
+                        if not link:
+                            link = e.feed.feedUrl
+                    feed = Feed.create_raw(e.feed.title, link, e.feed.siteUrl)
+                    feeds[e.feed.feedUrl] = feed
+
+                user_item = _new_user_item(user, feed, e)
 
                 if sf == 'like':
                     user_item.tags.add('imported', 'liked')

@@ -58,10 +58,12 @@ APP.Views.Reader = Backbone.View.extend({
         var template = Handlebars.compile($('#index-template').html());
         this.$el.html(template);
 
-        if (this.feedID) {
+        this.feeds.on('add remove sort change sync', function() {
+            this._renderLeftBar();
+        }, this);
 
+        if (this.feedID) {
             this.feeds.on('reset', function() {
-                this._renderLeftBar();
                 this.feed = this.feeds.where({id: parseInt(this.feedID, 10)})[0];
                 this.feed.fetchRelated('items');
                 this.items = this.feed.get('items');
@@ -69,9 +71,6 @@ APP.Views.Reader = Backbone.View.extend({
             }, this);
             this.feeds.fetch({reset: true});
         } else {
-            this.feeds.on('reset', function() {
-                this._renderLeftBar();
-            }, this);
             this.feeds.fetch({reset: true});
 
             this.items.on('reset', function() {

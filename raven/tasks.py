@@ -44,12 +44,21 @@ class ImportOPMLTask(Task):
 
                 for sub in subscriptions:
                     if hasattr(sub, 'type'):
-                        Feed.create_from_url(sub.xmlUrl, user)
+                        title = sub.title
+                        link = sub.xmlUrl
+                        site = sub.htmlUrl
+                        Feed.create_raw(title, link, site, user)
                     else:
                         # In this case, it's a 'group' of feeds.
                         folder = sub
                         for sub in folder:
-                            Feed.create_from_url(sub.xmlUrl, user)
+                            title = sub.title
+                            link = sub.xmlUrl
+                            site = sub.htmlUrl
+                            feed = Feed.create_raw(title, link, site, user)
+
+                            userfeed = feed.userfeed(user)
+                            userfeed.tags.add(folder.title)
             return True
         else:
             return False

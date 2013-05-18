@@ -75,7 +75,7 @@ class ImportOPMLTask(Task):
 class SyncFromReaderAPITask(Task):
     '''A task for sync'ing data from a Google Reader-compatible API.'''
 
-    def run(self, user, *args, **kwargs):
+    def run(self, user, loadLimit, *args, **kwargs):
         def _new_user_item(user, feed, entry):
             try:
                 item = FeedItem.objects.get(reader_guid=entry.id)
@@ -148,7 +148,7 @@ class SyncFromReaderAPITask(Task):
         for f in reader.feeds:
             feed = feeds[f.feedUrl]
 
-            f.loadItems(loadLimit=150)
+            f.loadItems(loadLimit=loadLimit)
             for e in f.items:
                 if e.url is None:
                     continue
@@ -161,7 +161,7 @@ class SyncFromReaderAPITask(Task):
         special.remove('reading-list')
         for sf in special:
             f = reader.specialFeeds[sf]
-            f.loadItems(loadLimit=150)
+            f.loadItems(loadLimit=loadLimit)
             for e in f.items:
                 try:
                     feed = feeds[e.feed.feedUrl]

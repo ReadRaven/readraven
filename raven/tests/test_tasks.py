@@ -119,16 +119,16 @@ class SyncFromReaderAPITaskTest(TestCase):
         other_owner.subscribe(other_feed)
 
         task = tasks.SyncFromReaderAPITask()
-        result = task.delay(owner, 'alex@chizang.net', secure)
+        result = task.delay(owner, 10, 'alex@chizang.net', secure)
 
         self.assertTrue(result.successful())
 
         feeds = Feed.objects.all()
         # Tricky. We are subscribed to 122 feeds
         # We create another feed above, to get to 123
-        # But 5 feeds in the import were "shared-with-you" so the total
-        # number of feeds should be 128
-        self.assertEqual(feeds.count(), 128)
+        # But 3 feeds in the import were "shared-with-you" so the total
+        # number of feeds should be 126
+        self.assertEqual(feeds.count(), 126)
 
         total_feeds = Feed.objects.all().count()
         owner = User.objects.get(pk=owner.pk)
@@ -151,7 +151,7 @@ class SyncFromReaderAPITaskTest(TestCase):
         self.assertEqual(feed.pk, duplicate2.pk)
 
         tagged = UserFeedItem.objects.filter(tags__name__in=['shared-with-you'])
-        self.assertEqual(len(tagged), 31)
+        self.assertEqual(len(tagged), 10)
 
         # Uncomment for manual checking of ephemeral data sets
         #from raven.models import FeedItem

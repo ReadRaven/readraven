@@ -48,13 +48,21 @@ APP.Views.Reader = Backbone.View.extend({
     initialize: function(options) {
         this.feeds = options.feeds;
         this.items = options.items;
+
     },
     render: function() {
         var template = Handlebars.compile($('#index-template').html());
         this.$el.html(template);
 
-        this._renderLeftBar();
-        this._renderRightBar();
+        this.feeds.on('reset', function() {
+            this._renderLeftBar();
+        }, this);
+        this.feeds.fetch({reset: true});
+
+        this.items.on('reset', function() {
+            this._renderRightBar();
+        }, this);
+        this.items.fetch({reset: true});
 
         return this;
     }

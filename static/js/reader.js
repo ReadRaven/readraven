@@ -14,18 +14,12 @@ APP.Routers.ReaderRouter = Backbone.Router.extend({
     reader: function() {
         var feeds = this.feeds || new APP.Collections.Feeds();
         var items = new APP.Collections.FeedItems();
-        feeds.fetch().then(_.bind(function(args) {
-            if (this.feeds == undefined) {
-                this.feeds = feeds;
-            }
-            items.fetch().then(_.bind(function(args) {
-                this.currentView = new APP.Views.Reader({
-                    feeds: feeds,
-                    items: items
-                });
-                this.currentView.render();
-            }, this));
-        }, this));
+
+        this.currentView = new APP.Views.Reader({
+            feeds: feeds,
+            items: items
+        });
+        this.currentView.render();
     },
     feed: function(id) {
         var feeds = this.feeds || new APP.Collections.Feeds();

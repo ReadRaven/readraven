@@ -67,7 +67,7 @@ class FeedResourceTest(ResourceTestCase):
 
         self.assertEqual(
             sorted(resource.keys()),
-            [u'description', u'link', u'resource_uri', u'title'])
+            [u'description', u'id', u'items', u'link', u'resource_uri', u'title'])
 
     def test_single_resource(self):
         feed = Feed()
@@ -91,7 +91,7 @@ class FeedResourceTest(ResourceTestCase):
 
         self.assertEqual(
             sorted(content.keys()),
-            [u'description', u'link', u'resource_uri', u'title'])
+            [u'description', u'id', u'items', u'link', u'resource_uri', u'title'])
 
     def test_unauthorized(self):
         feed = Feed()
@@ -223,12 +223,12 @@ class FeedItemResourceTest(TestCase):
         self.assertEqual(resource['read'], useritem.read)
         self.assertEqual(resource['title'], item.title)
 
-        feed_id = int(resource['feed'].split('/')[-2])
+        feed_id = int(resource['feed']['id'])
         self.assertEqual(feed_id, item.feed.pk)
 
         self.assertEqual(
             sorted(resource.keys()),
-            [u'description', u'feed', u'link', u'published', u'read',
+            [u'description', u'feed', u'id', u'link', u'published', u'read',
              u'resource_uri', u'title'])
 
     @unittest.skipUnless(network_available(), 'Network unavailable')

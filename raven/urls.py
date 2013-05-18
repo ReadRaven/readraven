@@ -16,6 +16,8 @@ urlpatterns = patterns(
     url(r'^values', 'raven.views.values'),
     url(r'^logout/$', 'django.contrib.auth.views.logout', {'next_page': '/'}),
     url(r'^$', 'raven.views.index'),
+    url(r'^usher$', 'usher.views.dashboard'),
+    url(r'^usher/$', 'usher.views.dashboard'),
     url(r'^usher/sign_up', 'usher.views.sign_up'),
     url(r'^usher/sign_in', 'usher.views.sign_in'),
     url(r'^usher/dashboard', 'usher.views.dashboard'),

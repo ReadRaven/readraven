@@ -14,36 +14,21 @@ APP.Routers.ReaderRouter = Backbone.Router.extend({
     reader: function() {
         var feeds = this.feeds || new APP.Collections.Feeds();
         var items = new APP.Collections.FeedItems();
-        feeds.fetch().then(_.bind(function(args) {
-            if (this.feeds == undefined) {
-                this.feeds = feeds;
-            }
-            items.fetch().then(_.bind(function(args) {
-                this.currentView = new APP.Views.Reader({
-                    feeds: feeds,
-                    items: items
-                });
-                $('#main').html(this.currentView.render().el);
-            }, this));
-        }, this));
+
+        this.currentView = new APP.Views.Reader({
+            feeds: feeds,
+            items: items
+        });
+        this.currentView.render();
     },
     feed: function(id) {
         var feeds = this.feeds || new APP.Collections.Feeds();
-        feeds.fetch().then(_.bind(function(args) {
-            if (this.feeds == undefined) {
-                this.feeds = feeds;
-            }
-            var feed = feeds.where({id: parseInt(id, 10)})[0];
-            var items = new APP.Collections.FeedItems(feed.get('items'));
-            items.fetch().then(_.bind(function(args) {
-                this.currentView = new APP.Views.Reader({
-                    feed: feed,
-                    feeds: feeds,
-                    items: feed.get('items')
-                });
-                $('#main').html(this.currentView.render().el);
-            }, this));
-        }, this));
+
+        this.currentView = new APP.Views.Reader({
+            feedID: id,
+            feeds: feeds,
+        });
+        this.currentView.render();
     }
 });
 

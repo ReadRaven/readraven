@@ -60,17 +60,14 @@ def dashboard(request):
         'usher/dashboard.html',
         context_instance=RequestContext(request))
 
-
 def sign_in(request):
-    if request.GET['next'] == '/usher/sign_up':
+    page = request.GET.get('next', '')
+    if page == '/usher/sign_up':
         return render_to_response(
             'usher/auth_new_user.html',
             context_instance=RequestContext(request))
     else:
-        return render_to_response(
-            'usher/auth_existing_user.html',
-            context_instance=RequestContext(request))
-
+        return HttpResponseRedirect('/usher/google_auth')
 
 @login_required
 def sign_up(request):

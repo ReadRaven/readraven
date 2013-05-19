@@ -119,6 +119,7 @@
   <script type="text/x-handlebars" id="feed-item-template">
     <div class="row">
       <div class="feeditem">
+        <div class="pull-right ">{{formatDate item.published}}</div>
         <h3><a href="{{item.link}}" target="blank">{{item.title}}</a></h3>
         <div class="subtitle">
           from <a href="#/feed/{{feed.id}}">{{feed.title}}</a>
@@ -136,6 +137,7 @@
   <script src="{% static 'js/jquery-1.9.1.js' %}"></script>
   <script src="{% static 'js/underscore.js' %}"></script>
   <script src="{% static 'js/backbone.js' %}"></script>
+  <script src="{% static 'js/moment.min.js' %}"></script>
   <script src="{% static 'js/csrftoken.js' %}"></script>
 
   <script src="{% static 'js/backbone-tastypie.js' %}"></script>

@@ -1,5 +1,10 @@
 from .base import *
 
+# RabbitMQ/Celery settings
+import djcelery
+djcelery.setup_loader()
+BROKER_URL = os.environ.get('CLOUDAMQP_URL', '')
+
 # URL prefix for static files.
 # Example: "http://example.com/static/", "http://static.example.com/"
 STATIC_URL = 'https://s3.amazonaws.com/readraven/static/'

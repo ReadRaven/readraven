@@ -61,11 +61,12 @@
     <div class="container">
       <div id="main" class="row-fluid">
         <div class="span3 column">
-          <ul class="nav nav-tabs nav-stacked">
-            <li class="active"><a href="#">Import From Google</a></li>
+          <ul class="nav nav-pills nav-stacked">
+            <li class="active"><a href="#">Account Settings</a></li>
           </ul>
         </div>
         <div class="span5 column">
+         <b>IMPORT FROM READER</b><br>
          <p>Upload your Google Takeout zip file to import and preserve all
          your historical Google Reader data.</p>
          <br>
@@ -77,7 +78,17 @@
            </div>
          </div>
          <button type="submit" class="btn btn-success">Import!</button>
-        </form>
+         </form>
+         <hr>
+         <b>PAYMENT INFO</b><br>
+          {% if user.customer.current_subscription.status == "trialing" %}
+            <p><i>Enjoy Readraven for free until {{ user.customer.current_subscription.trial_end|date:"F d, Y" }}</i></p>
+          {% endif %}
+          <p>We have your <b>{{ user.customer.card_kind }}</b> ending in
+          <b>{{ user.customer.card_last_4 }}</b> in our files.
+          <br>
+          <p>If you'd like to cancel your account, please email us at
+          <a href="mailto:help@readraven.com">help@readraven.com</a>.
         </div>
       </div>
     </div>

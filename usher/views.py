@@ -49,7 +49,7 @@ def import_takeout(request):
                 for chunk in f.chunks():
                     dest.write(chunk)
 
-            task = tasks.ImportOPMLTask()
+            task = tasks.EatTakeoutTask()
             result = task.delay(request.user, z)
 
     return HttpResponseRedirect(reverse('usher.views.dashboard'))

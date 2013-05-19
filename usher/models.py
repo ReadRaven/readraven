@@ -5,6 +5,8 @@ from django.db import models
 from oauth2client.django_orm import FlowField, CredentialsField
 from south.modelsinspector import add_introspection_rules
 
+from stripe import InvalidRequestError
+
 add_introspection_rules([], ["^oauth2client\.django_orm\.FlowField"])
 add_introspection_rules([], ["^oauth2client\.django_orm\.CredentialsField"])
 
@@ -73,9 +75,20 @@ class User(AbstractBaseUser):
     def is_customer(self):
         try:
             customer = self.customer
-            if customer.stripe_customer.get('deleted'):
-                customer.purge()
-                return False
+            try:
+                if customer.stripe_customer.get('deleted'):
+                    customer.purge()
+                    return False
+            # If we have an existing user in readraven, but they were
+            # somehow deleted from the stripe side, we'll get an
+            # exception here. Let's purge them from the readraven side,
+            # which also deletes them from the stripe side. This would
+            # be a rare situation, but we need to guard...
+            except InvalidRequestError, e:
+                if e.startswith('No such customer:'):
+                    customer.purge()
+                    return False
+
             try:
                 current_plan = self.customer.current_subscription.plan
                 return True

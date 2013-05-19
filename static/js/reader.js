@@ -7,32 +7,28 @@ APP.Routers.ReaderRouter = Backbone.Router.extend({
         'feed/:id': 'feed',
         '*default': 'reader'
     },
-    initializer: function(config) {
-        this.feeds = this.feeds || new APP.Collections.Feeds();
-        // TODO: fetch all feeds if they haven't been previously fetched.
+    initialize: function(config) {
+        this.feeds = new APP.Collections.Feeds();
     },
     reader: function() {
-        var feeds = this.feeds || new APP.Collections.Feeds();
         var items = new APP.Collections.FeedItems();
 
         this.currentView = new APP.Views.Reader({
-            feeds: feeds,
+            feeds: this.feeds,
             items: items
         });
         this.currentView.render();
     },
     feed: function(id) {
-        var feeds = this.feeds || new APP.Collections.Feeds();
-
         this.currentView = new APP.Views.Reader({
             feedID: id,
-            feeds: feeds,
+            feeds: this.feeds,
         });
         this.currentView.render();
     }
 });
 
-var router = new APP.Routers.ReaderRouter({});
+var router = new APP.Routers.ReaderRouter();
 Backbone.history.start();
 
 }());

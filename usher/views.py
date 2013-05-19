@@ -104,6 +104,7 @@ def sign_up(request):
     whitelist = set([
         'alex@chizang.net',
         'alex@readraven.com',
+        'caro.knapp@gmail.com',
         'paul@eventuallyanyway.com',
         'garrytan@gmail.com',
         'vyduna@gmail.com',

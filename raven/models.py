@@ -125,7 +125,10 @@ class Feed(models.Model):
 
         # TODO: consider logging every time this is None, so we can go
         # build some manual workarounds?
-        return feedfinder.feed(url)
+        try:
+            return feedfinder.feed(url)
+        except feedfinder.TimeoutError:
+            return None
 
     def update(self, data=None):
         if data is None:

@@ -3,6 +3,7 @@ import os
 import zipfile
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.files.storage import default_storage
 
 from celery.task import Task, PeriodicTask
 from libgreader import ClientAuthMethod, OAuth2Method, GoogleReader
@@ -88,12 +89,13 @@ class EatTakeoutTask(Task):
     '''A task for processing a Google Takeout file.'''
 
     def _import_subscriptions(self):
-        name = os.path.join(
-            os.path.splitext(os.path.basename(self.filename))[0],
-            'Reader', 'subscriptions.xml')
-        try:
-            subscriptions = opml.from_string(self.z.open(name).read())
-        except KeyError:
+        subscriptions = None
+        for f in self.z.namelist():
+            if 'subscriptions.xml' in f:
+                subscriptions = opml.from_string(self.z.open(f).read())
+                break
+
+        if subscriptions is None:
             return False
 
         for sub in subscriptions:
@@ -116,12 +118,13 @@ class EatTakeoutTask(Task):
         return True
 
     def _import_json_items(self, import_file):
-        name = os.path.join(
-            os.path.splitext(os.path.basename(self.filename))[0],
-            'Reader', import_file)
-        try:
-            data = json.loads(self.z.open(name).read(), strict=False)
-        except KeyError:
+        data = None
+        for f in self.z.namelist():
+            if import_file in f:
+                data = json.loads(self.z.open(f).read(), strict=False)
+                break
+
+        if data is None:
             return False
 
         try:
@@ -213,8 +216,9 @@ class EatTakeoutTask(Task):
                 pass
 
     def run(self, user, filename, *args, **kwargs):
-        if zipfile.is_zipfile(filename):
-            with zipfile.ZipFile(filename, 'r') as z:
+        local = default_storage.open(filename)
+        if zipfile.is_zipfile(local):
+            with zipfile.ZipFile(local, 'r') as z:
                 self.z = z
                 self.user = user
                 self.filename = filename

@@ -204,7 +204,7 @@ def getALinks(data, baseuri):
 def getLocalLinks(links, baseuri):
     baseuri = baseuri.lower()
     urilen = len(baseuri)
-    return [l for l in links if l.lower().startswith(baseuri)]
+    return [unicode(l for l in links if l.lower().startswith(baseuri))]
 
 def isFeedLink(link):
     return link[-4:].lower() in ('.rss', '.rdf', '.xml', '.atom')

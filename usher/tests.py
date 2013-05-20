@@ -1,10 +1,15 @@
 from datetime import datetime
+import os
 
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError, DatabaseError, connection
 from django.test import TestCase
+from django.test.client import Client
 
-from raven.models import Feed, FeedItem
+from raven.models import Feed, UserFeedItem
+
+THIS_DIR = os.path.dirname(__file__)
+TESTDATA_DIR = os.path.join(THIS_DIR, '..', 'raven', 'tests', 'testdata')
 
 User = get_user_model()
 
@@ -110,3 +115,40 @@ class UserTest(TestCase):
 
         # Testing we are using order_by() in User.feeditems() monkeypatch
         self.assertEqual(user.feeditems[0].title, item.title)
+
+class ImportTakeoutTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            'bob', 'bob@bob.com', password='bob')
+        self.user.save()
+
+        self.client = Client()
+        self.client.login(username='bob@bob.com', password='bob')
+
+    def test_import(self):
+        takeout = 'alex@chizang.net-takeout.zip'
+
+        # Run this test twice and ensure the counts don't change. That
+        # is, ensure we aren't creating duplicates during our imports.
+        for i in range(2):
+            with open(os.path.join(TESTDATA_DIR, takeout)) as f:
+                self.client.post('/usher/import_takeout', {'zipfile' : f })
+
+            total_feeds = Feed.objects.all().count()
+            owner = User.objects.get(pk=self.user.pk)
+
+            #self.assertEqual(total_feeds, 145)
+            self.assertEqual(self.user.feeds.count(), 122)
+
+            starred = UserFeedItem.objects.filter(starred=True)
+            self.assertEqual(len(starred), 9)
+
+            shared_with_me = UserFeedItem.objects.filter(tags__name__in=['shared-with-you'])
+            self.assertEqual(len(shared_with_me), 31)
+
+            shared = UserFeedItem.objects.filter(tags__name__in=['shared'])
+            self.assertEqual(len(shared), 1)
+
+            # See how all the above should add up!
+            imported = UserFeedItem.objects.filter(tags__name__in=['imported'])
+            self.assertEqual(len(imported), 41)

@@ -1,6 +1,8 @@
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.files.storage import default_storage
 from django.db import models
+
 
 from oauth2client.django_orm import FlowField, CredentialsField
 from south.modelsinspector import add_introspection_rules
@@ -99,3 +101,8 @@ class User(AbstractBaseUser):
             return False
 
         return False
+
+class UserTakeoutUpload(models.Model):
+    zipfile = models.FileField(upload_to='takeouts')
+    user = models.ForeignKey(User, related_name='takeouts')
+    upload_date = models.DateTimeField(auto_now_add=True)

@@ -17,7 +17,7 @@ SECURE_FILE = os.path.join(THIS_DIR, '..', '..', 'secure')
 User = get_user_model()
 
 __all__ = [
-    'UpdateFeedTaskTest', 'ImportOPMLTaskTest', 'SyncFromReaderAPITaskTest']
+    'UpdateFeedTaskTest', 'EatTakeoutTaskTest', 'SyncFromReaderAPITaskTest']
 
 
 class UpdateFeedTaskTest(TestCase):
@@ -45,8 +45,8 @@ class UpdateFeedTaskTest(TestCase):
         self.assertEqual(feed.items.count(), 20)
 
 
-class ImportOPMLTaskTest(TestCase):
-    '''Test ImportOPMLTask.'''
+class EatTakeoutTaskTest(TestCase):
+    '''Test EatTakeoutTask.'''
 
     @unittest.skipUnless(network_available(), 'Network unavailable')
     @unittest.skipUnless(os.path.exists(SECURE_FILE), 'password unavailable')
@@ -65,7 +65,7 @@ class ImportOPMLTaskTest(TestCase):
         other_feed.save()
         other_owner.subscribe(other_feed)
 
-        task = tasks.ImportOPMLTask()
+        task = tasks.EatTakeoutTask()
         result = task.delay(
             owner,
             os.path.join(TESTDATA_DIR, 'alex@chizang.net-takeout.zip'))
@@ -80,8 +80,15 @@ class ImportOPMLTaskTest(TestCase):
         starred = UserFeedItem.objects.filter(starred=True)
         self.assertEqual(len(starred), 9)
 
+        shared_with_me = UserFeedItem.objects.filter(tags__name__in=['shared-with-you'])
+        self.assertEqual(len(shared_with_me), 31)
+
+        shared = UserFeedItem.objects.filter(tags__name__in=['shared'])
+        self.assertEqual(len(shared), 1)
+
+        # See how all the above should add up!
         imported = UserFeedItem.objects.filter(tags__name__in=['imported'])
-        self.assertEqual(len(imported), 9)
+        self.assertEqual(len(imported), 41)
 
     @override_settings(CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
                        CELERY_ALWAYS_EAGER=True,
@@ -92,7 +99,7 @@ class ImportOPMLTaskTest(TestCase):
         owner.save()
 
         # A zip bomb
-        task = tasks.ImportOPMLTask()
+        task = tasks.EatTakeoutTask()
         result = task.delay(owner, os.path.join(TESTDATA_DIR, '42.zip'))
 
         # Tricksy! The celery task should succeed in running, but should

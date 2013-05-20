@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 
 from taggit.managers import TaggableManager
 
@@ -40,7 +40,7 @@ class Feed(models.Model):
     # link is the RSS feed link
     # site is the "real" web page (not required!)
     link = models.URLField(max_length=500, unique=True)
-    site = models.URLField(max_length=500, unique=True, null=True)
+    site = models.URLField(max_length=500, null=True)
     title = models.CharField(max_length=200)
 
     # Optional metadata
@@ -95,13 +95,13 @@ class Feed(models.Model):
         feed.site = site
 
         try:
-            feed.validate_unique()
-        except ValidationError:
+            # It's cleaner to do this than to monkey around with
+            # validate_unique().
             feed = Feed.objects.get(link=link)
-        else:
-            feed.save()  # Save so that Feed has a key
-        finally:
-            return feed
+        except ObjectDoesNotExist:
+            feed.save()
+
+        return feed
 
     @classmethod
     def create_and_subscribe(Class, title, link, site, subscriber):

@@ -84,8 +84,8 @@ class UpdateFeedTask(PeriodicTask):
             feed.save()
 
 
-class ImportOPMLTask(Task):
-    '''A task for importing feeds from OPML files.'''
+class EatTakeoutTask(Task):
+    '''A task for processing a Google Takeout file.'''
 
     def _import_subscriptions(self):
         name = os.path.join(
@@ -115,12 +115,12 @@ class ImportOPMLTask(Task):
                     userfeed.tags.add(folder.title)
         return True
 
-    def _import_starred(self):
+    def _import_json_items(self, import_file):
         name = os.path.join(
             os.path.splitext(os.path.basename(self.filename))[0],
-            'Reader', 'starred.json')
+            'Reader', import_file)
         try:
-            starred = json.loads(self.z.open(name).read(), strict=False)
+            data = json.loads(self.z.open(name).read(), strict=False)
         except KeyError:
             return False
 
@@ -128,13 +128,17 @@ class ImportOPMLTask(Task):
             # This is like, weak sauce verification, hoping that we're
             # not about to get bogus data. Still, a carefully crafted
             # attack file could make it past this check.
-            id = starred['id']
-            if not id.endswith('starred'):
+            id = data['id']
+            if not (id.endswith('starred') or
+                    id.endswith('broadcast-friends') or
+                    id.endswith('broadcast') or
+                    id.endswith('post') or
+                    id.endswith('like')):
                 return False
         except KeyError:
             return False
 
-        for i in starred['items']:
+        for i in data['items']:
             title = i['origin']['title']
             site = i['origin']['htmlUrl']
             link = i['origin']['streamId']
@@ -163,19 +167,50 @@ class ImportOPMLTask(Task):
                     item['content'] = ''
             item['time'] = i['published']
             entry = FakeEntry(item)
+            user_item = _new_user_item(self.user, feed, entry)
 
             for c in i.get('categories', []):
-                if c.startswith('user/') and c.endswith('/read'):
-                    entry.read = True
+                if c.startswith('user/') and c.endswith('/like'):
+                    user_item.tags.add('liked')
+                elif c.startswith('user/') and c.endswith('/post'):
+                    user_item.tags.add('notes')
+                elif c.startswith('user/') and c.endswith('/created'):
+                    user_item.tags.add('notes')
+                # Annoyingly, if something is shared-with-you, it also
+                # gets the /broadcast tag. So if we are processing the
+                # shared-with-you.json file, don't mark those items as
+                # things that *you've* shared
+                elif c.startswith('user/') and c.endswith('/broadcast') \
+                    and not id.endswith('broadcast-friends'):
+                    user_item.tags.add('shared')
+                elif c.startswith('user/') and c.endswith('/broadcast-friends'):
+                    user_item.tags.add('shared-with-you')
                 elif c.startswith('user/') and c.endswith('/starred'):
-                    entry.starred = True
+                    user_item.starred = True
+                elif c.startswith('user/') and c.endswith('/read'):
+                    user_item.read = True
                 elif c.startswith('user/') and ('label' in c):
                     tag = c.split('/')[-1]
-                    entry.tags.append(tag)
+                    user_item.tags.append(tag)
 
-            user_item = _new_user_item(self.user, feed, entry)
             user_item.tags.add('imported')
             user_item.save()
+
+            try:
+                # This comes from the 'shared-with-you' category.
+                friend_userid = i['via'][0]['href'].split('/')[-4]
+                # Not sure how to save/model friend_userid yet
+            except KeyError:
+                pass
+
+            # XXX: should we do something about i['comments'] too?
+            for a in i['annotations']:
+                # Following attributes are interesting, but not sure
+                # how to model them yet.
+                #  - a['content']
+                #  - a['userId']
+                #  - a['profileId']
+                pass
 
     def run(self, user, filename, *args, **kwargs):
         if zipfile.is_zipfile(filename):
@@ -185,8 +220,21 @@ class ImportOPMLTask(Task):
                 self.filename = filename
 
                 did_sub = self._import_subscriptions()
-                did_star = self._import_starred()
-            return did_sub
+                if not did_sub:
+                    # Probably a malformed takeout. Let's stop processing
+                    # immediately.
+                    return did_sub
+
+                imports = [
+                    'starred.json',
+                    'shared-by-followers.json',
+                    'shared.json',
+                    'notes.json',
+                    'liked.json',
+                ]
+                for i in imports:
+                    self._import_json_items(i)
+            return True
         else:
             return False
 

@@ -4,12 +4,13 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, get_user_model
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.files.storage import default_storage
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect, HttpResponseBadRequest
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
-from django import forms
+from django.forms import ModelForm
 
 
 from oauth2client import xsrfutil
@@ -18,6 +19,7 @@ from oauth2client.client import flow_from_clientsecrets, FlowExchangeError
 import stripe
 from payments.models import Customer
 from raven import tasks
+from .models import UserTakeoutUpload
 
 User = get_user_model()
 
@@ -34,23 +36,21 @@ FLOW = flow_from_clientsecrets(
     redirect_uri=settings.GOOGLE_OAUTH2_CALLBACK)
 
 
-class UploadFileForm(forms.Form):
-    zipfile = forms.FileField()
+class UserTakeoutUploadForm(ModelForm):
+    class Meta:
+        model = UserTakeoutUpload
+        fields = ['zipfile']
 
 @login_required
 def import_takeout(request):
     if request.method == 'POST':
-        form = UploadFileForm(request.POST, request.FILES)
+        i = UserTakeoutUpload(user=request.user)
+        form = UserTakeoutUploadForm(request.POST, request.FILES, instance=i)
         if form.is_valid():
-            f = request.FILES['zipfile']
-            z = '/tmp/' + str(f)
-            with open(z, 'wb+') as dest:
-                # XXX: we need to defend against huge file upload attack
-                for chunk in f.chunks():
-                    dest.write(chunk)
+            takeout = form.save()
 
             task = tasks.EatTakeoutTask()
-            result = task.delay(request.user, z)
+            result = task.delay(request.user, takeout.zipfile.name)
 
     return HttpResponseRedirect(reverse('usher.views.dashboard'))
 

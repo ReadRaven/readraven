@@ -124,6 +124,7 @@ INSTALLED_APPS = (
     'south',
     'payments',
     'taggit',
+    'storages',
 
     'raven',
     'usher',

@@ -1,7 +1,9 @@
+boto=2.9.3
 celery==3.0.18
 Django==1.5.1
 django-celery==3.0.11
 django-secure==0.1.2
+django-storages==1.1.8
 django-tastypie==0.9.14
 django-taggit==0.10a1
 feedparser==5.1.3

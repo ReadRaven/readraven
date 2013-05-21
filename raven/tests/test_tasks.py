@@ -74,8 +74,8 @@ class EatTakeoutTaskTest(TestCase):
 
         total_feeds = Feed.objects.all().count()
         owner = User.objects.get(pk=owner.pk)
-        self.assertEqual(total_feeds, 123)
-        self.assertEqual(owner.feeds.count(), total_feeds-1)
+        self.assertEqual(total_feeds, 146)
+        self.assertEqual(owner.feeds.count(), 122)
 
         starred = UserFeedItem.objects.filter(starred=True)
         self.assertEqual(len(starred), 9)

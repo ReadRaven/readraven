@@ -19,6 +19,8 @@ TEST_RUNNER = 'djcelery.contrib.test_runner.CeleryTestSuiteRunner'
 # Example: "http://example.com/static/", "http://static.example.com/"
 STATIC_URL = '/static/'
 
+DEFAULT_FILE_STORAGE = 'storages.backends.overwrite.OverwriteStorage'
+
 GOOGLE_API_SECRETS = os.path.join(SECRETS_DIR, 'local_client_secrets.json')
 GOOGLE_OAUTH2_CALLBACK = 'http://localhost:8000/google_auth_callback'
 

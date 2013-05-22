@@ -18,6 +18,7 @@ class FeedResource(ModelResource):
         authorization = Authorization()
         default_format = 'application/json'
         fields = ['description', 'title', 'link', 'id', 'items']
+        max_limit = 20
         queryset = models.Feed.objects.all()
         resource_name = 'feed'
     items = fields.ToManyField('raven.resources.FeedItemResource', 'items')
@@ -65,6 +66,7 @@ class FeedItemResource(ModelResource):
             'read': ALL,
             'feed': ALL_WITH_RELATIONS
         }
+        max_limit = 20
         queryset = models.FeedItem.objects.all()
         resource_name = 'item'
 

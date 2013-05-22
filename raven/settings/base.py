@@ -187,3 +187,5 @@ SECURE_SSL_REDIRECT = True
 # XXX: If you remove this, you will get an infinite-redirect loop on
 # heroku
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+API_LIMIT_PER_PAGE = 0

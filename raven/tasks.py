@@ -300,8 +300,8 @@ class SyncFromReaderAPITask(Task):
                         link = Feed.autodiscover(e.feed.siteUrl)
                         if not link:
                             link = e.feed.feedUrl
-                    feed = Feed.create_raw(e.feed.title, link, e.feed.siteUrl)
-                    feeds[e.feed.feedUrl] = feed
+                        feed = Feed.create_raw(e.feed.title, link, e.feed.siteUrl)
+                        feeds[e.feed.feedUrl] = feed
 
                 user_item = _new_user_item(user, feed, e)
 

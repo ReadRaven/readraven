@@ -1,4 +1,4 @@
-boto=2.9.3
+boto==2.9.3
 celery==3.0.18
 Django==1.5.1
 django-celery==3.0.11

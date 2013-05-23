@@ -74,7 +74,15 @@ class FeedItemResource(ModelResource):
     read = fields.BooleanField()
 
     def get_object_list(self, request):
-        return models.FeedItem.objects.for_user(request.user).order_by('-published')
+        #return models.FeedItem.objects.for_user(request.user).order_by('-published')
+        # TODO: filtering by 'read' really should be an API parameter. For
+        # now, however, we're just hardcoding it here.
+
+        userfeeditems = models.UserFeedItem.objects.filter(
+            user=request.user,
+            read=False)
+        return models.FeedItem.objects.filter(
+            userfeeditems__in=userfeeditems).order_by('-published')
 
     def obj_get(self, bundle=None, request=None, **kwargs):
         bundle.obj = models.FeedItem.objects.get(pk=kwargs['pk'])

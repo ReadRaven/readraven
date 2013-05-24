@@ -307,9 +307,11 @@ class FeedItemResourceTest(TestCase):
 
         self.assertEqual(resource['read'], False)
 
+        resource['read'] = True
+
         self.client.put(
             resource['resource_uri'],
-            data=json.dumps({'read': True}),
+            data=json.dumps(resource),
             content_type='application/json')
 
         response = self.client.get(resource['resource_uri'])

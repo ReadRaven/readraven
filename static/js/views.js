@@ -154,7 +154,10 @@ APP.Views.FeedItemListView = Backbone.View.extend({
     _scroll: function(e) {
         var selected = $('.feeditem.selected');
         if (selected.length === 0) {
-            $('.feeditem').eq(0).addClass('selected');
+            var par = $('.feeditem').eq(0).parent(),
+                item = this.items.get(par.attr('data-feeditem'));
+            par.find('.feeditem').addClass('selected');
+            item.save({'read': true});
         } else {
             var par = selected.parent(),
                 next_par = null;
@@ -167,6 +170,9 @@ APP.Views.FeedItemListView = Backbone.View.extend({
                 var next = next_par.find('.feeditem'),
                     headline = next.find('h3');
                 if (headline.isOnScreen()) {
+                    var item = this.items.get(next_par.attr('data-feeditem'));
+                    item.save({'read': true});
+
                     selected.removeClass('selected');
                     next.addClass('selected');
                 }
@@ -178,6 +184,9 @@ APP.Views.FeedItemListView = Backbone.View.extend({
                 var next = next_par.find('.feeditem'),
                     headline = selected.find('h3');
                 if (!headline.isOnScreen() && next.isOnScreen()) {
+                    var item = this.items.get(next_par.attr('data-feeditem'));
+                    item.save({'read': true});
+
                     selected.removeClass('selected');
                     next.addClass('selected');
                 }
@@ -218,6 +227,7 @@ APP.Views.FeedItemView = Backbone.View.extend({
     className: 'row',
     initialize: function(options) {
         this.item = options.item;
+        this.$el.attr('data-feeditem', this.item.id);
     },
     render: function() {
         if (this.item.get('title') !== undefined) {

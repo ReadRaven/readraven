@@ -31,13 +31,14 @@ APP.Views.Reader = Backbone.View.extend({
         $('#add-feed').val('');
     },
     deleteFeed: function(e) {
+        /* TODO: we should really pop up a "confirm"-type box. */
         e.preventDefault();
-        var actualTarget = e.target.parentNode.parentNode,
-            feedID = actualTarget.getAttribute('data-feedid'),
+        var target = $(e.target).parent().parent(),
+            feedID = target.attr('data-feedid'),
             feed = this.feeds.where({id: parseInt(feedID, 10)})[0];
         feed.destroy({
             success: function(model, response) {
-                actualTarget.remove();
+                target.remove();
             }
         });
     },
@@ -127,6 +128,7 @@ APP.Views.FeedListView = Backbone.View.extend({
 APP.Views.FeedListingView = Backbone.View.extend({
     initialize: function(options) {
         this.feed = options.feed;
+        this.$el.attr('data-feedid', this.feed.get('id'));
     },
     render: function() {
         var template = Handlebars.compile($('#feed-listing-template').html());

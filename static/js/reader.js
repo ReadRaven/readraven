@@ -13,23 +13,15 @@ APP.Routers.ReaderRouter = Backbone.Router.extend({
         '*default': 'reader'
     },
     initialize: function(config) {
-        this.feeds = new APP.Collections.Feeds();
+        this.readerView = new APP.Views.Reader();
     },
     reader: function() {
-        var items = new APP.Collections.FeedItems();
-
-        this.currentView = new APP.Views.Reader({
-            feeds: this.feeds,
-            items: items
-        });
-        this.currentView.render();
+        this.readerView.setFeed();
+        this.readerView.render();
     },
     feed: function(id) {
-        this.currentView = new APP.Views.Reader({
-            feedID: id,
-            feeds: this.feeds,
-        });
-        this.currentView.render();
+        this.readerView.setFeed(id);
+        this.readerView.render();
     }
 });
 

@@ -3,11 +3,12 @@
 window.APP = window.APP || {Routers: {}, Collections: {}, Models: {}, Views: {}};
 
 APP.Views.Reader = Backbone.View.extend({
-    _renderLeftBar: function() {
+    _rendered: false,
+    _renderLeftSide: function() {
         var view = new APP.Views.FeedListView({feeds: this.feeds});
         this.$el.find('#feed-list').html(view.render().el);
     },
-    _renderRightBar: function() {
+    _renderRightSide: function() {
         var view = new APP.Views.FeedItemListView({items: this.items});
         this.$el.find('#item-list').html(view.render().el);
     },
@@ -46,37 +47,51 @@ APP.Views.Reader = Backbone.View.extend({
         'click div.delete-feed': 'deleteFeed'
     },
     initialize: function(options) {
-        if (options.feedID) {
-            this.feeds = options.feeds;
-            this.feedID = options.feedID;
-        } else {
-            this.feeds = options.feeds;
-            this.items = options.items;
-        }
+        this.feeds = new APP.Collections.Feeds();
     },
     render: function() {
+        if (this._rendered) { return this; }
+
         var template = Handlebars.compile($('#index-template').html());
         this.$el.html(template);
 
-        if (this.feedID) {
-            this.feeds.on('reset', function() {
+        this.feeds.fetch({success: this.feeds.onSuccess});
+        this._renderLeftSide();
 
-                this.feed = this.feeds.where({id: parseInt(this.feedID, 10)})[0];
-                this.feed.fetchRelated('items');
-                this.items = this.feed.get('items');
-                this._renderRightBar();
-            }, this);
-            this.feeds.fetch({reset: true, success: this.feeds.onSuccess});
-        } else {
-            this.feeds.fetch({reset: true, success: this.feeds.onSuccess});
+        this._rendered = true;
+        return this;
+    },
+    setFeed: function(id) {
+        this.feed = undefined;
+        this.items = undefined;
+        this.$el.find('#item-list').empty();
+
+        if (!id) {
+            this.items = new APP.Collections.FeedItems();
 
             this.items.on('reset', function() {
-                this._renderRightBar();
+                this._renderRightSide();
             }, this);
             this.items.fetch({reset: true, success: this.items.onSuccess});
+        } else {
+            /* This motherfucking bullshit right here is because
+             * motherfucking Backbone fucking Relational doesn't modify
+             * Collection to pull for the Store.
+             */
+            this.feed = this.feeds.where({id: parseInt(id, 10)})[0];
+            if (!this.feed) {
+                this.feed = APP.Models.Feed.findOrCreate({id: id});
+            }
+
+            this.feed.once('sync', _.bind(function(__) {
+                this.items = this.feed.get('items');
+                this.items.once('sync', _.bind(function(__) {
+                    this._renderRightSide();
+                }, this));
+                this.feed.fetchRelated('items');
+            }, this));
+            this.feed.fetch();
         }
-        this._renderLeftBar();
-        return this;
     }
 });
 
@@ -96,7 +111,7 @@ APP.Views.FeedListView = Backbone.View.extend({
 
         this.feeds.on('add', _.bind(this._add, this));
         this.feeds.on('remove', _.bind(this._remove, this));
-        this.feeds.on('reset sort', _.bind(this.render, this));
+        this.feeds.on('change sort', _.bind(this.render, this));
         /* TODO: handle 'change' and 'sync' events. */
     },
     render: function(e) {

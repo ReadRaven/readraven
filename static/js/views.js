@@ -16,7 +16,7 @@ APP.Views.Reader = Backbone.View.extend({
         e.preventDefault();
         var url = $('#add-feed').val();
         var urlregex = new RegExp(
-            "^(http:\/\/|https:\/\/|ftp:\/\/){1}([0-9A-Za-z]+\.)");
+            "^(http:\/\/|https:\/\/|ftp:\/\/){1}([0-9A-Za-z]+)");
         if (urlregex.test(url)) {
             console.log('adding feed for '+url);
             var feed = new APP.Models.Feed({
@@ -167,25 +167,29 @@ APP.Views.FeedItemListView = Backbone.View.extend({
     },
     _scrollLast: 0,
     _scroll: function(e) {
-        var selected = $('.feeditem.selected');
+        var selected = $('.feeditem.selected'),
+            par = null,
+            item = null,
+            next = null,
+            headline = null;
         if (selected.length === 0) {
-            var par = $('.feeditem').eq(0).parent(),
-                item = this.items.get(par.attr('data-feeditem'));
+            par = $('.feeditem').eq(0).parent();
+            item = this.items.get(par.attr('data-feeditem'));
             par.find('.feeditem').addClass('selected');
             item.save({'read': true});
         } else {
-            var par = selected.parent(),
-                next_par = null;
+            par = selected.parent();
+            var next_par = null;
 
             var scrollPosition = $(e.currentTarget).scrollTop();
             if (scrollPosition > this._scrollLast) {
                 /* Scroll down */
                 next_par = par.next();
 
-                var next = next_par.find('.feeditem'),
-                    headline = next.find('h3');
+                next = next_par.find('.feeditem');
+                headline = next.find('h3');
                 if (headline.isOnScreen()) {
-                    var item = this.items.get(next_par.attr('data-feeditem'));
+                    item = this.items.get(next_par.attr('data-feeditem'));
                     item.save({'read': true});
 
                     selected.removeClass('selected');
@@ -196,10 +200,10 @@ APP.Views.FeedItemListView = Backbone.View.extend({
                 next_par = par.prev();
                 if (next_par.length === 0) { return; }
 
-                var next = next_par.find('.feeditem'),
-                    headline = selected.find('h3');
+                next = next_par.find('.feeditem');
+                headline = selected.find('h3');
                 if (!headline.isOnScreen() && next.isOnScreen()) {
-                    var item = this.items.get(next_par.attr('data-feeditem'));
+                    item = this.items.get(next_par.attr('data-feeditem'));
                     item.save({'read': true});
 
                     selected.removeClass('selected');

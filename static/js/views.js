@@ -120,6 +120,25 @@ APP.Views.FeedListingView = Backbone.View.extend({
     }
 });
 
+$.fn.isOnScreen = function(){
+    /* Convenience method for checking to see if a node is in the viewport. */
+    var win = $(window);
+
+    var viewport = {
+        top : win.scrollTop(),
+        left : win.scrollLeft()
+    };
+    viewport.right = viewport.left + win.width();
+    viewport.bottom = viewport.top + win.height();
+
+    var bounds = this.offset();
+    bounds.right = bounds.left + this.outerWidth();
+    bounds.bottom = bounds.top + this.outerHeight();
+
+    return (!(viewport.right < bounds.left || viewport.left > bounds.right ||
+              viewport.bottom < bounds.top || viewport.top > bounds.bottom));
+};
+
 APP.Views.FeedItemListView = Backbone.View.extend({
     _add: function(item) {
         this._renderItem(item);
@@ -131,6 +150,50 @@ APP.Views.FeedItemListView = Backbone.View.extend({
         var view = new APP.Views.FeedItemView({item: item});
         this.$el.append(view.render().el);
     },
+    _scrollLast: 0,
+    _scroll: function(e) {
+        var selected = $('.feeditem.selected');
+        if (selected.length === 0) {
+            var par = $('.feeditem').eq(0).parent(),
+                item = this.items.get(par.attr('data-feeditem'));
+            par.find('.feeditem').addClass('selected');
+            item.save({'read': true});
+        } else {
+            var par = selected.parent(),
+                next_par = null;
+
+            var scrollPosition = $(e.currentTarget).scrollTop();
+            if (scrollPosition > this._scrollLast) {
+                /* Scroll down */
+                next_par = par.next();
+
+                var next = next_par.find('.feeditem'),
+                    headline = next.find('h3');
+                if (headline.isOnScreen()) {
+                    var item = this.items.get(next_par.attr('data-feeditem'));
+                    item.save({'read': true});
+
+                    selected.removeClass('selected');
+                    next.addClass('selected');
+                }
+            } else if (scrollPosition < this._scrollLast) {
+                /* Scroll up */
+                next_par = par.prev();
+                if (next_par.length === 0) { return; }
+
+                var next = next_par.find('.feeditem'),
+                    headline = selected.find('h3');
+                if (!headline.isOnScreen() && next.isOnScreen()) {
+                    var item = this.items.get(next_par.attr('data-feeditem'));
+                    item.save({'read': true});
+
+                    selected.removeClass('selected');
+                    next.addClass('selected');
+                }
+            }
+            this._scrollLast = scrollPosition;
+        }
+    },
     initialize: function(options) {
         this.items = options.items;
 
@@ -140,10 +203,14 @@ APP.Views.FeedItemListView = Backbone.View.extend({
     },
     render: function() {
         var el = this.$el;
+
+        $(window).scroll(_.bind(this._scroll, this));
+
         el.children().remove();
         _.each(this.items.models, _.bind(function(item) {
             this._renderItem(item);
         }, this));
+
         return this;
     }
 });
@@ -157,8 +224,10 @@ APP.Views.FeedItemView = Backbone.View.extend({
         };
         this.$el.html(template(context));
     },
+    className: 'row',
     initialize: function(options) {
         this.item = options.item;
+        this.$el.attr('data-feeditem', this.item.id);
     },
     render: function() {
         if (this.item.get('title') !== undefined) {
@@ -169,6 +238,7 @@ APP.Views.FeedItemView = Backbone.View.extend({
             }, this);
             this.item.fetch();
         }
+
         return this;
     }
 });

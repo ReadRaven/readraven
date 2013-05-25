@@ -21,11 +21,26 @@
         padding: 5px 15px;
         border-radius: 15px;
       }
+      div.feeditem.selected {
+        border: 3px solid #333;
+      }
       div.feeditem div.subtitle {
         margin-top: -20px;
         margin-bottom: 10px;
         font-size: 90%;
         font-weight: bold;
+      }
+
+
+      div#feed-list {
+        height: 500px;
+        overflow: auto;
+      }
+      div#item-list {
+        /* TODO: use this.
+        height: 100%;
+        overflow: auto;
+        */
       }
     </style>
     <link href="{% static 'css/bootstrap-responsive.css' %}" rel="stylesheet">
@@ -117,16 +132,14 @@
     </a>
   </script>
   <script type="text/x-handlebars" id="feed-item-template">
-    <div class="row">
-      <div class="feeditem">
-        <div class="pull-right ">{{formatDate item.published}}</div>
-        <h3><a href="{{item.link}}" target="blank">{{item.title}}</a></h3>
-        <div class="subtitle">
-          from <a href="#/feed/{{feed.id}}">{{feed.title}}</a>
-        </div>
-        <div class="content">
-          {{{item.description}}}
-        </div>
+    <div class="feeditem">
+      <div class="pull-right ">{{formatDate item.published}}</div>
+      <h3><a href="{{item.link}}" target="blank">{{item.title}}</a></h3>
+      <div class="subtitle">
+        from <a href="#/feed/{{feed.id}}">{{feed.title}}</a>
+      </div>
+      <div class="content">
+        {{{item.description}}}
       </div>
     </div>
   </script>

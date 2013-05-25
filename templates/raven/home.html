@@ -36,6 +36,17 @@
         height: 500px;
         overflow: auto;
       }
+      div#feed-list div.feed-listing-label {
+        display: inline-block;
+        white-space: nowrap;
+        overflow: hidden;
+        width: 80%;
+        text-overflow: ellipsis;
+      }
+      div#feed-list div.delete-feed {
+        margin-right: 15px;
+        cursor: pointer;
+      }
       div#item-list {
         /* TODO: use this.
         height: 100%;
@@ -120,16 +131,16 @@
     </div>
   </script>
   <script type="text/x-handlebars" id="feed-listing-template">
-    <a href="#/feed/{{id}}" data-feedid="{{id}}">
+    <div class="feed-listing-label"><a href="#/feed/{{id}}" data-feedid="{{id}}">
     {{#if title}}
       {{title}}
     {{else}}
       {{link}}
     {{/if}}
-      <div class="pull-right delete-feed">
-        <i class="icon-trash icon-black"></i>
-      </div>
-    </a>
+    </a></div>
+    <div class="pull-right delete-feed">
+      <i class="icon-trash icon-black"></i>
+    </div>
   </script>
   <script type="text/x-handlebars" id="feed-item-template">
     <div class="feeditem">

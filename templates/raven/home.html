@@ -98,9 +98,11 @@
             <p class="navbar-text pull-right">
             <a href="{% url 'usher.views.dashboard' %}">{{ user.email }}</a> | <a href="{% url 'django.contrib.auth.views.logout' %}">Log out</a>
             </p>
+            {% comment %}
             <ul class="nav">
               <li><a href="{% url 'raven.views.home' %}">Home</a></li>
             </ul>
+            {% endcomment %}
           </div>
         </div>
       </div>

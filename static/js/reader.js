@@ -19,6 +19,11 @@ $.ajaxSetup({
     },
     crossDomain: false
 });
+$(document).bind('ajaxStart', function() {
+    $('.loading').show();
+}).bind('ajaxStop', function() {
+    $('.loading').hide();
+});
 
 APP.Routers.ReaderRouter = Backbone.Router.extend({
     routes: {

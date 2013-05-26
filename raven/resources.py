@@ -9,6 +9,15 @@ from tastypie.resources import ALL, ALL_WITH_RELATIONS, ModelResource
 from raven import models
 
 
+def _feed_filter(bundle):
+    items = bundle.obj.items.filter(
+        userfeeditems__in=models.UserFeedItem.objects.filter(
+            read=False)).order_by('-published')
+    if not len(items):
+        items = bundle.obj.items
+    return items
+
+
 class FeedResource(ModelResource):
     '''A resource representing Feeds.'''
     class Meta:
@@ -21,7 +30,8 @@ class FeedResource(ModelResource):
         max_limit = 20
         queryset = models.Feed.objects.all()
         resource_name = 'feed'
-    items = fields.ToManyField('raven.resources.FeedItemResource', 'items')
+    items = fields.ToManyField(
+        'raven.resources.FeedItemResource', _feed_filter)
 
     def get_object_list(self, request):
         return models.Feed.objects.for_user(request.user).order_by('title')
@@ -74,7 +84,8 @@ class FeedItemResource(ModelResource):
     read = fields.BooleanField()
 
     def get_object_list(self, request):
-        #return models.FeedItem.objects.for_user(request.user).order_by('-published')
+        #return models.FeedItem.objects.for_user(request.user).order_by(
+        #    '-published')
         # TODO: filtering by 'read' really should be an API parameter. For
         # now, however, we're just hardcoding it here.
 

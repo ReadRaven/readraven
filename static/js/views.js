@@ -10,7 +10,7 @@ APP.Views.Reader = Backbone.View.extend({
     },
     _renderRightSide: function() {
         var view = new APP.Views.FeedItemListView({items: this.items});
-        this.$el.find('#item-list').html(view.render().el);
+        this.$el.find('#strong-side').html(view.render().el);
     },
     addFeed: function(e) {
         e.preventDefault();
@@ -65,7 +65,7 @@ APP.Views.Reader = Backbone.View.extend({
     setFeed: function(id) {
         this.feed = undefined;
         this.items = undefined;
-        this.$el.find('#item-list').empty();
+        this.$el.find('#strong-side').empty();
 
         if (!id) {
             this.items = new APP.Collections.FeedItems();
@@ -227,7 +227,8 @@ APP.Views.FeedItemListView = Backbone.View.extend({
     render: function() {
         var el = this.$el;
 
-        $(window).scroll(_.bind(this._scroll, this));
+        $('#strong-side').scroll(_.bind(this._scroll, this));
+        //$(window).scroll(_.bind(this._scroll, this));
 
         el.children().remove();
         _.each(this.items.models, _.bind(function(item) {

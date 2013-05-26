@@ -12,13 +12,37 @@
     <link href="{% static 'css/bootstrap.css' %}" rel="stylesheet">
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
     <style>
-      body {
-        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+      body, html, .container-fluid {
+        height: 100%;
+        overflow: hidden;
       }
+      div#main {
+        height: 100%;
+        padding-top: 45px;
+      }
+      div#main div.row {
+        margin-left: 0px;
+      }
+      div#main > div {
+        height: 100%;
+      }
+      div#main div#left-side form.form-search {
+        margin-bottom: 10px;
+      }
+      div#main div#left-side div#feed-list {
+        height: 85%;
+        overflow: auto;
+      }
+      div#main div#strong-side {
+        overflow: auto;
+        height: 95%;
+      }
+
+
 
       div.loading {
         background: url('/static/img/loading.gif') center center no-repeat;
-        margin-top: -50px;
+        margin-top: 10px;
         position: fixed;
         width: 100%;
         height: 20px;
@@ -41,19 +65,15 @@
         font-weight: bold;
       }
 
-      div#feed-list {
-        height: 500px;
-        overflow: auto;
+      div.feed-listing {
+        line-height: 1.6em;
       }
-      div#feed-list div.feed-listing-label {
+      div.feed-listing div.feed-listing-label {
         display: inline-block;
         white-space: nowrap;
         overflow: hidden;
         width: 80%;
         text-overflow: ellipsis;
-      }
-      div.feed-listing {
-        line-height: 1.6em;
       }
       div.feed-listing div.delete-feed {
         display: none;
@@ -62,12 +82,6 @@
       div.feed-listing:hover div.delete-feed {
         cursor: pointer;
         display: block;
-      }
-      div#item-list {
-        /* TODO: use this.
-        height: 100%;
-        overflow: auto;
-        */
       }
     </style>
     <link href="{% static 'css/bootstrap-responsive.css' %}" rel="stylesheet">
@@ -87,31 +101,30 @@
   <body>
     <div class="loading"></div>
 
-    <div class="navbar navbar-fixed-top">
-      <div class="navbar-inner">
-        <div class="container">
-          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="brand" href="#"><b>ReadRaven</b></a>
-          <div class="nav-collapse collapse">
-            <p class="navbar-text pull-right">
-            <a href="{% url 'usher.views.dashboard' %}">{{ user.email }}</a> | <a href="{% url 'django.contrib.auth.views.logout' %}">Log out</a>
-            </p>
-            {% comment %}
-            <ul class="nav">
-              <li><a href="{% url 'raven.views.home' %}">Home</a></li>
-            </ul>
-            {% endcomment %}
+    <div class="container-fluid">
+
+      <div class="navbar navbar-fixed-top">
+        <div class="navbar-inner">
+          <div class="container">
+            <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="brand" href="#"><b>ReadRaven</b></a>
+            <div class="nav-collapse collapse">
+              <p class="navbar-text pull-right">
+              <a href="{% url 'usher.views.dashboard' %}">{{ user.email }}</a> | <a href="{% url 'django.contrib.auth.views.logout' %}">Log out</a>
+              </p>
+              <ul class="nav">
+                <li><a href="{% url 'raven.views.home' %}">Home</a></li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-    <div class="container">
-      <div id="main" class="row-fluid">
-      </div>
+
+      <div id="main" class="row-fluid"></div>
     </div>
   </body>
 
@@ -132,7 +145,7 @@
 
   {% handlebars %}
   <script type="text/x-handlebars" id="index-template">
-    <div class="span3 column">
+    <div class="span3 column" id="left-side">
     {% endhandlebars %}{% comment %}
     We should really have search, but holy shit that's a lot of work.
       <form class="form-search">
@@ -146,7 +159,7 @@
       </form>
       <div id="feed-list"></div>
     </div>
-    <div class="span9 column" id="item-list">
+    <div class="span9 column" id="strong-side">
     </div>
   </script>
   <script type="text/x-handlebars" id="feed-listing-template">

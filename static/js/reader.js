@@ -7,6 +7,19 @@ Handlebars.registerHelper('formatDate', function(context, block) {
     return moment(context).fromNow();
 });
 
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        if (!(/^(GET|HEAD)$/.test(settings.type))) {
+            // Send the token to same-origin, relative URLs only.
+            // Send the token only if the method warrants CSRF protection
+            // Using the CSRFToken value acquired earlier
+            var csrftoken = $.cookie('csrftoken');
+            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+        }
+    },
+    crossDomain: false
+});
+
 APP.Routers.ReaderRouter = Backbone.Router.extend({
     routes: {
         'feed/:id': 'feed',

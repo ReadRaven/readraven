@@ -191,7 +191,8 @@ APP.Views.FeedItemListView = Backbone.View.extend({
 
                 next = next_par.find('.feeditem');
                 headline = next.find('h3');
-                if (headline.isOnScreen()) {
+                var current_headline = selected.find('h3');
+                if (headline.isOnScreen() && !current_headline.isOnScreen()) {
                     item = this.items.get(next_par.attr('data-feeditem'));
                     item.save({'read': true});
 

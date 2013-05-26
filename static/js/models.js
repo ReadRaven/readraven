@@ -27,6 +27,7 @@ APP.Collections.Feeds = Backbone.Collection.extend({
                         limit: limit,
                         offset: offset+limit
                     },
+                    remove: false,
                     success: collection.onSuccess
                 };
             collection.fetch(params);

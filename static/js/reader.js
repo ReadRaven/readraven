@@ -7,29 +7,39 @@ Handlebars.registerHelper('formatDate', function(context, block) {
     return moment(context).fromNow();
 });
 
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        if (!(/^(GET|HEAD)$/.test(settings.type))) {
+            // Send the token to same-origin, relative URLs only.
+            // Send the token only if the method warrants CSRF protection
+            // Using the CSRFToken value acquired earlier
+            var csrftoken = $.cookie('csrftoken');
+            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+        }
+    },
+    crossDomain: false
+});
+$(document).bind('ajaxStart', function() {
+    $('.loading').show();
+}).bind('ajaxStop', function() {
+    $('.loading').hide();
+});
+
 APP.Routers.ReaderRouter = Backbone.Router.extend({
     routes: {
         'feed/:id': 'feed',
         '*default': 'reader'
     },
     initialize: function(config) {
-        this.feeds = new APP.Collections.Feeds();
+        this.readerView = new APP.Views.Reader();
     },
     reader: function() {
-        var items = new APP.Collections.FeedItems();
-
-        this.currentView = new APP.Views.Reader({
-            feeds: this.feeds,
-            items: items
-        });
-        this.currentView.render();
+        this.readerView.setFeed();
+        this.readerView.render();
     },
     feed: function(id) {
-        this.currentView = new APP.Views.Reader({
-            feedID: id,
-            feeds: this.feeds,
-        });
-        this.currentView.render();
+        this.readerView.setFeed(id);
+        this.readerView.render();
     }
 });
 

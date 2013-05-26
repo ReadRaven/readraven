@@ -51,9 +51,16 @@
         width: 80%;
         text-overflow: ellipsis;
       }
-      div#feed-list div.delete-feed {
+      div.feed-listing {
+        line-height: 1.6em;
+      }
+      div.feed-listing div.delete-feed {
+        display: none;
         margin-right: 15px;
+      }
+      div.feed-listing:hover div.delete-feed {
         cursor: pointer;
+        display: block;
       }
       div#item-list {
         /* TODO: use this.

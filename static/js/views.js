@@ -126,6 +126,7 @@ APP.Views.FeedListView = Backbone.View.extend({
 });
 
 APP.Views.FeedListingView = Backbone.View.extend({
+    className: 'feed-listing',
     initialize: function(options) {
         this.feed = options.feed;
         this.$el.attr('data-feedid', this.feed.get('id'));

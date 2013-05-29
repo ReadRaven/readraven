@@ -6,7 +6,7 @@ from django.db import IntegrityError, DatabaseError, connection
 from django.test import TestCase
 from django.test.client import Client
 
-from raven.models import Feed, UserFeedItem
+from raven.models import Feed, FeedItem, UserFeedItem
 
 THIS_DIR = os.path.dirname(__file__)
 TESTDATA_DIR = os.path.join(THIS_DIR, '..', 'raven', 'tests', 'testdata')

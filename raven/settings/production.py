@@ -20,11 +20,11 @@ GOOGLE_OAUTH2_CALLBACK = 'https://www.readraven.com/google_auth_callback'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'd8ij5eddp5m7rp',
-        'USER': 'fosibpjnqdhrax',
-        'PASSWORD': 'wEl_rZsLsVSdrI0pCtmFrdNfVy',
-        'HOST': 'ec2-23-21-89-65.compute-1.amazonaws.com',
-        'PORT': '5432',
+        'NAME': 'dbvr1c9n17e1eq',
+        'USER': 'u32q47ibmnijo7',
+        'PASSWORD': 'p4imtt2lft4ucvcbu8220n66pgp',
+        'HOST': 'ec2-54-235-223-47.compute-1.amazonaws.com',
+        'PORT': '5642',
     }
 }
 

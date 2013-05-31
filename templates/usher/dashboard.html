@@ -50,9 +50,11 @@
             <p class="navbar-text pull-right">
             <a href="{% url 'usher.views.dashboard' %}">{{ user.email }}</a> | <a href="{% url 'django.contrib.auth.views.logout' %}">Log out</a>
             </p>
+            {% comment %}
             <ul class="nav">
               <li><a href="{% url 'raven.views.home' %}">Home</a></li>
             </ul>
+            {% endcomment %}
           </div>
         </div>
       </div>
@@ -68,7 +70,12 @@
         <div class="span5 column">
          <b>IMPORT FROM READER</b><br>
          <p>Upload your Google Takeout zip file to import and preserve all
-         your historical Google Reader data.</p>
+         your historical Google Reader data. You can upload your Takeout as
+         many times as you like, but we will only save the last one.</p>
+
+         {% if last_upload %}
+            <p>You uploaded <b>{{zipfile}}</b> on <b>{{ last_upload|date:"F d, Y" }}</b></p>
+         {% endif %}
          <br>
          <form action="/usher/import_takeout" method="post" enctype="multipart/form-data">
          {% csrf_token %}

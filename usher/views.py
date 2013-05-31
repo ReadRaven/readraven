@@ -56,8 +56,18 @@ def import_takeout(request):
 
 @login_required
 def dashboard(request):
+    user = request.user
+    takeout = user.takeouts
+    last_upload = None
+    zipfile = None
+    for t in takeout.values():
+        last_upload = t['upload_date']
+        zipfile = t['zipfile'].replace('takeouts/', '')
+
     return render_to_response(
         'usher/dashboard.html',
+        { 'last_upload' : last_upload,
+          'zipfile' : zipfile },
         context_instance=RequestContext(request))
 
 def sign_in(request):

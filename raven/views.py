@@ -1,9 +1,13 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext
+from taggit.models import Tag, TaggedItem
+
+from raven.models import Feed, UserFeed
 
 User = get_user_model()
 
@@ -25,4 +29,30 @@ def values(request):
 def home(request):
     return render_to_response(
         'raven/home.html',
+        context_instance=RequestContext(request))
+
+@login_required
+@user_passes_test(lambda u: u.is_customer(), login_url='/usher/sign_up')
+def feedlist(request):
+    '''Fragment for the feed list.'''
+
+    userfeeds = UserFeed.objects.filter(user=request.user)
+    ct = ContentType.objects.get_for_model(UserFeed)
+    kwargs = {
+        "userfeed__in": userfeeds,
+    }
+    tags = TaggedItem.tag_model().objects.filter(**kwargs).distinct()
+
+    # Ugh. Fucking Django and taggit, with their fucked up aggregates...
+    untagged_feeds = []
+    for feed in userfeeds:
+        if feed.tags.count() == 0:
+            untagged_feeds.append(feed)
+
+    context = {
+        'tags': tags,
+        'untagged_feeds': untagged_feeds
+    }
+    return render_to_response(
+        'raven/feedlist.html', context,
         context_instance=RequestContext(request))

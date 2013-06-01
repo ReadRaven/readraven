@@ -5,8 +5,7 @@ window.APP=window.APP||{Routers:{},Collections:{},Models:{},Views:{}};
 APP.Views.Reader = Backbone.View.extend({
     _rendered: false,
     _renderLeftSide: function() {
-        var view = new APP.Views.FeedListView({feeds: this.feeds});
-        this.$el.find('#feed-list').html(view.render().el);
+        this.$el.find('#feed-list').load('/raven/_feedlist/');
     },
     _renderRightSide: function() {
         var view = new APP.Views.FeedItemListView({items: this.items});
@@ -93,48 +92,6 @@ APP.Views.Reader = Backbone.View.extend({
             }, this));
             this.feed.fetch();
         }
-    }
-});
-
-APP.Views.FeedListView = Backbone.View.extend({
-    _add: function(feed) {
-        this._renderFeed(feed);
-    },
-    _remove: function(e) {
-        /* TODO: implement this? */
-    },
-    _renderFeed: function(feed) {
-        var view = new APP.Views.FeedListingView({feed: feed});
-        this.$el.append(view.render().el);
-    },
-    initialize: function(options) {
-        this.feeds = options.feeds;
-
-        this.feeds.on('add', _.bind(this._add, this));
-        this.feeds.on('remove', _.bind(this._remove, this));
-        this.feeds.on('change sort', _.bind(this.render, this));
-        /* TODO: handle 'change' and 'sync' events. */
-    },
-    render: function(e) {
-        var el = this.$el;
-        el.children().remove();
-        _.each(this.feeds.models, _.bind(function(feed) {
-            this._renderFeed(feed);
-        }, this));
-        return this;
-    }
-});
-
-APP.Views.FeedListingView = Backbone.View.extend({
-    className: 'feed-listing',
-    initialize: function(options) {
-        this.feed = options.feed;
-        this.$el.attr('data-feedid', this.feed.get('id'));
-    },
-    render: function() {
-        var template = Handlebars.compile($('#feed-listing-template').html());
-        this.$el.html(template(this.feed.attributes));
-        return this;
     }
 });
 

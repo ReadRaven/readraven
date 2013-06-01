@@ -94,7 +94,10 @@ def sign_up(request):
             # TODO: get to 1.0 so we can start charging for reals!
             customer.subscribe('free', trial_days=14)
         except stripe.StripeError, e:
-            # hmm... not sure.
+            # At least one error is known:
+            #   Your card was declined. Your request was in test mode, but
+            #   used a non test card. For a list of valid test cards,
+            #   visit: https://stripe.com/docs/testing
             print "ERROR:", e
 
         # All good! Goto thankyou?

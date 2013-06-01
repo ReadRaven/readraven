@@ -1,6 +1,6 @@
 (function() {
 "use strict";
-window.APP = window.APP || {Routers: {}, Collections: {}, Models: {}, Views: {}};
+window.APP=window.APP||{Routers:{},Collections:{},Models:{},Views:{}};
 
 APP.Views.Reader = Backbone.View.extend({
     _rendered: false,
@@ -147,9 +147,12 @@ $.fn.isOnScreen = function(){
         left : win.scrollLeft()
     };
     viewport.right = viewport.left + win.width();
-    viewport.bottom = viewport.top + win.height();
+    /* HACK! We only want the top quarter to trigger the event... */
+    viewport.bottom = viewport.top + (win.height() * .25);
 
     var bounds = this.offset();
+    if (bounds === undefined) { return; }
+
     bounds.right = bounds.left + this.outerWidth();
     bounds.bottom = bounds.top + this.outerHeight();
 
@@ -160,13 +163,23 @@ $.fn.isOnScreen = function(){
 APP.Views.FeedItemListView = Backbone.View.extend({
     _add: function(item) {
         this._renderItem(item);
+        this._loader.show();
+    },
+    _more: function(e) {
+        e.preventDefault();
+
+        if (this.items.hasNext()) {
+            this.items.getNext();
+        }
+        this._loader.hide();
     },
     _remove: function(e) {
         /* TODO: implement this? */
     },
     _renderItem: function(item) {
-        var view = new APP.Views.FeedItemView({item: item});
-        this.$el.append(view.render().el);
+        var view = new APP.Views.FeedItemView({item: item}),
+            container = this.$el.find('#feeditem-container');
+        container.append(view.render().el);
     },
     _scrollLast: 0,
     _scroll: function(e) {
@@ -225,12 +238,17 @@ APP.Views.FeedItemListView = Backbone.View.extend({
         this.items.on('reset sort', _.bind(this.render, this));
     },
     render: function() {
-        var el = this.$el;
-
         $('#strong-side').scroll(_.bind(this._scroll, this));
-        //$(window).scroll(_.bind(this._scroll, this));
 
-        el.children().remove();
+        var el = this.$el,
+            template = Handlebars.compile($('#feed-item-list-template').html());
+        el.html(template({}));
+        this._loader = el.find('.feeditem-loader');
+
+        el.find('#loader').click(_.bind(this._more, this));
+
+        var container = el.find('#feeditem-container');
+        container.children().remove();
         _.each(this.items.models, _.bind(function(item) {
             this._renderItem(item);
         }, this));

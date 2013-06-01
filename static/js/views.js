@@ -265,6 +265,7 @@ APP.Views.FeedItemView = Backbone.View.extend({
             item: this.item.attributes
         };
         this.$el.html(template(context));
+        this.$el.find('a').attr('target', '_blank');
     },
     className: 'row',
     initialize: function(options) {

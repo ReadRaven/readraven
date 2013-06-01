@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import logging
 import os
 import zipfile
 
@@ -11,6 +12,8 @@ import json
 import opml
 
 from raven.models import Feed, FeedItem, UserFeedItem
+
+logger = logging.getLogger('django')
 
 
 class FakeEntry(object):
@@ -39,7 +42,12 @@ def _new_user_item(user, feed, entry):
         item.reader_guid = entry.id
         item.published = datetime.utcfromtimestamp(entry.time)
         item.guid = item.calculate_guid()
-        item.save()
+        try:
+            paranoid_item = FeedItem.objects.get(guid=item.guid)
+            item = paranoid_item
+            logger.error('Detected duplicate GUID for %s' % item.link)
+        except ObjectDoesNotExist:
+            item.save()
 
     try:
         user_item = item.userfeeditem(user)

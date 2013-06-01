@@ -51,9 +51,6 @@ APP.Collections.FeedItems = Backbone.Collection.extend({
             collection._limit = response.meta.limit;
         }
         collection._offset = response.meta.offset;
-        /* If you want to see this in action (and LMFAO), uncomment this line.
-        collection.getNext();
-         */
     },
     getNext: function() {
         if (this.length == this._total) {
@@ -68,6 +65,9 @@ APP.Collections.FeedItems = Backbone.Collection.extend({
                 success: this.onSuccess
             };
         this.fetch(params);
+    },
+    hasNext: function() {
+        return !(this.length == this._total);
     },
     model: APP.Models.FeedItem,
     url: '/api/0.9/item/'

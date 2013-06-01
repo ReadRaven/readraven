@@ -4,7 +4,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Readraven : Dashboard</title>
+    <title>ReadRaven : dashboard</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
@@ -90,7 +90,7 @@
          <b>PAYMENT INFO</b><br>
           {% comment %}
           {% if user.customer.current_subscription.status == "trialing" %}
-            <p><i>Enjoy Readraven for free until {{ user.customer.current_subscription.trial_end|date:"F d, Y" }}</i></p>
+            <p><i>Enjoy ReadRaven for free until {{ user.customer.current_subscription.trial_end|date:"F d, Y" }}</i></p>
           {% endif %}
           {% endcomment %}
           <p>We have your <b>{{ user.customer.card_kind }}</b> ending in

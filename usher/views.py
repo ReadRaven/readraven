@@ -104,7 +104,9 @@ def sign_up(request):
         return HttpResponseRedirect("/")
     else:
         if request.user.is_customer():
-            return HttpResponseRedirect("/")
+            # Redirect to / in production mode, fall through in DEBUG mode
+            if settings.DEBUG is False:
+                return HttpResponseRedirect("/")
 
     task = tasks.SyncFromReaderAPITask()
     result = task.delay(request.user, loadLimit=150)

@@ -1,8 +1,8 @@
+from django.conf import settings
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.storage import default_storage
 from django.db import models
-
 
 from oauth2client.django_orm import FlowField, CredentialsField
 from south.modelsinspector import add_introspection_rules
@@ -75,6 +75,9 @@ class User(AbstractBaseUser):
         feed.add_subscriber(self)
 
     def is_customer(self):
+        if settings.DEBUG is True:
+            return True
+
         try:
             customer = self.customer
             try:

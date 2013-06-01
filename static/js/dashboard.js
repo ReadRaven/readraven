@@ -12,6 +12,13 @@ var Content = Backbone.View.extend({
         "import":_.template(document.getElementById("import").innerHTML),
         //"help":_.template(document.getElementById("help").innerHTML)
     },
+    events:{
+        'click #togglehelp' : 'toggleHelp'
+    },
+    toggleHelp: function(e) {
+        e.preventDefault();
+        this.$('.help').toggle('fast');
+    },
     render:function(route){
         //Simply sets the content as appropriate
         this.$el.html(this.content[route]);

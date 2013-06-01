@@ -58,3 +58,9 @@ body#index {
     body#index a.googleauth:active {
         background: url(../img/googleauth_press.png) no-repeat left top;
     }
+    body#dashboard div.help {
+        display: none;
+    }
+    body#dashboard div.help img {
+        position: absolute;
+    }

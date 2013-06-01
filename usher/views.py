@@ -52,7 +52,9 @@ def import_takeout(request):
             task = tasks.EatTakeoutTask()
             result = task.delay(request.user, takeout.zipfile.name)
 
-    return HttpResponseRedirect(reverse('usher.views.dashboard'))
+    # This isn't the prettiest, but it works.
+    #return HttpResponseRedirect(reverse('usher.views.dashboard'))
+    return HttpResponseRedirect('/usher/dashboard#import')
 
 @login_required
 def dashboard(request):

@@ -29,11 +29,6 @@
     <link rel="shortcut icon" href="{% static 'ico/favicon.png' %}">
     <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,600,300|Crimson+Text:400,600,700' rel='stylesheet' type='text/css'>
     <link href="{% static 'css/bootstrap-fileupload.css' %}" rel="stylesheet">
-    <script src="{% static 'js/jquery-1.9.1.js' %}"></script>
-    <script src="{% static 'js/bootstrap-fileupload.js' %}"></script>
-    <script type="text/javascript">
-        $('.fileupload').fileupload({uploadtype: 'file'});
-    </script>
   </head>
   <body id="dashboard">
 
@@ -60,47 +55,76 @@
       </div>
     </div>
 
+    <!-- CONTENT TEMPLATES -->
+    <script type="text/html" id="account">
+    <div>
+     <b>PAYMENT INFO</b><br>
+       {% comment %}
+       {% if user.customer.current_subscription.status == "trialing" %}
+         <p><i>Enjoy ReadRaven for free until {{ user.customer.current_subscription.trial_end|date:"F d, Y" }}</i></p>
+       {% endif %}
+       {% endcomment %}
+       {% if user.customer.card_kind %}
+       <p>We have your <b>{{ user.customer.card_kind }}</b> ending in
+       <b>{{ user.customer.card_last_4 }}</b> in our files.</p>
+       {% else %}
+       <p>We don't have a credit card for you on file, sneaky goat!</p>
+       {% endif %}
+       <br>
+       <p>ReadRaven is currently free until we're worthy of your money, but
+       if you'd like to cancel your account, please email us at
+       <a href="mailto:help@readraven.com">help@readraven.com</a>.</p>
+    </div>
+    </script>
+
+    <script type="text/html" id="import">
+    <div>
+     <b>IMPORT FROM READER</b><br>
+     <p>Upload your Google Takeout zip file to import and preserve all
+     your historical Google Reader data. You can upload your Takeout as
+     many times as you like, but we will only save the last one.</p>
+
+     {% if last_upload %}
+        <p>You uploaded <b>{{zipfile}}</b> on <b>{{ last_upload|date:"F d, Y" }}</b></p>
+     {% endif %}
+     <br>
+     <form action="/usher/import_takeout" method="post" enctype="multipart/form-data">
+     {% csrf_token %}
+     <div class="fileupload fileupload-new" data-provides="fileupload">
+       <div class="input-append">
+         <div class="uneditable-input span3"><i class="icon-file fileupload-exists"></i> <span class="fileupload-preview"></span></div><span class="btn btn-file"><span class="fileupload-new">Select file</span><span class="fileupload-exists">Change</span><input name="zipfile" type="file" /></span><a href="#" class="btn fileupload-exists" data-dismiss="fileupload">Remove</a>
+       </div>
+     </div>
+     <button type="submit" class="btn btn-success">Import!</button>
+     </form>
+    </div>
+    <br>
+    </script>
+
+    <script type="text/html" id="help">
+    </script>
+
     <div class="container">
       <div id="main" class="row-fluid">
         <div class="span3 column">
-          <ul class="nav nav-pills nav-stacked">
-            <li class="active"><a href="#">Account Settings</a></li>
-          </ul>
+          <!-- Nav Bar -->
+          <ul class="nav nav-pills nav-stacked" id="nav-item-container"></ul>
         </div>
-        <div class="span5 column">
-         <b>IMPORT FROM READER</b><br>
-         <p>Upload your Google Takeout zip file to import and preserve all
-         your historical Google Reader data. You can upload your Takeout as
-         many times as you like, but we will only save the last one.</p>
 
-         {% if last_upload %}
-            <p>You uploaded <b>{{zipfile}}</b> on <b>{{ last_upload|date:"F d, Y" }}</b></p>
-         {% endif %}
-         <br>
-         <form action="/usher/import_takeout" method="post" enctype="multipart/form-data">
-         {% csrf_token %}
-         <div class="fileupload fileupload-new" data-provides="fileupload">
-           <div class="input-append">
-             <div class="uneditable-input span3"><i class="icon-file fileupload-exists"></i> <span class="fileupload-preview"></span></div><span class="btn btn-file"><span class="fileupload-new">Select file</span><span class="fileupload-exists">Change</span><input name="zipfile" type="file" /></span><a href="#" class="btn fileupload-exists" data-dismiss="fileupload">Remove</a>
-           </div>
-         </div>
-         <button type="submit" class="btn btn-success">Import!</button>
-         </form>
-         <hr>
-         <b>PAYMENT INFO</b><br>
-          {% comment %}
-          {% if user.customer.current_subscription.status == "trialing" %}
-            <p><i>Enjoy ReadRaven for free until {{ user.customer.current_subscription.trial_end|date:"F d, Y" }}</i></p>
-          {% endif %}
-          {% endcomment %}
-          <p>We have your <b>{{ user.customer.card_kind }}</b> ending in
-          <b>{{ user.customer.card_last_4 }}</b> in our files.
-          <br>
-          <p>ReadRaven is currently free until we're worthy of your money, but
-          if you'd like to cancel your account, please email us at
-          <a href="mailto:help@readraven.com">help@readraven.com</a>.
-        </div>
+        <div class="span5 column" id="content"></div>
       </div>
     </div>
   </body>
+
+  <script src="{% static 'js/handlebars-1.0.0-rc.3.js' %}"></script>
+  <script src="{% static 'js/jquery-1.9.1.js' %}"></script>
+  <script src="{% static 'js/jquery.cookie.js' %}"></script>
+  <script src="{% static 'js/underscore.js' %}"></script>
+  <script src="{% static 'js/backbone.js' %}"></script>
+
+  <script src="{% static 'js/dashboard.js' %}"></script>
+  <script src="{% static 'js/bootstrap-fileupload.js' %}"></script>
+  <script type="text/javascript">
+      $('.fileupload').fileupload({uploadtype: 'file'});
+  </script>
 </html>

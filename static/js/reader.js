@@ -1,6 +1,6 @@
 (function() {
 "use strict";
-window.APP = window.APP || {Routers: {}, Collections: {}, Models: {}, Views: {}};
+window.APP = window.APP||{Routers:{},Collections:{},Models:{},Views:{}};
 
 Handlebars.registerHelper('formatDate', function(context, block) {
     //var f = block.hash.format || "MMM Do, YYYY";

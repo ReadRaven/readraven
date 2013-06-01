@@ -89,13 +89,8 @@ def sign_up(request):
                 customer = Customer.create(request.user)
             customer.update_card(request.POST.get("stripeToken"))
 
-            # Free trial until 7/4/2013 (beware off-by-one!)
-            free_until = datetime(2013, 7, 5)
-            now = datetime.utcnow()
-            trial = free_until - now
-            if trial.days < 14:
-                trial.days = 14
-            customer.subscribe('monthly', trial_days=trial.days)
+            # TODO: get to 1.0 so we can start charging for reals!
+            customer.subscribe('free', trial_days=14)
         except stripe.StripeError, e:
             # hmm... not sure.
             print "ERROR:", e
@@ -104,7 +99,9 @@ def sign_up(request):
         return HttpResponseRedirect("/")
     else:
         if request.user.is_customer():
-            return HttpResponseRedirect("/")
+            # Redirect to / in production mode, fall through in DEBUG mode
+            if settings.DEBUG is False:
+                return HttpResponseRedirect("/")
 
     task = tasks.SyncFromReaderAPITask()
     result = task.delay(request.user, loadLimit=150)
@@ -113,6 +110,7 @@ def sign_up(request):
 
     whitelist = set([
         'alex@chizang.net',
+        'alex.chiang@canonical.com',
         'alex@readraven.com',
         'caro.knapp@gmail.com',
         'rockstar.dev@gmail.com',

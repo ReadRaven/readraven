@@ -135,6 +135,14 @@ STRIPE_PUBLIC_KEY = os.environ['STRIPE_PUBLIC_KEY']
 STRIPE_SECRET_KEY = os.environ['STRIPE_SECRET_KEY']
 
 PAYMENTS_PLANS = {
+    "free": {
+        "stripe_plan_id": "raven-free",
+        "name": "raven-free",
+        "description": "Free during beta",
+        "price": 0,
+        "currency": "usd",
+        "interval": "month"
+    },
     "monthly": {
         "stripe_plan_id": "raven-monthly",
         "name": "raven-monthly",

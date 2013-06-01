@@ -88,13 +88,16 @@
          </form>
          <hr>
          <b>PAYMENT INFO</b><br>
+          {% comment %}
           {% if user.customer.current_subscription.status == "trialing" %}
             <p><i>Enjoy Readraven for free until {{ user.customer.current_subscription.trial_end|date:"F d, Y" }}</i></p>
           {% endif %}
+          {% endcomment %}
           <p>We have your <b>{{ user.customer.card_kind }}</b> ending in
           <b>{{ user.customer.card_last_4 }}</b> in our files.
           <br>
-          <p>If you'd like to cancel your account, please email us at
+          <p>ReadRaven is currently free until we're worthy of your money, but
+          if you'd like to cancel your account, please email us at
           <a href="mailto:help@readraven.com">help@readraven.com</a>.
         </div>
       </div>

@@ -141,6 +141,8 @@ class UserFeedItemResource(ModelResource):
         resource_name = 'item'
         max_limit = 20
 
+    feed = fields.ForeignKey('raven.resources.UserFeedResource', 'feed')
+
     def get_object_list(self, request):
         return super(UserFeedItemResource, self).get_object_list(request).filter(
             user=request.user.pk)

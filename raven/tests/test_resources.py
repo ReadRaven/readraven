@@ -86,6 +86,7 @@ class UserFeedResourceTest(API095TestCase):
         self.assertEqual(content['meta']['next'], None)
 
     def test_endpoint_by_id(self):
+        '''Get a single feed by traversing the API.'''
         feed = Feed.create_and_subscribe(
             'Paul Hummer', 'http://www.paulhummer.org/rss', None, self.user)
 
@@ -103,7 +104,7 @@ class UserFeedResourceTest(API095TestCase):
         self.assertEqual(content['title'], feed.title)
 
     def test_endpoint_only_owned(self):
-        '''Don't return items where UserFeed.user is not the user.'''
+        '''Don't return feeds where UserFeed.user is not the user.'''
         # Test data
         feed = Feed.create_and_subscribe(
             'Paul Hummer', 'http://www.paulhummer.org/rss', None, self.user)
@@ -225,14 +226,15 @@ class UserFeedItemResourceTest(API095TestCase):
         content = json.loads(result.content)
         self.assertEqual(
             sorted(content.keys()),
-            ['description', 'id', 'link', 'published', 'read', 'resource_uri',
-             'starred', 'title'])
+            ['description', 'feed', 'id', 'link', 'published', 'read',
+             'resource_uri', 'starred', 'title'])
         self.assertEqual(content['description'], item.description)
         self.assertEqual(content['link'], item.link)
         self.assertEqual(
             dateutil.parser.parse(content['published']),
             item.published)
         self.assertEqual(content['title'], item.title)
+        self.assertEqual(content['feed'], '/api/0.9.5/feed/1/')
 
     def test_endpoint_only_owned(self):
         '''Don't return items where UserFeedItem.user is not the user.'''

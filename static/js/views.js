@@ -82,11 +82,14 @@ APP.Views.Reader = Backbone.View.extend({
              * motherfucking Backbone fucking Relational doesn't modify
              * Collection to pull for the Store.
              */
+            /* Disabled for now.
             this.feed = this.feeds.where({id: parseInt(id, 10)})[0];
             if (!this.feed) {
                 this.feed = APP.Models.Feed.findOrCreate({id: id});
             }
+            */
 
+            this.feed = APP.Models.Feed.findOrCreate({id: id});
             this.feed.once('sync', _.bind(function(__) {
                 this.items = this.feed.get('items');
                 this.items.once('sync', _.bind(function(__) {

@@ -37,6 +37,8 @@
         overflow: auto;
         height: 95%;
       }
+      /*
+      div#main div#strong-side div.feeditem-empty,
       div#main div#strong-side div.feeditem-loader {
         font-weight: bold;
         margin: 15px;
@@ -44,6 +46,7 @@
         background-color: #eee;
         border: 1px solid #888;
       }
+      */
       div#main div#strong-side div.feeditem-loader a {
         padding: 15px;
         display: inline-block;
@@ -60,6 +63,15 @@
         z-index: 1031;
       }
 
+      div.feeditem-empty,
+      div.feeditem-loader {
+        font-weight: bold;
+        background-color: #eee;
+        text-align: center;
+        margin-bottom: 50px;
+      }
+      div.feeditem-empty,
+      div.feeditem-loader,
       div.feeditem {
         margin: 0 5px 15px 5px;
         border: 3px solid #ddd;
@@ -199,6 +211,11 @@
       <div class="content">
         {{{item.description}}}
       </div>
+    </div>
+  </script>
+  <script type="text/x-handlebars" id="feed-item-empty-template">
+    <div class="feeditem-empty">
+      Congratulations! You're all caught up.
     </div>
   </script>
   {% endhandlebars %}

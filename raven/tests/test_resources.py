@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 import unittest
 
@@ -11,14 +12,271 @@ from raven.test_utils import network_available
 
 User = get_user_model()
 
-__all__ = ['FeedResourceTest', 'FeedItemResourceTest']
+__all__ = [
+    'API095Test', 'UserFeedResourceTest', 'UserFeedItemResourceTest',
+    'FeedResource09Test', 'FeedItemResource09Test',
+    ]
 
 
-class FeedResourceTest(ResourceTestCase):
+class API095TestCase(ResourceTestCase):
+    '''A generic test case for API 0.9.5'''
+
+    def setUp(self):
+        super(API095TestCase, self).setUp()
+
+        self.user = User.objects.create_user(
+            'bob', 'bob@example.com', password='bob')
+        self.user.save()
+
+        self.api_client.client.login(username='bob@example.com', password='bob')
+
+
+class API095Test(API095TestCase):
+    '''Test the 0.9.5 api endpoints.'''
+
+    def test_endpoint(self):
+        '''The root API endpoint returns all the other endpoints.'''
+        result = self.api_client.get('/api/0.9.5/')
+        self.assertEqual(200, result.status_code)
+
+        content = json.loads(result.content)
+        self.assertEqual(content.keys(), ['feed', 'item'])
+        self.assertEqual(content['feed'].keys(), ['list_endpoint', 'schema'])
+        self.assertEqual(content['feed']['list_endpoint'], '/api/0.9.5/feed/')
+
+
+class UserFeedResourceTest(API095TestCase):
+    '''Test raven.resources.UserFeedResource.'''
+
+    def test_endpoint_empty(self):
+        '''Don't return any feeds if none exist (duh).'''
+        result = self.api_client.get('/api/0.9.5/feed/')
+        self.assertEqual(200, result.status_code)
+
+        content = json.loads(result.content)
+        self.assertEqual(content.keys(), ['meta', 'objects'])
+        self.assertEqual(
+            content['meta'].keys(),
+            ['previous', 'total_count', 'offset', 'limit', 'next'])
+        self.assertEqual(content['meta']['previous'], None)
+        self.assertEqual(content['meta']['total_count'], 0)
+        self.assertEqual(content['meta']['offset'], 0)
+        self.assertEqual(content['meta']['limit'], 20)
+        self.assertEqual(content['meta']['next'], None)
+        self.assertEqual(content['objects'], [])
+
+    def test_endpoint_single_item(self):
+        '''The root feed endpoint returns a list of feeds.'''
+        feed = Feed.create_and_subscribe(
+            'Paul Hummer', 'http://www.paulhummer.org/rss', None, self.user)
+
+        result = self.api_client.get('/api/0.9.5/feed/')
+        self.assertEqual(200, result.status_code)
+
+        content = json.loads(result.content)
+        self.assertEqual(content.keys(), ['meta', 'objects'])
+        self.assertEqual(
+            content['meta'].keys(),
+            ['previous', 'total_count', 'offset', 'limit', 'next'])
+        self.assertEqual(content['meta']['previous'], None)
+        self.assertEqual(content['meta']['total_count'], 1)
+        self.assertEqual(content['meta']['offset'], 0)
+        self.assertEqual(content['meta']['limit'], 20)
+        self.assertEqual(content['meta']['next'], None)
+
+        feed_dict = content['objects'][0]
+        self.assertEqual(feed_dict.keys(), ['id', 'resource_uri'])
+
+    def test_endpoint_only_owned(self):
+        '''Don't return items where UserFeed.user is not the user.'''
+        # Test data
+        feed = Feed.create_and_subscribe(
+            'Paul Hummer', 'http://www.paulhummer.org/rss', None, self.user)
+
+        mike = User.objects.create_user(
+            'mike', 'mike@example.com', password='mike')
+        mike.save()
+        feed = Feed.create_and_subscribe(
+            'Gothamist', 'http://feeds.gothamistllc.com/gothamist05', None, mike)
+
+        # Actual test
+        result = self.api_client.get('/api/0.9.5/feed/')
+        self.assertEqual(200, result.status_code)
+
+        content = json.loads(result.content)
+        self.assertEqual(content.keys(), ['meta', 'objects'])
+        self.assertEqual(
+            content['meta'].keys(),
+            ['previous', 'total_count', 'offset', 'limit', 'next'])
+        self.assertEqual(content['meta']['previous'], None)
+        self.assertEqual(content['meta']['total_count'], 1)
+        self.assertEqual(content['meta']['offset'], 0)
+        self.assertEqual(content['meta']['limit'], 20)
+        self.assertEqual(content['meta']['next'], None)
+
+        feed_dict = content['objects'][0]
+        self.assertEqual(feed_dict.keys(), ['id', 'resource_uri'])
+
+    def test_endpoint_paging(self):
+        '''Page out more than 20 feeds.'''
+        # Test data
+        for i in xrange(0, 50):
+            Feed.create_and_subscribe(
+                'feed {0}'.format(i),
+                'http://www.example.com/rss{0}'.format(i),
+                None, self.user)
+
+        # Actual test
+        result = self.api_client.get('/api/0.9.5/feed/')
+        self.assertEqual(200, result.status_code)
+
+        content = json.loads(result.content)
+        self.assertEqual(content.keys(), ['meta', 'objects'])
+        self.assertEqual(
+            content['meta'].keys(),
+            ['previous', 'total_count', 'offset', 'limit', 'next'])
+        self.assertEqual(content['meta']['previous'], None)
+        self.assertEqual(content['meta']['total_count'], 50)
+        self.assertEqual(content['meta']['offset'], 0)
+        self.assertEqual(content['meta']['limit'], 20)
+        self.assertEqual(
+            content['meta']['next'].split('?')[1],
+            'limit=20&offset=20')
+        self.assertEqual(len(content['objects']), 20)
+
+
+class UserFeedItemResourceTest(API095TestCase):
+    '''Test raven.resources.UserFeedItemResource.'''
+
+    def test_endpoint_empty(self):
+        '''Don't return any items if none exist (uh, duh).'''
+        result = self.api_client.get('/api/0.9.5/item/')
+        self.assertEqual(200, result.status_code)
+
+        content = json.loads(result.content)
+        self.assertEqual(content.keys(), ['meta', 'objects'])
+        self.assertEqual(
+            content['meta'].keys(),
+            ['previous', 'total_count', 'offset', 'limit', 'next'])
+        self.assertEqual(content['meta']['previous'], None)
+        self.assertEqual(content['meta']['total_count'], 0)
+        self.assertEqual(content['meta']['offset'], 0)
+        self.assertEqual(content['meta']['limit'], 20)
+        self.assertEqual(content['meta']['next'], None)
+        self.assertEqual(content['objects'], [])
+
+    def test_endpoint_single_item(self):
+        '''The root feed endpoint returns a list of items.'''
+        # Test data
+        feed = Feed.create_and_subscribe(
+            'Paul Hummer', 'http://www.paulhummer.org/rss', None, self.user)
+        item = FeedItem()
+        item.feed = feed
+        item.title = 'Feed title'
+        item.link = 'http://www.paulhummer.org/rss/1'
+        item.guid = 'http://www.paulhummer.org/rss/1'
+        item.published = datetime.now()
+        item.save()
+
+        # Actual test
+        result = self.api_client.get('/api/0.9.5/item/')
+        self.assertEqual(200, result.status_code)
+
+        content = json.loads(result.content)
+        self.assertEqual(content.keys(), ['meta', 'objects'])
+        self.assertEqual(
+            content['meta'].keys(),
+            ['previous', 'total_count', 'offset', 'limit', 'next'])
+        self.assertEqual(content['meta']['previous'], None)
+        self.assertEqual(content['meta']['total_count'], 1)
+        self.assertEqual(content['meta']['offset'], 0)
+        self.assertEqual(content['meta']['limit'], 20)
+        self.assertEqual(content['meta']['next'], None)
+
+        feed_dict = content['objects'][0]
+        self.assertEqual(
+            sorted(feed_dict.keys()),
+            ['id', 'read', 'resource_uri', 'starred'])
+
+    def test_endpoint_only_owned(self):
+        '''Don't return items where UserFeedItem.user is not the user.'''
+        # Test data
+        feed = Feed.create_and_subscribe(
+            'Paul Hummer', 'http://www.paulhummer.org/rss', None, self.user)
+        item = FeedItem()
+        item.feed = feed
+        item.title = 'Feed title'
+        item.link = 'http://www.paulhummer.org/rss/1'
+        item.guid = 'http://www.paulhummer.org/rss/1'
+        item.published = datetime.now()
+        item.save()
+
+        mike = User.objects.create_user(
+            'mike', 'mike@example.com', password='mike')
+        mike.save()
+        feed = Feed.create_and_subscribe(
+            'Gothamist', 'http://feeds.gothamistllc.com/gothamist05', None, mike)
+        item = FeedItem()
+        item.feed = feed
+        item.title = 'Feed title'
+        item.link = 'http://www.gothamist.com/rss/1'
+        item.guid = 'http://www.gothamist.com/rss/1'
+        item.published = datetime.now()
+        item.save()
+
+        # Actual test
+        result = self.api_client.get('/api/0.9.5/item/')
+        self.assertEqual(200, result.status_code)
+
+        content = json.loads(result.content)
+        self.assertEqual(content.keys(), ['meta', 'objects'])
+        self.assertEqual(
+            content['meta'].keys(),
+            ['previous', 'total_count', 'offset', 'limit', 'next'])
+        self.assertEqual(content['meta']['previous'], None)
+        self.assertEqual(content['meta']['total_count'], 1)
+        self.assertEqual(content['meta']['offset'], 0)
+        self.assertEqual(content['meta']['limit'], 20)
+        self.assertEqual(content['meta']['next'], None)
+
+    def test_endpoint_paging(self):
+        '''Page out more than 20 items.'''
+        # Test data
+        feed = Feed.create_and_subscribe(
+            'Paul Hummer', 'http://www.paulhummer.org/rss', None, self.user)
+        for i in xrange(0, 50):
+            item = FeedItem()
+            item.feed = feed
+            item.title = 'Feed title {0}'.format(i)
+            item.link = 'http://www.paulhummer.org/rss/{0}'.format(i)
+            item.guid = 'http://www.paulhummer.org/rss/{0}'.format(i)
+            item.published = datetime.now()
+            item.save()
+
+        # Actual test
+        result = self.api_client.get('/api/0.9.5/item/')
+        self.assertEqual(200, result.status_code)
+
+        content = json.loads(result.content)
+        self.assertEqual(content.keys(), ['meta', 'objects'])
+        self.assertEqual(
+            content['meta'].keys(),
+            ['previous', 'total_count', 'offset', 'limit', 'next'])
+        self.assertEqual(content['meta']['previous'], None)
+        self.assertEqual(content['meta']['total_count'], 50)
+        self.assertEqual(content['meta']['offset'], 0)
+        self.assertEqual(content['meta']['limit'], 20)
+        self.assertEqual(
+            content['meta']['next'].split('?')[1],
+            'limit=20&offset=20')
+        self.assertEqual(len(content['objects']), 20)
+
+
+class FeedResource09Test(ResourceTestCase):
     '''Test the FeedResource.'''
 
     def setUp(self):
-        super(FeedResourceTest, self).setUp()
+        super(FeedResource09Test, self).setUp()
 
         self.user = User.objects.create_user(
             'bob', 'bob@bob.com', password='bob')
@@ -143,7 +401,7 @@ class FeedResourceTest(ResourceTestCase):
         self.assertEqual(len(content['objects']), 0)
 
 
-class FeedItemResourceTest(TestCase):
+class FeedItemResource09Test(TestCase):
     '''Test the FeedItemResource.'''
 
     def setUp(self):

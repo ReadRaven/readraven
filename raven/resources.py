@@ -18,7 +18,7 @@ def _feed_filter(bundle):
     return items
 
 
-class FeedResource(ModelResource):
+class FeedResource09(ModelResource):
     '''A resource representing Feeds.'''
     class Meta:
         allowed_methods = ('get', 'post', 'delete',)
@@ -31,7 +31,7 @@ class FeedResource(ModelResource):
         queryset = models.Feed.objects.all()
         resource_name = 'feed'
     items = fields.ToManyField(
-        'raven.resources.FeedItemResource', _feed_filter)
+        'raven.resources.FeedItemResource09', _feed_filter)
 
     def get_object_list(self, request):
         return models.Feed.objects.for_user(request.user).order_by('title')
@@ -63,7 +63,7 @@ class FeedResource(ModelResource):
         feed.remove_subscriber(bundle.request.user)
 
 
-class FeedItemResource(ModelResource):
+class FeedItemResource09(ModelResource):
     '''A resource representing FeedItems.'''
     class Meta:
         allowed_methods = ('get', 'put',)
@@ -80,7 +80,7 @@ class FeedItemResource(ModelResource):
         queryset = models.FeedItem.objects.all()
         resource_name = 'item'
 
-    feed = fields.ForeignKey(FeedResource, 'feed', full=True)
+    feed = fields.ForeignKey(FeedResource09, 'feed', full=True)
     read = fields.BooleanField()
 
     def get_object_list(self, request):
@@ -110,3 +110,31 @@ class FeedItemResource(ModelResource):
     def dehydrate_read(self, bundle):
         userfeeditem = bundle.obj.userfeeditem(bundle.request.user)
         return userfeeditem.read
+
+
+class UserFeedResource(ModelResource):
+    '''A resource describing raven.models.UserFeed.'''
+    class Meta:
+        authentication = SessionAuthentication()
+        authorization = Authorization()
+        queryset = models.UserFeed.objects.all()
+        resource_name = 'feed'
+        max_limit = 20
+
+    def get_object_list(self, request):
+        return super(UserFeedResource, self).get_object_list(request).filter(
+            user=request.user.pk)
+
+
+class UserFeedItemResource(ModelResource):
+    '''A resource describing raven.models.UserFeedItem.'''
+    class Meta:
+        authentication = SessionAuthentication()
+        authorization = Authorization()
+        queryset = models.UserFeedItem.objects.all()
+        resource_name = 'item'
+        max_limit = 20
+
+    def get_object_list(self, request):
+        return super(UserFeedItemResource, self).get_object_list(request).filter(
+            user=request.user.pk)

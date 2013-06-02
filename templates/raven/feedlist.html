@@ -27,7 +27,7 @@
 {% endfor %}
 {% for feed in untagged_feeds %}
     <li class="feed-listing untagged">
-        <div class="feed-listing-label">
+        <div class="feed-listing-label {% if feed.unread_count %}unread{% endif %}">
             <a href="#/feed/{{feed.feed.id}}">
             {% if feed.feed.title %}
                 {{ feed.feed.title }}
@@ -35,10 +35,13 @@
                 {{ feed.feed.link }}
             {% endif %}
             </a>
+            {% if feed.unread_count %}({{feed.unread_count}}){% endif %}
         </div>
+        {% comment %}
         <div class="pull-right delete-feed">
             <i class="icon-trash icon-black"></i>
         </div>
+        {% endcomment %}
     </li>
 {% endfor %}
 </ul>

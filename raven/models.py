@@ -349,6 +349,11 @@ class UserFeed(models.Model):
         settings.AUTH_USER_MODEL, related_name='userfeeds')
     tags = TaggableManager()
 
+    def unread_count(self):
+        '''Return the UserFeedItem unread count.'''
+        return UserFeedItem.objects.filter(
+            user=self.user, feed=self.feed, read=False).count()
+
 
 class UserFeedItem(models.Model):
     '''A model for user metadata on a post.'''

@@ -181,7 +181,10 @@ APP.Views.FeedItemListView = Backbone.View.extend({
             nextRow = this._currentRow.prev('div.row');
             nextSelected = nextRow.find('.feeditem');
 
-            if (nextRow.length === 0) { return; }
+            if (nextRow.length === 0) {
+                this._scrollLast = scrollPosition;
+                return;
+            }
 
             if (!headline.isOnScreen() && nextRow.isOnScreen()) {
                 selected.removeClass('selected');
@@ -192,12 +195,64 @@ APP.Views.FeedItemListView = Backbone.View.extend({
         }
         this._scrollLast = scrollPosition;
     },
+    _keyNav: function(e, combo) {
+        var selected = this._currentRow.find('.feeditem'),
+            headline = selected.find('h3'),
+            nextSelected = null,
+            nextRow = null,
+            nextHeadline = null,
+            scrollTarget = 0;
+
+        if (combo === 'j' || combo === 'n') {
+            nextRow = this._currentRow.next('div.row');
+        } else if (combo === 'k' || combo === 'p') {
+            // This little bit allows us to scroll to top of current
+            // feeditem if we are in the middle of it, rather than going
+            // all the way to the previous feeditem (which would be
+            // jarring and weird).
+            if (!headline.isOnScreen()) {
+                nextRow = this._currentRow;
+            } else {
+                nextRow = this._currentRow.prev('div.row');
+            }
+        }
+
+        if (nextRow.length === 0) { return; }
+
+        // We need to adjust the offset by the height of the current
+        // headline, which can be calculated as show below. This value
+        // is currently 63px.
+        //
+        // For some reason, trying to calculate it dynamically results
+        // in our math being off, and scrolling to the wrong place on
+        // the page, so hard code it and fix as necessary if we ever
+        // change the size of the headline.
+        //var headline = selected.find('h3');
+        //console.log(headline.offset().top);
+
+        // Calculate next offset
+        nextHeadline = nextRow.find('h3');
+        scrollTarget = this._scrollLast + nextHeadline.offset().top - 63;
+
+        $('#strong-side').animate({
+            scrollTop: scrollTarget
+        }, 1, function () {
+            selected.removeClass('selected');
+            nextSelected = nextRow.find('.feeditem');
+            nextSelected.addClass('selected');
+        });
+
+        this._currentRow = nextRow;
+    },
     initialize: function(options) {
         this.items = options.items;
 
         this.items.on('add', _.bind(this._add, this));
         this.items.on('remove', _.bind(this._remove, this));
         this.items.on('reset sort', _.bind(this.render, this));
+
+        // Keybindings!
+        Mousetrap.bind(['j', 'n', 'k', 'p'], _.bind(this._keyNav, this));
     },
     render: function() {
         $('#strong-side').scroll(_.bind(this._scroll, this));

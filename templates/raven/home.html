@@ -77,21 +77,21 @@
         font-weight: bold;
       }
 
-      div.feed-listing {
+      li.feed-listing {
         line-height: 1.6em;
       }
-      div.feed-listing div.feed-listing-label {
+      li.feed-listing div.feed-listing-label a {
         display: inline-block;
         white-space: nowrap;
         overflow: hidden;
         width: 80%;
         text-overflow: ellipsis;
       }
-      div.feed-listing div.delete-feed {
+      li.feed-listing div.delete-feed {
         display: none;
         margin-right: 15px;
       }
-      div.feed-listing:hover div.delete-feed {
+      li.feed-listing:hover div.delete-feed {
         cursor: pointer;
         display: block;
       }
@@ -171,7 +171,7 @@
         <input type="text" class="input-medium" id="add-feed"/>
         <button class="btn" id="add-feed">Add Feed</button>
       </form>
-      <div id="feed-list"></div>
+      <div id="feed-list" class="css-treeview"></div>
     </div>
     <div class="span9 column" id="strong-side">
     </div>

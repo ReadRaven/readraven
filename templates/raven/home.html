@@ -37,6 +37,8 @@
         overflow: auto;
         height: 95%;
       }
+      /*
+      div#main div#strong-side div.feeditem-empty,
       div#main div#strong-side div.feeditem-loader {
         font-weight: bold;
         margin: 15px;
@@ -44,6 +46,7 @@
         background-color: #eee;
         border: 1px solid #888;
       }
+      */
       div#main div#strong-side div.feeditem-loader a {
         padding: 15px;
         display: inline-block;
@@ -60,6 +63,15 @@
         z-index: 1031;
       }
 
+      div.feeditem-empty,
+      div.feeditem-loader {
+        font-weight: bold;
+        background-color: #eee;
+        text-align: center;
+        margin-bottom: 50px;
+      }
+      div.feeditem-empty,
+      div.feeditem-loader,
       div.feeditem {
         margin: 0 5px 15px 5px;
         border: 3px solid #ddd;
@@ -77,21 +89,27 @@
         font-weight: bold;
       }
 
-      div.feed-listing {
+      li.feed-listing {
         line-height: 1.6em;
       }
-      div.feed-listing div.feed-listing-label {
+      li.feed-listing div.feed-listing-label {
+        width: 80%;
+      }
+      li.feed-listing div.feed-listing-label.unread {
+        font-weight: bold;
+      }
+      li.feed-listing div.feed-listing-label a {
+        max-width: 80%;
         display: inline-block;
         white-space: nowrap;
         overflow: hidden;
-        width: 80%;
         text-overflow: ellipsis;
       }
-      div.feed-listing div.delete-feed {
+      li.feed-listing div.delete-feed {
         display: none;
         margin-right: 15px;
       }
-      div.feed-listing:hover div.delete-feed {
+      li.feed-listing:hover div.delete-feed {
         cursor: pointer;
         display: block;
       }
@@ -171,21 +189,9 @@
         <input type="text" class="input-medium" id="add-feed"/>
         <button class="btn" id="add-feed">Add Feed</button>
       </form>
-      <div id="feed-list"></div>
+      <div id="feed-list" class="css-treeview"></div>
     </div>
     <div class="span9 column" id="strong-side">
-    </div>
-  </script>
-  <script type="text/x-handlebars" id="feed-listing-template">
-    <div class="feed-listing-label"><a href="#/feed/{{id}}">
-    {{#if title}}
-      {{title}}
-    {{else}}
-      {{link}}
-    {{/if}}
-    </a></div>
-    <div class="pull-right delete-feed">
-      <i class="icon-trash icon-black"></i>
     </div>
   </script>
   <script type="text/x-handlebars" id="feed-item-list-template">
@@ -205,6 +211,11 @@
       <div class="content">
         {{{item.description}}}
       </div>
+    </div>
+  </script>
+  <script type="text/x-handlebars" id="feed-item-empty-template">
+    <div class="feeditem-empty">
+      Congratulations! You're all caught up.
     </div>
   </script>
   {% endhandlebars %}

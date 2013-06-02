@@ -5,8 +5,7 @@ window.APP=window.APP||{Routers:{},Collections:{},Models:{},Views:{}};
 APP.Views.Reader = Backbone.View.extend({
     _rendered: false,
     _renderLeftSide: function() {
-        var view = new APP.Views.FeedListView({feeds: this.feeds});
-        this.$el.find('#feed-list').html(view.render().el);
+        this.$el.find('#feed-list').load('/raven/_feedlist/');
     },
     _renderRightSide: function() {
         var view = new APP.Views.FeedItemListView({items: this.items});
@@ -48,7 +47,9 @@ APP.Views.Reader = Backbone.View.extend({
         'click div.delete-feed': 'deleteFeed'
     },
     initialize: function(options) {
+        /* Disabled for now.
         this.feeds = new APP.Collections.Feeds();
+         */
     },
     render: function() {
         if (this._rendered) { return this; }
@@ -56,7 +57,9 @@ APP.Views.Reader = Backbone.View.extend({
         var template = Handlebars.compile($('#index-template').html());
         this.$el.html(template);
 
+        /* Disabled for now.
         this.feeds.fetch({success: this.feeds.onSuccess});
+         */
         this._renderLeftSide();
 
         this._rendered = true;
@@ -79,11 +82,14 @@ APP.Views.Reader = Backbone.View.extend({
              * motherfucking Backbone fucking Relational doesn't modify
              * Collection to pull for the Store.
              */
+            /* Disabled for now.
             this.feed = this.feeds.where({id: parseInt(id, 10)})[0];
             if (!this.feed) {
                 this.feed = APP.Models.Feed.findOrCreate({id: id});
             }
+            */
 
+            this.feed = APP.Models.Feed.findOrCreate({id: id});
             this.feed.once('sync', _.bind(function(__) {
                 this.items = this.feed.get('items');
                 this.items.once('sync', _.bind(function(__) {
@@ -93,48 +99,6 @@ APP.Views.Reader = Backbone.View.extend({
             }, this));
             this.feed.fetch();
         }
-    }
-});
-
-APP.Views.FeedListView = Backbone.View.extend({
-    _add: function(feed) {
-        this._renderFeed(feed);
-    },
-    _remove: function(e) {
-        /* TODO: implement this? */
-    },
-    _renderFeed: function(feed) {
-        var view = new APP.Views.FeedListingView({feed: feed});
-        this.$el.append(view.render().el);
-    },
-    initialize: function(options) {
-        this.feeds = options.feeds;
-
-        this.feeds.on('add', _.bind(this._add, this));
-        this.feeds.on('remove', _.bind(this._remove, this));
-        this.feeds.on('change sort', _.bind(this.render, this));
-        /* TODO: handle 'change' and 'sync' events. */
-    },
-    render: function(e) {
-        var el = this.$el;
-        el.children().remove();
-        _.each(this.feeds.models, _.bind(function(feed) {
-            this._renderFeed(feed);
-        }, this));
-        return this;
-    }
-});
-
-APP.Views.FeedListingView = Backbone.View.extend({
-    className: 'feed-listing',
-    initialize: function(options) {
-        this.feed = options.feed;
-        this.$el.attr('data-feedid', this.feed.get('id'));
-    },
-    render: function() {
-        var template = Handlebars.compile($('#feed-listing-template').html());
-        this.$el.html(template(this.feed.attributes));
-        return this;
     }
 });
 
@@ -265,6 +229,7 @@ APP.Views.FeedItemView = Backbone.View.extend({
             item: this.item.attributes
         };
         this.$el.html(template(context));
+        this.$el.find('a').attr('target', '_blank');
     },
     className: 'row',
     initialize: function(options) {

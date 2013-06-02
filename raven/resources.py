@@ -125,6 +125,12 @@ class UserFeedResource(ModelResource):
         return super(UserFeedResource, self).get_object_list(request).filter(
             user=request.user.pk)
 
+    def dehydrate(self, bundle):
+        bundle.data['description'] = bundle.obj.feed.description
+        bundle.data['link'] = bundle.obj.feed.link
+        bundle.data['title'] = bundle.obj.feed.title
+        return bundle
+
 
 class UserFeedItemResource(ModelResource):
     '''A resource describing raven.models.UserFeedItem.'''
@@ -138,3 +144,10 @@ class UserFeedItemResource(ModelResource):
     def get_object_list(self, request):
         return super(UserFeedItemResource, self).get_object_list(request).filter(
             user=request.user.pk)
+
+    def dehydrate(self, bundle):
+        bundle.data['description'] = bundle.obj.item.description
+        bundle.data['link'] = bundle.obj.item.link
+        bundle.data['published'] = bundle.obj.item.published
+        bundle.data['title'] = bundle.obj.item.title
+        return bundle

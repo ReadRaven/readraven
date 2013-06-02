@@ -1,4 +1,5 @@
 from datetime import datetime
+import dateutil
 import json
 import unittest
 
@@ -84,8 +85,22 @@ class UserFeedResourceTest(API095TestCase):
         self.assertEqual(content['meta']['limit'], 20)
         self.assertEqual(content['meta']['next'], None)
 
-        feed_dict = content['objects'][0]
-        self.assertEqual(feed_dict.keys(), ['id', 'resource_uri'])
+    def test_endpoint_by_id(self):
+        feed = Feed.create_and_subscribe(
+            'Paul Hummer', 'http://www.paulhummer.org/rss', None, self.user)
+
+        result = self.api_client.get('/api/0.9.5/feed/')
+        content = json.loads(result.content)
+        result = self.api_client.get(content['objects'][0]['resource_uri'])
+        self.assertEqual(200, result.status_code)
+
+        content = json.loads(result.content)
+        self.assertEqual(
+            sorted(content.keys()),
+            ['description', 'id', 'link', 'resource_uri', 'title'])
+        self.assertEqual(content['description'], feed.description)
+        self.assertEqual(content['link'], feed.link)
+        self.assertEqual(content['title'], feed.title)
 
     def test_endpoint_only_owned(self):
         '''Don't return items where UserFeed.user is not the user.'''
@@ -113,9 +128,6 @@ class UserFeedResourceTest(API095TestCase):
         self.assertEqual(content['meta']['offset'], 0)
         self.assertEqual(content['meta']['limit'], 20)
         self.assertEqual(content['meta']['next'], None)
-
-        feed_dict = content['objects'][0]
-        self.assertEqual(feed_dict.keys(), ['id', 'resource_uri'])
 
     def test_endpoint_paging(self):
         '''Page out more than 20 feeds.'''
@@ -193,10 +205,34 @@ class UserFeedItemResourceTest(API095TestCase):
         self.assertEqual(content['meta']['limit'], 20)
         self.assertEqual(content['meta']['next'], None)
 
-        feed_dict = content['objects'][0]
+    def test_endpoint_by_id(self):
+        '''Get a specific feed item.'''
+        feed = Feed.create_and_subscribe(
+            'Paul Hummer', 'http://www.paulhummer.org/rss', None, self.user)
+        item = FeedItem()
+        item.feed = feed
+        item.title = 'Feed title'
+        item.link = 'http://www.paulhummer.org/rss/1'
+        item.guid = 'http://www.paulhummer.org/rss/1'
+        item.published = datetime.now()
+        item.save()
+
+        result = self.api_client.get('/api/0.9.5/item/')
+        content = json.loads(result.content)
+        result = self.api_client.get(content['objects'][0]['resource_uri'])
+        self.assertEqual(200, result.status_code)
+
+        content = json.loads(result.content)
         self.assertEqual(
-            sorted(feed_dict.keys()),
-            ['id', 'read', 'resource_uri', 'starred'])
+            sorted(content.keys()),
+            ['description', 'id', 'link', 'published', 'read', 'resource_uri',
+             'starred', 'title'])
+        self.assertEqual(content['description'], item.description)
+        self.assertEqual(content['link'], item.link)
+        self.assertEqual(
+            dateutil.parser.parse(content['published']),
+            item.published)
+        self.assertEqual(content['title'], item.title)
 
     def test_endpoint_only_owned(self):
         '''Don't return items where UserFeedItem.user is not the user.'''

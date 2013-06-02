@@ -146,53 +146,103 @@ APP.Views.FeedItemListView = Backbone.View.extend({
         container.append(view.render().el);
     },
     _scrollLast: 0,
+    _currentRow: null,
     _scroll: function(e) {
-        var selected = $('.feeditem.selected'),
-            par = null,
-            item = null,
-            next = null,
-            headline = null;
-        if (selected.length === 0) {
-            par = $('.feeditem').eq(0).parent();
-            item = this.items.get(par.attr('data-feeditem'));
-            par.find('.feeditem').addClass('selected');
+        var selected = this._currentRow.find('.feeditem'),
+            nextSelected = null,
+            nextRow = null,
+            headline = null,
+            nextHeadline = null,
+            item = null;
+
+        var scrollPosition = $(e.currentTarget).scrollTop();
+        /* Scroll down */
+        if (scrollPosition > this._scrollLast) {
+            selected.addClass('selected');
+            item = this.items.get(this._currentRow.attr('data-feeditem'));
             item.save({'read': true});
-        } else {
-            par = selected.parent();
-            var next_par = null;
 
-            var scrollPosition = $(e.currentTarget).scrollTop();
-            if (scrollPosition > this._scrollLast) {
-                /* Scroll down */
-                next_par = par.next();
+            headline = selected.find('h3');
+            nextRow = this._currentRow.next('div.row');
+            nextSelected = nextRow.find('.feeditem');
+            nextHeadline = nextSelected.find('h3');
 
-                next = next_par.find('.feeditem');
-                headline = next.find('h3');
-                var current_headline = selected.find('h3');
-                if (headline.isOnScreen() && !current_headline.isOnScreen()) {
-                    item = this.items.get(next_par.attr('data-feeditem'));
-                    item.save({'read': true});
+            if (nextHeadline.isOnScreen() && !headline.isOnScreen()) {
+                selected.removeClass('selected');
+                nextSelected.addClass('selected');
+                item = this.items.get(nextRow.attr('data-feeditem'));
+                item.save({'read': true});
 
-                    selected.removeClass('selected');
-                    next.addClass('selected');
-                }
-            } else if (scrollPosition < this._scrollLast) {
-                /* Scroll up */
-                next_par = par.prev();
-                if (next_par.length === 0) { return; }
-
-                next = next_par.find('.feeditem');
-                headline = selected.find('h3');
-                if (!headline.isOnScreen() && next.isOnScreen()) {
-                    item = this.items.get(next_par.attr('data-feeditem'));
-                    item.save({'read': true});
-
-                    selected.removeClass('selected');
-                    next.addClass('selected');
-                }
+                this._currentRow = nextRow;
             }
-            this._scrollLast = scrollPosition;
+        /* Scroll up */
+        } else if (scrollPosition < this._scrollLast) {
+            headline = selected.find('h3');
+            nextRow = this._currentRow.prev('div.row');
+            nextSelected = nextRow.find('.feeditem');
+
+            if (nextRow.length === 0) {
+                this._scrollLast = scrollPosition;
+                return;
+            }
+
+            if (!headline.isOnScreen() && nextRow.isOnScreen()) {
+                selected.removeClass('selected');
+                nextSelected.addClass('selected');
+
+                this._currentRow = nextRow;
+            }
         }
+        this._scrollLast = scrollPosition;
+    },
+    _keyNav: function(e, combo) {
+        var selected = this._currentRow.find('.feeditem'),
+            headline = selected.find('h3'),
+            nextSelected = null,
+            nextRow = null,
+            nextHeadline = null,
+            scrollTarget = 0;
+
+        if (combo === 'j' || combo === 'n') {
+            nextRow = this._currentRow.next('div.row');
+        } else if (combo === 'k' || combo === 'p') {
+            // This little bit allows us to scroll to top of current
+            // feeditem if we are in the middle of it, rather than going
+            // all the way to the previous feeditem (which would be
+            // jarring and weird).
+            if (!headline.isOnScreen()) {
+                nextRow = this._currentRow;
+            } else {
+                nextRow = this._currentRow.prev('div.row');
+            }
+        }
+
+        if (nextRow.length === 0) { return; }
+
+        // We need to adjust the offset by the height of the current
+        // headline, which can be calculated as show below. This value
+        // is currently 63px.
+        //
+        // For some reason, trying to calculate it dynamically results
+        // in our math being off, and scrolling to the wrong place on
+        // the page, so hard code it and fix as necessary if we ever
+        // change the size of the headline.
+        //var headline = selected.find('h3');
+        //console.log(headline.offset().top);
+
+        // Calculate next offset
+        nextHeadline = nextRow.find('h3');
+        scrollTarget = this._scrollLast + nextHeadline.offset().top - 63;
+
+        $('#strong-side').animate({
+            scrollTop: scrollTarget
+        }, 1, function () {
+            selected.removeClass('selected');
+            nextSelected = nextRow.find('.feeditem');
+            nextSelected.addClass('selected');
+        });
+
+        this._currentRow = nextRow;
     },
     initialize: function(options) {
         this.items = options.items;
@@ -200,6 +250,9 @@ APP.Views.FeedItemListView = Backbone.View.extend({
         this.items.on('add', _.bind(this._add, this));
         this.items.on('remove', _.bind(this._remove, this));
         this.items.on('reset sort', _.bind(this.render, this));
+
+        // Keybindings!
+        Mousetrap.bind(['j', 'n', 'k', 'p'], _.bind(this._keyNav, this));
     },
     render: function() {
         $('#strong-side').scroll(_.bind(this._scroll, this));
@@ -216,6 +269,8 @@ APP.Views.FeedItemListView = Backbone.View.extend({
         _.each(this.items.models, _.bind(function(item) {
             this._renderItem(item);
         }, this));
+
+        this._currentRow = el.find('#feeditem-container div.row').first();
 
         return this;
     }

@@ -47,7 +47,9 @@ APP.Views.Reader = Backbone.View.extend({
         'click div.delete-feed': 'deleteFeed'
     },
     initialize: function(options) {
+        /* Disabled for now.
         this.feeds = new APP.Collections.Feeds();
+         */
     },
     render: function() {
         if (this._rendered) { return this; }
@@ -55,7 +57,9 @@ APP.Views.Reader = Backbone.View.extend({
         var template = Handlebars.compile($('#index-template').html());
         this.$el.html(template);
 
+        /* Disabled for now.
         this.feeds.fetch({success: this.feeds.onSuccess});
+         */
         this._renderLeftSide();
 
         this._rendered = true;

@@ -146,50 +146,51 @@ APP.Views.FeedItemListView = Backbone.View.extend({
         container.append(view.render().el);
     },
     _scrollLast: 0,
+    _currentRow: null,
     _scroll: function(e) {
-        var selected = $('.feeditem.selected'),
-            par = null,
-            item = null,
-            next = null,
-            headline = null;
-        if (selected.length === 0) {
-            par = $('.feeditem').eq(0).parent();
-            item = this.items.get(par.attr('data-feeditem'));
-            par.find('.feeditem').addClass('selected');
+        var selected = this._currentRow.find('.feeditem'),
+            nextSelected = null,
+            nextRow = null,
+            headline = null,
+            nextHeadline = null,
+            item = null;
+
+        var scrollPosition = $(e.currentTarget).scrollTop();
+        /* Scroll down */
+        if (scrollPosition > this._scrollLast) {
+            selected.addClass('selected');
+            item = this.items.get(this._currentRow.attr('data-feeditem'));
             item.save({'read': true});
-        } else {
-            par = selected.parent();
-            var next_par = null;
 
-            var scrollPosition = $(e.currentTarget).scrollTop();
-            if (scrollPosition > this._scrollLast) {
-                /* Scroll down */
-                next_par = par.next();
+            headline = selected.find('h3');
+            nextRow = this._currentRow.next('div.row');
+            nextSelected = nextRow.find('.feeditem');
+            nextHeadline = nextSelected.find('h3');
 
-                next = next_par.find('.feeditem');
-                headline = next.find('h3');
-                var current_headline = selected.find('h3');
-                if (headline.isOnScreen() && !current_headline.isOnScreen()) {
-                    item = this.items.get(next_par.attr('data-feeditem'));
-                    item.save({'read': true});
+            if (nextHeadline.isOnScreen() && !headline.isOnScreen()) {
+                selected.removeClass('selected');
+                nextSelected.addClass('selected');
+                item = this.items.get(nextRow.attr('data-feeditem'));
+                item.save({'read': true});
 
-                    selected.removeClass('selected');
-                    next.addClass('selected');
-                }
-            } else if (scrollPosition < this._scrollLast) {
-                /* Scroll up */
-                next_par = par.prev();
-                if (next_par.length === 0) { return; }
-
-                next = next_par.find('.feeditem');
-                headline = selected.find('h3');
-                if (!headline.isOnScreen() && next.isOnScreen()) {
-                    selected.removeClass('selected');
-                    next.addClass('selected');
-                }
+                this._currentRow = nextRow;
             }
-            this._scrollLast = scrollPosition;
+        /* Scroll up */
+        } else if (scrollPosition < this._scrollLast) {
+            headline = selected.find('h3');
+            nextRow = this._currentRow.prev('div.row');
+            nextSelected = nextRow.find('.feeditem');
+
+            if (nextRow.length === 0) { return; }
+
+            if (!headline.isOnScreen() && nextRow.isOnScreen()) {
+                selected.removeClass('selected');
+                nextSelected.addClass('selected');
+
+                this._currentRow = nextRow;
+            }
         }
+        this._scrollLast = scrollPosition;
     },
     initialize: function(options) {
         this.items = options.items;
@@ -213,6 +214,8 @@ APP.Views.FeedItemListView = Backbone.View.extend({
         _.each(this.items.models, _.bind(function(item) {
             this._renderItem(item);
         }, this));
+
+        this._currentRow = el.find('#feeditem-container div.row').first();
 
         return this;
     }

@@ -143,6 +143,7 @@ class UserFeedItemResource(ModelResource):
         filtering = {
             'feed': ALL_WITH_RELATIONS,
             'read': ALL,
+            'starred': ALL,
         }
 
     feed = fields.ForeignKey('raven.resources.UserFeedResource', 'feed')

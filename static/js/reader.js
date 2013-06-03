@@ -4,7 +4,13 @@ window.APP = window.APP||{Routers:{},Collections:{},Models:{},Views:{}};
 
 Handlebars.registerHelper('formatDate', function(context, block) {
     //var f = block.hash.format || "MMM Do, YYYY";
-    return moment(context).fromNow();
+    var published = moment.utc(context);
+
+    if (moment.utc().diff(published, 'days') > 0) {
+        return published.format('LL');
+    } else {
+        return published.fromNow();
+    }
 });
 
 $.ajaxSetup({

@@ -380,6 +380,11 @@ class UserFeedItem(models.Model):
             ufi.user = user
             ufi.feed = feed
             ufi.item = item
+            try:
+                ufi.validate_unique()
+            except ValidationError:
+                return
+
             ufi.save()
 
     @receiver(post_save, sender=FeedItem)

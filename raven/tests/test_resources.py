@@ -8,7 +8,7 @@ from django.test import TestCase
 from django.test.client import Client
 from tastypie.test import ResourceTestCase
 
-from raven.models import Feed, FeedItem, UserFeedItem
+from raven.models import Feed, FeedItem, UserFeed, UserFeedItem
 from raven.test_utils import network_available
 
 User = get_user_model()
@@ -235,6 +235,48 @@ class UserFeedItemResourceTest(API095TestCase):
             item.published)
         self.assertEqual(content['title'], item.title)
         self.assertEqual(content['feed'], '/api/0.9.5/feed/1/')
+
+    def test_lookup_by_feed_id(self):
+        '''Filter items by feed.id.'''
+        # Test data
+        feed = Feed.create_and_subscribe(
+            'Paul Hummer', 'http://www.paulhummer.org/rss', None, self.user)
+        item = FeedItem()
+        item.feed = feed
+        item.title = 'Feed title'
+        item.link = 'http://www.paulhummer.org/rss/1'
+        item.guid = 'http://www.paulhummer.org/rss/1'
+        item.published = datetime.now()
+        item.save()
+
+        item = FeedItem()
+        item.feed = feed
+        item.title = 'Feed title 2'
+        item.link = 'http://www.paulhummer.org/rss/2'
+        item.guid = 'http://www.paulhummer.org/rss/2'
+        item.published = datetime.now()
+        item.save()
+
+        feed2 = Feed.create_and_subscribe(
+            'Gothamist', 'http://feeds.gothamistllc.com/gothamist05', None,
+            self.user)
+        item2 = FeedItem()
+        item2.feed = feed2
+        item2.title = 'Feed title'
+        item2.link = 'http://www.gothamist.com/rss/1'
+        item2.guid = 'http://www.gothamist.com/rss/1'
+        item2.published = datetime.now()
+        item2.save()
+
+        userfeed = UserFeed.objects.get(user=self.user, feed=feed)
+
+        # Actual test
+        result = self.api_client.get(
+            '/api/0.9.5/item/?feed={0}'.format(userfeed.pk))
+        self.assertEqual(200, result.status_code)
+
+        content = json.loads(result.content)
+        self.assertEqual(len(content['objects']), 2)
 
     def test_endpoint_only_owned(self):
         '''Don't return items where UserFeedItem.user is not the user.'''

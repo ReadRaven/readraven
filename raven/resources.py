@@ -140,6 +140,9 @@ class UserFeedItemResource(ModelResource):
         queryset = models.UserFeedItem.objects.all()
         resource_name = 'item'
         max_limit = 20
+        filtering = {
+            'feed': ALL_WITH_RELATIONS,
+        }
 
     feed = fields.ForeignKey('raven.resources.UserFeedResource', 'feed')
 

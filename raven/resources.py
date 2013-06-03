@@ -198,7 +198,8 @@ class UserFeedItemResource(ModelResource):
             'starred': ALL,
         }
 
-    feed = fields.ForeignKey('raven.resources.UserFeedResource', 'feed')
+    feed = fields.ForeignKey(
+        'raven.resources.UserFeedResource', 'feed', readonly=True)
 
     def build_filters(self, filters=None):
         # This is probably not the right way to do this, but it *seems*

@@ -644,6 +644,56 @@ class UserFeedItemResourceTest(API095TestCase):
             'limit=20&offset=20')
         self.assertEqual(len(content['objects']), 20)
 
+    def test_put_read(self):
+        '''We can set 'read' via the API.'''
+        # Test data
+        feed = Feed.create_and_subscribe(
+            'Paul Hummer', 'http://www.paulhummer.org/rss', None, self.user)
+        item = FeedItem()
+        item.feed = feed
+        item.title = 'Feed title -_-'
+        item.link = 'http://www.paulhummer.org/rss/1'
+        item.guid = 'http://www.paulhummer.org/rss/1'
+        item.published = datetime.now()
+        item.save()
+        useritem = UserFeedItem.objects.get(user=self.user, item=item, feed=feed)
+        endpoint = '/api/0.9.5/item/{0}/'.format(useritem.pk)
+        resource = json.loads(self.api_client.get(endpoint).content)
+        resource['read'] = True
+
+        # Actual test
+        result = self.api_client.put(
+            endpoint, format='json', data=resource)
+        self.assertEqual(result.status_code, 204)
+
+        new_resource = json.loads(self.api_client.get(endpoint).content)
+        self.assertEqual(new_resource['read'], True)
+
+    def test_put_starred(self):
+        '''We can set 'starred' via the API.'''
+        # Test data
+        feed = Feed.create_and_subscribe(
+            'Paul Hummer', 'http://www.paulhummer.org/rss', None, self.user)
+        item = FeedItem()
+        item.feed = feed
+        item.title = 'Feed title -_-'
+        item.link = 'http://www.paulhummer.org/rss/1'
+        item.guid = 'http://www.paulhummer.org/rss/1'
+        item.published = datetime.now()
+        item.save()
+        useritem = UserFeedItem.objects.get(user=self.user, item=item, feed=feed)
+        endpoint = '/api/0.9.5/item/{0}/'.format(useritem.pk)
+        resource = json.loads(self.api_client.get(endpoint).content)
+        resource['starred'] = True
+
+        # Actual test
+        result = self.api_client.put(
+            endpoint, format='json', data=resource)
+        self.assertEqual(result.status_code, 204)
+
+        new_resource = json.loads(self.api_client.get(endpoint).content)
+        self.assertEqual(new_resource['starred'], True)
+
 
 class FeedResource09Test(ResourceTestCase):
     '''Test the FeedResource.'''

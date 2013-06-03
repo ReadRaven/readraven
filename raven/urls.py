@@ -6,12 +6,18 @@ from raven import resources
 
 
 v09 = Api(api_name='0.9')
-v09.register(resources.FeedResource())
-v09.register(resources.FeedItemResource())
+v09.register(resources.FeedResource09())
+v09.register(resources.FeedItemResource09())
+
+v095 = Api(api_name='0.9.5')
+v095.register(resources.UserFeedResource())
+v095.register(resources.UserFeedItemResource())
 
 urlpatterns = patterns(
     '',
     url(r'api/', include(v09.urls)),
+    url(r'api/', include(v095.urls)),
+
     url(r'^home', 'raven.views.home'),
     url(r'^values', 'raven.views.values'),
     url(r'^logout/$', 'django.contrib.auth.views.logout', {'next_page': '/'}),

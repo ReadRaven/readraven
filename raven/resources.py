@@ -1,6 +1,7 @@
 import json
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Q
 from tastypie import fields
 from tastypie.authentication import SessionAuthentication
 from tastypie.authorization import Authorization
@@ -18,7 +19,7 @@ def _feed_filter(bundle):
     return items
 
 
-class FeedResource(ModelResource):
+class FeedResource09(ModelResource):
     '''A resource representing Feeds.'''
     class Meta:
         allowed_methods = ('get', 'post', 'delete',)
@@ -31,7 +32,7 @@ class FeedResource(ModelResource):
         queryset = models.Feed.objects.all()
         resource_name = 'feed'
     items = fields.ToManyField(
-        'raven.resources.FeedItemResource', _feed_filter)
+        'raven.resources.FeedItemResource09', _feed_filter)
 
     def get_object_list(self, request):
         return models.Feed.objects.for_user(request.user).order_by('title')
@@ -63,7 +64,7 @@ class FeedResource(ModelResource):
         feed.remove_subscriber(bundle.request.user)
 
 
-class FeedItemResource(ModelResource):
+class FeedItemResource09(ModelResource):
     '''A resource representing FeedItems.'''
     class Meta:
         allowed_methods = ('get', 'put',)
@@ -80,7 +81,7 @@ class FeedItemResource(ModelResource):
         queryset = models.FeedItem.objects.all()
         resource_name = 'item'
 
-    feed = fields.ForeignKey(FeedResource, 'feed', full=True)
+    feed = fields.ForeignKey(FeedResource09, 'feed', full=True)
     read = fields.BooleanField()
 
     def get_object_list(self, request):
@@ -110,3 +111,139 @@ class FeedItemResource(ModelResource):
     def dehydrate_read(self, bundle):
         userfeeditem = bundle.obj.userfeeditem(bundle.request.user)
         return userfeeditem.read
+
+
+class UserFeedResource(ModelResource):
+    '''A resource describing raven.models.UserFeed.'''
+    class Meta:
+        always_return_data = True
+        authentication = SessionAuthentication()
+        authorization = Authorization()
+        queryset = models.UserFeed.objects.all()
+        resource_name = 'feed'
+        max_limit = 20
+
+    def build_filters(self, filters=None):
+        # This is probably not the right way to do this, but it *seems*
+        # performant, and it does what we want.
+        orm_filters = super(UserFeedResource, self).build_filters(filters)
+
+        if 'tags' in filters:
+            tags = filters['tags'].split(',')
+            #queryset = (Q(tags__name__in=[tags]))
+            orm_filters.update({'tags': tags})
+        return orm_filters
+
+    def apply_filters(self, request, applicable_filters):
+        # This is probably not the right way to do this, but it *seems*
+        # performant, and it does what we want.
+        if 'tags' in applicable_filters:
+            tags = applicable_filters.pop('tags')
+        else:
+            tags = None
+        semi_filtered = super(UserFeedResource, self).apply_filters(
+            request, applicable_filters)
+        if tags:
+            semi_filtered = semi_filtered.filter(tags__name__in=tags)
+        return semi_filtered
+
+    def get_object_list(self, request):
+        return super(UserFeedResource, self).get_object_list(request).filter(
+            user=request.user.pk)
+
+    def obj_create(self, bundle=None, **kwargs):
+        data = json.loads(bundle.request.body)
+        link = data['link']
+        user = bundle.request.user
+        try:
+            feed = models.Feed.objects.get(link=link)
+        except ObjectDoesNotExist:
+            try:
+                feed = models.Feed.objects.get(site=link)
+            except ObjectDoesNotExist:
+                link = models.Feed.autodiscover(link)
+                feed = models.Feed(link=link)
+                feed.save()
+                feed.update()
+        feed.add_subscriber(user)
+
+        userfeed = models.UserFeed.objects.get(user=user, feed=feed)
+        bundle.obj = userfeed
+        return bundle
+
+    def dehydrate(self, bundle):
+        bundle.data['description'] = bundle.obj.feed.description
+        bundle.data['link'] = bundle.obj.feed.link
+        bundle.data['title'] = bundle.obj.feed.title
+
+        #tags = []
+        #for tag in bundle.obj.tags.all():
+        #    tags.append(tag.name)
+        #bundle.data['tags'] = tags
+        bundle.data['tags'] = [tag.name for tag in bundle.obj.tags.all()]
+        return bundle
+
+
+class UserFeedItemResource(ModelResource):
+    '''A resource describing raven.models.UserFeedItem.'''
+    class Meta:
+        authentication = SessionAuthentication()
+        authorization = Authorization()
+        queryset = models.UserFeedItem.objects.all()
+        resource_name = 'item'
+        max_limit = 20
+        filtering = {
+            'feed': ALL_WITH_RELATIONS,
+            'read': ALL,
+            'starred': ALL,
+        }
+
+    feed = fields.ForeignKey('raven.resources.UserFeedResource', 'feed')
+
+    def build_filters(self, filters=None):
+        # This is probably not the right way to do this, but it *seems*
+        # performant, and it does what we want.
+        orm_filters = super(UserFeedItemResource, self).build_filters(filters)
+
+        if 'tags' in filters:
+            tags = filters['tags'].split(',')
+            #queryset = (Q(tags__name__in=[tags]))
+            orm_filters.update({'tags': tags})
+        if 'feed_tags' in filters:
+            feed_tags = filters['feed_tags'].split(',')
+            #queryset = (Q(tags__name__in=[feed_tags]))
+            orm_filters.update({'feed_tags': feed_tags})
+        return orm_filters
+
+    def apply_filters(self, request, applicable_filters):
+        # This is probably not the right way to do this, but it *seems*
+        # performant, and it does what we want.
+        if 'tags' in applicable_filters:
+            tags = applicable_filters.pop('tags')
+        else:
+            tags = None
+        if 'feed_tags' in applicable_filters:
+            feed_tags = applicable_filters.pop('feed_tags')
+        else:
+            feed_tags = None
+        semi_filtered = super(UserFeedItemResource, self).apply_filters(
+            request, applicable_filters)
+        if tags:
+            semi_filtered = semi_filtered.filter(tags__name__in=tags)
+        if feed_tags:
+            feeds = models.UserFeed.objects.filter(tags__name__in=feed_tags)
+            semi_filtered = semi_filtered.filter(feed__in=feeds)
+        return semi_filtered
+
+    def get_object_list(self, request):
+        return super(UserFeedItemResource, self).get_object_list(request).filter(
+            user=request.user.pk)
+
+    def dehydrate(self, bundle):
+        bundle.data['description'] = bundle.obj.item.description
+        bundle.data['link'] = bundle.obj.item.link
+        bundle.data['published'] = bundle.obj.item.published
+        bundle.data['title'] = bundle.obj.item.title
+
+        bundle.data['tags'] = [tag.name for tag in bundle.obj.tags.all()]
+        return bundle

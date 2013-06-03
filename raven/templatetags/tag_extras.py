@@ -11,7 +11,9 @@ class FeedTagGroupNode(template.Node):
         self.name = name
 
     def render(self, context):
-        context[self.name] = UserFeed.objects.filter(tags__in=[context['tag']])
+        tags = [context['tag']]
+        user = context['user']
+        context[self.name] = UserFeed.objects.filter(tags__in=tags, user=user)
         return ''
 
 

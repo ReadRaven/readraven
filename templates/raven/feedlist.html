@@ -18,9 +18,11 @@
                     </a>
                     {% if feed.unread_count %}({{feed.unread_count}}){% endif %}
                 </div>
+                {% comment %}
                 <div class="pull-right delete-feed">
                     <i class="icon-trash icon-black"></i>
                 </div>
+                {% endcomment %}
             </li>
         {% endfor %}
         </ul>

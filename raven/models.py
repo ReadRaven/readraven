@@ -1,7 +1,6 @@
 from datetime import datetime
 import calendar
 import logging
-import time
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -9,8 +8,8 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
-
 from taggit.managers import TaggableManager
+from taggit.models import TaggedItem
 
 import feedparser
 import hashlib
@@ -354,6 +353,16 @@ class UserFeed(models.Model):
         '''Return the UserFeedItem unread count.'''
         return UserFeedItem.objects.filter(
             user=self.user, feed=self.feed, read=False).count()
+
+    @staticmethod
+    def userfeed_tags(user):
+        '''Return all the UserFeed tags for a user.'''
+        #ct = ContentType.objects.get_for_model(UserFeed)
+        kwargs = {
+            "userfeed__in": UserFeed.objects.filter(user=user)
+        }
+        tags = TaggedItem.tag_model().objects.filter(**kwargs).distinct()
+        return tags
 
 
 class UserFeedItem(models.Model):

@@ -180,6 +180,31 @@ class UserFeedResourceTest(API095TestCase):
             'limit=20&offset=20')
         self.assertEqual(len(content['objects']), 20)
 
+    @unittest.skipUnless(network_available(), 'Network unavailable')
+    def test_subscribe(self):
+        #Subscribe to a feed.
+        response = self.api_client.post(
+            '/api/0.9.5/feed/', format='json',
+            data={'link': 'http://paulhummer.org/rss'})
+        self.assertEqual(response.status_code, 201)
+
+        content = json.loads(response.content)
+        self.assertEqual(content['title'], 'Dapper as...')
+
+    def test_unsubscribe(self):
+        feed = Feed.create_and_subscribe(
+            'Paul Hummer', 'http://www.paulhummer.org/rss', None, self.user)
+        userfeed = UserFeed.objects.get(user=self.user, feed=feed)
+
+        response = self.api_client.delete(
+            '/api/0.9.5/feed/{0}/'.format(userfeed.pk))
+        self.assertEqual(response.status_code, 204)
+
+        #Ensure the feed is now deleted.
+        response = self.api_client.get('/api/0.9/feed/')
+        content = json.loads(response.content)
+        self.assertEqual(len(content['objects']), 0)
+
 
 class UserFeedItemResourceTest(API095TestCase):
     '''Test raven.resources.UserFeedItemResource.'''

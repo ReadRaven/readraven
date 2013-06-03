@@ -116,6 +116,7 @@ class FeedItemResource09(ModelResource):
 class UserFeedResource(ModelResource):
     '''A resource describing raven.models.UserFeed.'''
     class Meta:
+        always_return_data = True
         authentication = SessionAuthentication()
         authorization = Authorization()
         queryset = models.UserFeed.objects.all()
@@ -149,6 +150,26 @@ class UserFeedResource(ModelResource):
     def get_object_list(self, request):
         return super(UserFeedResource, self).get_object_list(request).filter(
             user=request.user.pk)
+
+    def obj_create(self, bundle=None, **kwargs):
+        data = json.loads(bundle.request.body)
+        link = data['link']
+        user = bundle.request.user
+        try:
+            feed = models.Feed.objects.get(link=link)
+        except ObjectDoesNotExist:
+            try:
+                feed = models.Feed.objects.get(site=link)
+            except ObjectDoesNotExist:
+                link = models.Feed.autodiscover(link)
+                feed = models.Feed(link=link)
+                feed.save()
+                feed.update()
+        feed.add_subscriber(user)
+
+        userfeed = models.UserFeed.objects.get(user=user, feed=feed)
+        bundle.obj = userfeed
+        return bundle
 
     def dehydrate(self, bundle):
         bundle.data['description'] = bundle.obj.feed.description

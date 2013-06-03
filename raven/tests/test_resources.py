@@ -89,6 +89,9 @@ class UserFeedResourceTest(API095TestCase):
         '''Get a single feed by traversing the API.'''
         feed = Feed.create_and_subscribe(
             'Paul Hummer', 'http://www.paulhummer.org/rss', None, self.user)
+        userfeed = UserFeed.objects.get(user=self.user, feed=feed)
+        userfeed.tags.add('hipster', 'douchery')
+        userfeed.save()
 
         result = self.api_client.get('/api/0.9.5/feed/')
         content = json.loads(result.content)
@@ -98,10 +101,30 @@ class UserFeedResourceTest(API095TestCase):
         content = json.loads(result.content)
         self.assertEqual(
             sorted(content.keys()),
-            ['description', 'id', 'link', 'resource_uri', 'title'])
+            ['description', 'id', 'link', 'resource_uri', 'tags', 'title'])
         self.assertEqual(content['description'], feed.description)
         self.assertEqual(content['link'], feed.link)
         self.assertEqual(content['title'], feed.title)
+        self.assertEqual(
+            sorted(content['tags']), ['douchery', 'hipster'])
+
+    def test_filter_by_tag(self):
+        '''Only return feeds by a given tag.'''
+        feed = Feed.create_and_subscribe(
+            'Paul Hummer', 'http://www.paulhummer.org/rss', None, self.user)
+        userfeed = UserFeed.objects.get(user=self.user, feed=feed)
+        userfeed.tags.add('hipster', 'douchery')
+        userfeed.save()
+
+        feed2 = Feed.create_and_subscribe(
+            'Paul Hummer', 'http://www.paulhummer.org/rss1', None, self.user)
+        userfeed2 = UserFeed.objects.get(user=self.user, feed=feed2)
+        userfeed2.tags.add('test', 'tags')
+        userfeed2.save()
+
+        result = self.api_client.get('/api/0.9.5/feed/?tags=hipster')
+        content = json.loads(result.content)
+        self.assertEqual(content['meta']['total_count'], 1)
 
     def test_endpoint_only_owned(self):
         '''Don't return feeds where UserFeed.user is not the user.'''
@@ -217,6 +240,9 @@ class UserFeedItemResourceTest(API095TestCase):
         item.guid = 'http://www.paulhummer.org/rss/1'
         item.published = datetime.now()
         item.save()
+        userfeeditem = UserFeedItem.objects.get(user=self.user, item=item)
+        userfeeditem.tags.add('hipster', 'douche')
+        userfeeditem.save()
 
         result = self.api_client.get('/api/0.9.5/item/')
         content = json.loads(result.content)
@@ -227,7 +253,7 @@ class UserFeedItemResourceTest(API095TestCase):
         self.assertEqual(
             sorted(content.keys()),
             ['description', 'feed', 'id', 'link', 'published', 'read',
-             'resource_uri', 'starred', 'title'])
+             'resource_uri', 'starred', 'tags', 'title'])
         self.assertEqual(content['description'], item.description)
         self.assertEqual(content['link'], item.link)
         self.assertEqual(
@@ -235,6 +261,7 @@ class UserFeedItemResourceTest(API095TestCase):
             item.published)
         self.assertEqual(content['title'], item.title)
         self.assertEqual(content['feed'], '/api/0.9.5/feed/1/')
+        self.assertEqual(content['tags'], ['hipster', 'douche'])
 
     def test_lookup_by_feed_id(self):
         '''Filter items by feed.id.'''
@@ -331,6 +358,95 @@ class UserFeedItemResourceTest(API095TestCase):
 
         content = json.loads(result.content)
         self.assertEqual(len(content['objects']), 1)
+
+    def test_lookup_by_tag(self):
+        '''Only return the unread items.'''
+        # Test data
+        feed = Feed.create_and_subscribe(
+            'Paul Hummer', 'http://www.paulhummer.org/rss', None, self.user)
+        item = FeedItem()
+        item.feed = feed
+        item.title = 'Feed title'
+        item.link = 'http://www.paulhummer.org/rss/1'
+        item.guid = 'http://www.paulhummer.org/rss/1'
+        item.published = datetime.now()
+        item.save()
+
+        item2 = FeedItem()
+        item2.feed = feed
+        item2.title = 'Feed title 2'
+        item2.link = 'http://www.paulhummer.org/rss/2'
+        item2.guid = 'http://www.paulhummer.org/rss/2'
+        item2.published = datetime.now()
+        item2.save()
+
+        item3 = FeedItem()
+        item3.feed = feed
+        item3.title = 'Feed title 3'
+        item3.link = 'http://www.paulhummer.org/rss/3'
+        item3.guid = 'http://www.paulhummer.org/rss/3'
+        item3.published = datetime.now()
+        item3.save()
+
+        userfeeditem = UserFeedItem.objects.get(
+            user=self.user, feed=feed, item=item)
+        userfeeditem.tags.add('hipster')
+        userfeeditem.save()
+
+        userfeeditem2 = UserFeedItem.objects.get(
+            user=self.user, feed=feed, item=item2)
+        userfeeditem2.tags.add('hipster')
+        userfeeditem2.save()
+
+        # Actual test
+        result = self.api_client.get(
+            '/api/0.9.5/item/?tags=hipster')
+        self.assertEqual(200, result.status_code)
+
+        content = json.loads(result.content)
+        self.assertEqual(len(content['objects']), 2)
+
+    def test_lookup_by_feed_tag(self):
+        '''Only return the unread items.'''
+        # Test data
+        feed = Feed.create_and_subscribe(
+            'Paul Hummer', 'http://www.paulhummer.org/rss', None, self.user)
+        item = FeedItem()
+        item.feed = feed
+        item.title = 'Feed title'
+        item.link = 'http://www.paulhummer.org/rss/1'
+        item.guid = 'http://www.paulhummer.org/rss/1'
+        item.published = datetime.now()
+        item.save()
+
+        item2 = FeedItem()
+        item2.feed = feed
+        item2.title = 'Feed title 2'
+        item2.link = 'http://www.paulhummer.org/rss/2'
+        item2.guid = 'http://www.paulhummer.org/rss/2'
+        item2.published = datetime.now()
+        item2.save()
+        userfeed2 = UserFeed.objects.get(user=self.user, feed=feed)
+        userfeed2.tags.add('hipster')
+        userfeed2.save()
+
+        feed2 = Feed.create_and_subscribe(
+            'Paul Hummer', 'http://www.paulhummer.org/rss1', None, self.user)
+        item3 = FeedItem()
+        item3.feed = feed2
+        item3.title = 'Feed title 3'
+        item3.link = 'http://www.paulhummer.org/rss/3'
+        item3.guid = 'http://www.paulhummer.org/rss/3'
+        item3.published = datetime.now()
+        item3.save()
+
+        # Actual test
+        result = self.api_client.get(
+            '/api/0.9.5/item/?feed_tags=hipster')
+        self.assertEqual(200, result.status_code)
+
+        content = json.loads(result.content)
+        self.assertEqual(len(content['objects']), 2)
 
     def test_lookup_by_unread(self):
         '''Only return the unread items.'''

@@ -1,6 +1,7 @@
 import json
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Q
 from tastypie import fields
 from tastypie.authentication import SessionAuthentication
 from tastypie.authorization import Authorization
@@ -121,6 +122,30 @@ class UserFeedResource(ModelResource):
         resource_name = 'feed'
         max_limit = 20
 
+    def build_filters(self, filters=None):
+        # This is probably not the right way to do this, but it *seems*
+        # performant, and it does what we want.
+        orm_filters = super(UserFeedResource, self).build_filters(filters)
+
+        if 'tags' in filters:
+            tags = filters['tags'].split(',')
+            #queryset = (Q(tags__name__in=[tags]))
+            orm_filters.update({'tags': tags})
+        return orm_filters
+
+    def apply_filters(self, request, applicable_filters):
+        # This is probably not the right way to do this, but it *seems*
+        # performant, and it does what we want.
+        if 'tags' in applicable_filters:
+            tags = applicable_filters.pop('tags')
+        else:
+            tags = None
+        semi_filtered = super(UserFeedResource, self).apply_filters(
+            request, applicable_filters)
+        if tags:
+            semi_filtered = semi_filtered.filter(tags__name__in=tags)
+        return semi_filtered
+
     def get_object_list(self, request):
         return super(UserFeedResource, self).get_object_list(request).filter(
             user=request.user.pk)
@@ -129,6 +154,12 @@ class UserFeedResource(ModelResource):
         bundle.data['description'] = bundle.obj.feed.description
         bundle.data['link'] = bundle.obj.feed.link
         bundle.data['title'] = bundle.obj.feed.title
+
+        #tags = []
+        #for tag in bundle.obj.tags.all():
+        #    tags.append(tag.name)
+        #bundle.data['tags'] = tags
+        bundle.data['tags'] = [tag.name for tag in bundle.obj.tags.all()]
         return bundle
 
 
@@ -148,6 +179,41 @@ class UserFeedItemResource(ModelResource):
 
     feed = fields.ForeignKey('raven.resources.UserFeedResource', 'feed')
 
+    def build_filters(self, filters=None):
+        # This is probably not the right way to do this, but it *seems*
+        # performant, and it does what we want.
+        orm_filters = super(UserFeedItemResource, self).build_filters(filters)
+
+        if 'tags' in filters:
+            tags = filters['tags'].split(',')
+            #queryset = (Q(tags__name__in=[tags]))
+            orm_filters.update({'tags': tags})
+        if 'feed_tags' in filters:
+            feed_tags = filters['feed_tags'].split(',')
+            #queryset = (Q(tags__name__in=[feed_tags]))
+            orm_filters.update({'feed_tags': feed_tags})
+        return orm_filters
+
+    def apply_filters(self, request, applicable_filters):
+        # This is probably not the right way to do this, but it *seems*
+        # performant, and it does what we want.
+        if 'tags' in applicable_filters:
+            tags = applicable_filters.pop('tags')
+        else:
+            tags = None
+        if 'feed_tags' in applicable_filters:
+            feed_tags = applicable_filters.pop('feed_tags')
+        else:
+            feed_tags = None
+        semi_filtered = super(UserFeedItemResource, self).apply_filters(
+            request, applicable_filters)
+        if tags:
+            semi_filtered = semi_filtered.filter(tags__name__in=tags)
+        if feed_tags:
+            feeds = models.UserFeed.objects.filter(tags__name__in=feed_tags)
+            semi_filtered = semi_filtered.filter(feed__in=feeds)
+        return semi_filtered
+
     def get_object_list(self, request):
         return super(UserFeedItemResource, self).get_object_list(request).filter(
             user=request.user.pk)
@@ -157,4 +223,6 @@ class UserFeedItemResource(ModelResource):
         bundle.data['link'] = bundle.obj.item.link
         bundle.data['published'] = bundle.obj.item.published
         bundle.data['title'] = bundle.obj.item.title
+
+        bundle.data['tags'] = [tag.name for tag in bundle.obj.tags.all()]
         return bundle

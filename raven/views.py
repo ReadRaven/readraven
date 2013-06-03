@@ -35,7 +35,7 @@ def home(request):
 def feedlist(request):
     '''Fragment for the feed list.'''
     tags = UserFeed.userfeed_tags(request.user)
-    untagged_feeds = UserFeed.objects.exclude(tags__in=tags, user=request.user)
+    untagged_feeds = UserFeed.objects.filter(user=request.user).exclude(tags__in=tags)
     context = {
         'tags': tags,
         'untagged_feeds': untagged_feeds

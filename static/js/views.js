@@ -160,7 +160,9 @@ APP.Views.FeedItemListView = Backbone.View.extend({
         if (scrollPosition > this._scrollLast) {
             selected.addClass('selected');
             item = this.items.get(this._currentRow.attr('data-feeditem'));
-            item.save({'read': true});
+            if (item.attributes.read === false) {
+                item.save({'read': true});
+            }
 
             headline = selected.find('h3');
             nextRow = this._currentRow.next('div.row');
@@ -171,7 +173,9 @@ APP.Views.FeedItemListView = Backbone.View.extend({
                 selected.removeClass('selected');
                 nextSelected.addClass('selected');
                 item = this.items.get(nextRow.attr('data-feeditem'));
-                item.save({'read': true});
+                if (item.attributes.read === false) {
+                    item.save({'read': true});
+                }
 
                 this._currentRow = nextRow;
             }

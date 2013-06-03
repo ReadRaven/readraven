@@ -84,10 +84,16 @@ class UpdateFeedTask(PeriodicTask):
 
     def run(self, feeds=[]):
         if len(feeds) is 0:
-            age = datetime.now() - timedelta(minutes=30)
+            age = datetime.utcnow() - timedelta(minutes=30)
             feeds = Feed.objects.filter(last_fetched__lt=age)[:self.SLICE_SIZE]
+            never_fetched = Feed.objects.filter(last_fetched=None)
 
         for feed in feeds:
+            feed.update()
+            feed.last_fetched = datetime.utcnow()
+            feed.save()
+
+        for feed in never_fetched:
             feed.update()
             feed.last_fetched = datetime.utcnow()
             feed.save()

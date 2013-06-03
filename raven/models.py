@@ -1,4 +1,5 @@
 from datetime import datetime
+import calendar
 import logging
 import time
 
@@ -193,7 +194,7 @@ class Feed(models.Model):
                     # This warns about naive timestamps when timezone
                     # support is enabled.
                     item.published = datetime.utcfromtimestamp(
-                        time.mktime(entry.published_parsed))
+                        calendar.timegm(entry.published_parsed))
             except AttributeError:
                 # Ugh. Some feeds don't have published dates...
                 item.published = datetime.utcnow()
@@ -380,6 +381,11 @@ class UserFeedItem(models.Model):
             ufi.user = user
             ufi.feed = feed
             ufi.item = item
+            try:
+                ufi.validate_unique()
+            except ValidationError:
+                return
+
             ufi.save()
 
     @receiver(post_save, sender=FeedItem)

@@ -5,7 +5,6 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from taggit.models import Tag, TaggedItem
 
 from raven.models import Feed, UserFeed
 
@@ -35,15 +34,10 @@ def home(request):
 @user_passes_test(lambda u: u.is_customer(), login_url='/usher/sign_up')
 def feedlist(request):
     '''Fragment for the feed list.'''
-
-    userfeeds = UserFeed.objects.filter(user=request.user)
-    ct = ContentType.objects.get_for_model(UserFeed)
-    kwargs = {
-        "userfeed__in": userfeeds,
-    }
-    tags = TaggedItem.tag_model().objects.filter(**kwargs).distinct()
+    tags = UserFeed.userfeed_tags(request.user)
 
     # Ugh. Fucking Django and taggit, with their fucked up aggregates...
+    userfeeds = UserFeed.objects.filter(user=request.user)
     untagged_feeds = []
     for feed in userfeeds:
         if feed.tags.count() == 0:

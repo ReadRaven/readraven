@@ -285,6 +285,29 @@ class UserFeedTest(TestCase):
         userfeed.tags.clear()
         self.assertEquals(len(userfeed.tags.all()), 0)
 
+    def test_userfeed_tags(self):
+        bob = User.objects.create_user(
+            'bob', 'bob@example.com', password='bob')
+        bob.save()
+        bob_feed = Feed.create_and_subscribe(
+            'Paul Hummer', 'http://www.paulhummer.org/rss', None, bob)
+        bob_userfeed = UserFeed.objects.get(user=bob, feed=bob_feed)
+        bob_userfeed.tags.add('linux', 'nerd')
+        bob_userfeed.save()
+
+        mark = User.objects.create_user(
+            'mark', 'mark@example.com', password='mark')
+        mark.save()
+        mark_feed = Feed.create_and_subscribe(
+            'Paul Hummer', 'http://www.paulhummer.org/rss1', None, mark)
+        mark_userfeed = UserFeed.objects.get(user=mark, feed=mark_feed)
+        mark_userfeed.tags.add('linux')
+        mark_userfeed.save()
+
+        tags = UserFeed.userfeed_tags(bob)
+        self.assertEqual(tags.count(), 2)
+        self.assertEqual([tag.name for tag in tags.all()], ['linux', 'nerd'])
+
 
 class FeedItemTest(TestCase):
     '''Tests for the FeedItem model.'''

@@ -142,6 +142,7 @@ class UserFeedItemResource(ModelResource):
         max_limit = 20
         filtering = {
             'feed': ALL_WITH_RELATIONS,
+            'read': ALL,
         }
 
     feed = fields.ForeignKey('raven.resources.UserFeedResource', 'feed')

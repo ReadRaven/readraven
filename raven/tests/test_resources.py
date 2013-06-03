@@ -278,6 +278,104 @@ class UserFeedItemResourceTest(API095TestCase):
         content = json.loads(result.content)
         self.assertEqual(len(content['objects']), 2)
 
+    def test_lookup_by_unread(self):
+        '''Only return the unread items.'''
+        # Test data
+        feed = Feed.create_and_subscribe(
+            'Paul Hummer', 'http://www.paulhummer.org/rss', None, self.user)
+        item = FeedItem()
+        item.feed = feed
+        item.title = 'Feed title'
+        item.link = 'http://www.paulhummer.org/rss/1'
+        item.guid = 'http://www.paulhummer.org/rss/1'
+        item.published = datetime.now()
+        item.save()
+
+        item2 = FeedItem()
+        item2.feed = feed
+        item2.title = 'Feed title 2'
+        item2.link = 'http://www.paulhummer.org/rss/2'
+        item2.guid = 'http://www.paulhummer.org/rss/2'
+        item2.published = datetime.now()
+        item2.save()
+
+        item3 = FeedItem()
+        item3.feed = feed
+        item3.title = 'Feed title 3'
+        item3.link = 'http://www.paulhummer.org/rss/3'
+        item3.guid = 'http://www.paulhummer.org/rss/3'
+        item3.published = datetime.now()
+        item3.save()
+
+        userfeeditem = UserFeedItem.objects.get(
+            user=self.user, feed=feed, item=item)
+        userfeeditem.read = True
+        userfeeditem.save()
+
+        # Actual test
+        result = self.api_client.get(
+            '/api/0.9.5/item/?read=False')
+        self.assertEqual(200, result.status_code)
+
+        content = json.loads(result.content)
+        self.assertEqual(len(content['objects']), 2)
+
+        result = self.api_client.get(
+            '/api/0.9.5/item/?read=True')
+        self.assertEqual(200, result.status_code)
+
+        content = json.loads(result.content)
+        self.assertEqual(len(content['objects']), 1)
+
+    def test_lookup_by_unread_and_feed(self):
+        '''Only return the unread items by feed.'''
+        # Test data
+        feed = Feed.create_and_subscribe(
+            'Paul Hummer', 'http://www.paulhummer.org/rss', None, self.user)
+        item = FeedItem()
+        item.feed = feed
+        item.title = 'Feed title'
+        item.link = 'http://www.paulhummer.org/rss/1'
+        item.guid = 'http://www.paulhummer.org/rss/1'
+        item.published = datetime.now()
+        item.save()
+
+        item2 = FeedItem()
+        item2.feed = feed
+        item2.title = 'Feed title 2'
+        item2.link = 'http://www.paulhummer.org/rss/2'
+        item2.guid = 'http://www.paulhummer.org/rss/2'
+        item2.published = datetime.now()
+        item2.save()
+
+        userfeed = UserFeed.objects.get(user=self.user, feed=feed)
+
+        userfeeditem = UserFeedItem.objects.get(
+            user=self.user, feed=feed, item=item)
+        userfeeditem.read = True
+        userfeeditem.save()
+
+        mike = User.objects.create_user(
+            'mike', 'mike@example.com', password='mike')
+        mike.save()
+        feed2 = Feed.create_and_subscribe(
+            'Gothamist', 'http://feeds.gothamistllc.com/gothamist05-', None, mike)
+        item4 = FeedItem()
+        item4.feed = feed2
+        item4.title = 'Feed title'
+        item4.link = 'http://www.gothamist.com/rss/1'
+        item4.guid = 'http://www.gothamist.com/rss/1'
+        item4.published = datetime.now()
+        item4.save()
+
+        # Actual test
+        result = self.api_client.get(
+            '/api/0.9.5/item/?read=False&feed={0}'.format(userfeed.pk))
+        self.assertEqual(200, result.status_code)
+
+        content = json.loads(result.content)
+        self.assertEqual(len(content['objects']), 1)
+
     def test_endpoint_only_owned(self):
         '''Don't return items where UserFeedItem.user is not the user.'''
         # Test data

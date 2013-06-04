@@ -182,25 +182,36 @@ class FeedTest(TestCase):
                        CELERY_ALWAYS_EAGER=True,
                        BROKER_BACKEND='memory',)
     def test_dates(self):
-        feed = Feed()
-        feed.link = 'http://theworstthingever.com/index.rdf'
-        feed.save()
-        feed.update()
-        first_update = feed.items.count()
+        links = [
+            'http://theworstthingever.com/index.rdf',
+            'http://news.ycombinator.com/rss',
+            'http://aw.lackof.org/~awilliam/blog/index.rss',
+            'http://adeem.me/blog/feed/rss/',
+            'http://lusars.net/~mhunter/rss.xml',
+            'http://feeds.feedburner.com/Manbabies',
+            'http://www.365portraits.com/rss.php',
+            'http://iphonedevelopmentbits.com/feed/rss',
+            'http://blog.myspace.com/blog/rss.cfm?friendID=4470742',
+        ]
 
-        # Pause a few seconds, so when we fetch again, utcnow() in the
-        # model will be a different time (and therefore potentially a
-        # different GUID)
-        time.sleep(3)
-        feed.update()
-        second_update = feed.items.count()
+        for link in links:
+            feed = Feed()
+            feed.link = link
+            feed.save()
+            feed.update()
+            first_update = feed.items.count()
 
-        # If we don't parse dates properly, then on the second
-        # update, all the feeditems will have different GUIDs since we
-        # default to using utcnow(). This test ensures we parse every
-        # possible date field from feedparser. See feed.update() for
-        # details.
-        self.assertEqual(first_update, second_update)
+            # Pause a few seconds, so when we fetch again, utcnow() in the
+            # model will be a different time (and therefore potentially a
+            # different GUID)
+            time.sleep(3)
+            feed.update()
+            second_update = feed.items.count()
+
+            # Ensure that fetching feeds with missing or malformed dates
+            # do not result in different GUIDs (they should resolve to
+            # the same GUID).
+            self.assertEqual(first_update, second_update)
 
     @unittest.skipUnless(network_available(), 'Network unavailable')
     def test_autodiscovery(self):

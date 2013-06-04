@@ -251,12 +251,13 @@ var ItemView = Backbone.View.extend({
         this.$el.attr('data-feeditem', this.item.id);
     },
     render: function() {
-        var context = {
-            feed: this.item.get('feed').attributes,
-            item: this.item.attributes
-        };
-        this.$el.html(this.template(context));
-        this.$el.find('a').attr('target', '_blank');
+        var el = this.$el,
+            context = {
+                feed: this.item.get('feed').attributes,
+                item: this.item.attributes
+            };
+        el.html(this.template(context));
+        el.find('.content a').attr('target', '_blank');
         return this;
     },
     template: Handlebars.compile($('#feed-item-template').html())

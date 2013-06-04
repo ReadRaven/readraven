@@ -164,11 +164,18 @@ class Feed(models.Model):
             item = FeedItem()
             item.feed = self
             try:
-                item.description = entry.summary
+                item.description = entry.content[0]['value'].strip()
             except AttributeError:
-                logger.debug('Potential problem with feed id: %s' % self.pk)
-                if data.bozo == 1:
-                    logger.debug('Exception is %s' % data.bozo_exception)
+                try:
+                    item.description = entry.summary_detail['value'].strip()
+                except AttributeError:
+                    try:
+                        item.description = entry.summary.strip()
+                    except AttributeError:
+                        logger.warn('Potential problem with feed id: %s' % self.pk)
+                        if data.bozo == 1:
+                            logger.warn('Exception is %s' % data.bozo_exception)
+                        continue
             try:
                 item.link = entry.link
             except AttributeError:

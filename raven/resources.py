@@ -265,6 +265,7 @@ class UserFeedItemResource(ModelResource):
         bundle.data['link'] = bundle.obj.item.link
         bundle.data['published'] = bundle.obj.item.published
         bundle.data['title'] = bundle.obj.item.title
+        bundle.data['feed_title'] = bundle.obj.feed.title
 
         bundle.data['tags'] = [tag.name for tag in bundle.obj.tags.all()]
         return bundle

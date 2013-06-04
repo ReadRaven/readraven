@@ -277,8 +277,8 @@ class UserFeedItemResourceTest(API095TestCase):
         content = json.loads(result.content)
         self.assertEqual(
             sorted(content.keys()),
-            ['description', 'feed', 'id', 'link', 'published', 'read',
-             'resource_uri', 'starred', 'tags', 'title'])
+            ['description', 'feed', 'feed_title', 'id', 'link', 'published',
+             'read', 'resource_uri', 'starred', 'tags', 'title'])
         self.assertEqual(content['description'], item.description)
         self.assertEqual(content['link'], item.link)
         self.assertEqual(

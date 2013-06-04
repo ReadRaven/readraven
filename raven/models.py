@@ -172,14 +172,14 @@ class Feed(models.Model):
                     try:
                         item.description = entry.summary.strip()
                     except AttributeError:
-                        logger.warn('Potential problem with feed id: %s' % self.pk)
+                        logger.warn('No content (%s: %s)' % (self.pk, self.link))
                         if data.bozo == 1:
                             logger.warn('Exception is %s' % data.bozo_exception)
                         continue
             try:
                 item.link = entry.link
             except AttributeError:
-                logger.debug('Potential problem with feed id: %s' % self.pk)
+                logger.warn('No link (%s: %s)' % (self.pk, self.link))
                 if data.bozo == 1:
                     logger.debug('Exception is %s' % data.bozo_exception)
             try:
@@ -187,7 +187,7 @@ class Feed(models.Model):
             except AttributeError:
                 # Set this to empty string so calculate_guid() doesn't die
                 item.atom_id = ''
-                logger.debug('Potential problem with feed id: %s' % self.pk)
+                logger.warn('No atom_id (%s: %s)' % (self.pk, self.link))
                 if data.bozo == 1:
                     logger.debug('Exception is %s' % data.bozo_exception)
 
@@ -211,7 +211,6 @@ class Feed(models.Model):
                         item.published = datetime.utcfromtimestamp(
                             calendar.timegm(entry.created_parsed))
                     except AttributeError:
-                        logger.warn('Date parsing error, may lead to duplicates: %s' % self.pk)
                         item.published = datetime.utcnow()
 
             try:

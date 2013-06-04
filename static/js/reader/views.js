@@ -63,16 +63,21 @@ $.fn.isOnScreen = function(){
 };
 
 APP.Views.StrongSide = Backbone.View.extend({
+    add: function(item) {
+        this.renderItem(item);
+    },
     containerEl: '#feeditem-container',
     currentRow: null,
     el: '#strong-side',
     events: {
+        'click .feeditem-loader': 'more',
         'scroll': 'scroll_'
     },
     initialize: function(config) {
         this.items = new APP.Collections.Items();
+        this.items.on('add', _.bind(this.add, this));
         this.items.on('reset', _.bind(this.render, this));
-        this.items.fetch({reset: true});
+        this.items.fetch({reset: true, success: this.items.success});
 
         Mousetrap.bind(['j', 'n', 'k', 'p'], _.bind(this.keys, this));
     },
@@ -126,6 +131,10 @@ APP.Views.StrongSide = Backbone.View.extend({
         });
 
         this.currentRow = nextRow;
+    },
+    more: function(e) {
+        e.preventDefault();
+        this.items.getNext();
     },
     render: function() {
         var el = this.$el;

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import dateutil
 import json
 import unittest
@@ -693,6 +693,52 @@ class UserFeedItemResourceTest(API095TestCase):
 
         new_resource = json.loads(self.api_client.get(endpoint).content)
         self.assertEqual(new_resource['starred'], True)
+
+    def test_sort_published(self):
+        '''We can sort by 'published'.'''
+        # Test data
+        feed = Feed.create_and_subscribe(
+            'Paul Hummer', 'http://www.paulhummer.org/rss', None, self.user)
+        item = FeedItem()
+        item.feed = feed
+        item.title = 'Feed 1'
+        item.link = 'http://www.paulhummer.org/rss/1'
+        item.guid = 'http://www.paulhummer.org/rss/1'
+        item.published = datetime.now()
+        item.save()
+
+        item = FeedItem()
+        item.feed = feed
+        item.title = 'Feed 2'
+        item.link = 'http://www.paulhummer.org/rss/2'
+        item.guid = 'http://www.paulhummer.org/rss/2'
+        item.published = datetime.now() - timedelta(days=-1)
+        item.save()
+
+        item = FeedItem()
+        item.feed = feed
+        item.title = 'Feed 3'
+        item.link = 'http://www.paulhummer.org/rss/3'
+        item.guid = 'http://www.paulhummer.org/rss/3'
+        item.published = datetime.now() - timedelta(days=-2)
+        item.save()
+
+        # Actual test
+        result = self.api_client.get('/api/0.9.5/item/?order_by=-published')
+        self.assertEqual(result.status_code, 200)
+
+        content = json.loads(result.content)
+        self.assertEqual(
+            [item['title'] for item in content['objects']],
+            ['Feed 3', 'Feed 2', 'Feed 1'])
+
+        result = self.api_client.get('/api/0.9.5/item/?order_by=published')
+        self.assertEqual(result.status_code, 200)
+
+        content = json.loads(result.content)
+        self.assertEqual(
+            [item['title'] for item in content['objects']],
+            ['Feed 1', 'Feed 2', 'Feed 3'])
 
 
 class FeedResource09Test(ResourceTestCase):

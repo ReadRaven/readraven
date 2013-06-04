@@ -1,10 +1,10 @@
 import json
 
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Q
 from tastypie import fields
 from tastypie.authentication import SessionAuthentication
 from tastypie.authorization import Authorization
+from tastypie.exceptions import InvalidSortError
 from tastypie.resources import ALL, ALL_WITH_RELATIONS, ModelResource
 
 from raven import models
@@ -176,10 +176,6 @@ class UserFeedResource(ModelResource):
         bundle.data['link'] = bundle.obj.feed.link
         bundle.data['title'] = bundle.obj.feed.title
 
-        #tags = []
-        #for tag in bundle.obj.tags.all():
-        #    tags.append(tag.name)
-        #bundle.data['tags'] = tags
         bundle.data['tags'] = [tag.name for tag in bundle.obj.tags.all()]
         return bundle
 
@@ -189,14 +185,15 @@ class UserFeedItemResource(ModelResource):
     class Meta:
         authentication = SessionAuthentication()
         authorization = Authorization()
-        queryset = models.UserFeedItem.objects.all()
-        resource_name = 'item'
-        max_limit = 20
         filtering = {
             'feed': ALL_WITH_RELATIONS,
             'read': ALL,
             'starred': ALL,
         }
+        max_limit = 20
+        ordering = ('item__published',)
+        queryset = models.UserFeedItem.objects.all()
+        resource_name = 'item'
 
     feed = fields.ForeignKey(
         'raven.resources.UserFeedResource', 'feed', readonly=True)
@@ -235,6 +232,29 @@ class UserFeedItemResource(ModelResource):
             feeds = models.UserFeed.objects.filter(tags__name__in=feed_tags)
             semi_filtered = semi_filtered.filter(feed__in=feeds)
         return semi_filtered
+
+    def apply_sorting(self, obj_list, options=None):
+        '''Workaround: we don't want to expose the implementation detail that
+        we're returning UserFeedItems but ordering on FeedItem.published, so
+        we do this seemingly hacky but also very clever thing. It's less of a
+        hack because I'm totally documenting it.
+        '''
+        custom_ordering = None
+        if 'order_by' in options:
+            custom_ordering = options.get('order_by')
+            if custom_ordering == 'published':
+                custom_ordering = 'item__published'
+            elif custom_ordering == '-published':
+                custom_ordering = '-item__published'
+            else:
+                raise InvalidSortError(
+                    "The '%s' field does not allow ordering." % custom_ordering)
+
+        qs = super(UserFeedItemResource, self).apply_sorting(obj_list, None)
+
+        if custom_ordering:
+            return qs.order_by(custom_ordering)
+        return qs
 
     def get_object_list(self, request):
         return super(UserFeedItemResource, self).get_object_list(request).filter(

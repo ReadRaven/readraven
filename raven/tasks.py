@@ -303,7 +303,7 @@ class SyncFromReaderAPITask(Task):
         special.remove('reading-list')
         for sf in special:
             f = reader.specialFeeds[sf]
-            f.loadItems(loadLimit=loadLimit)
+            f.loadItems(loadLimit=1000)
             for e in f.items:
                 try:
                     feed = feeds[e.feed.feedUrl]

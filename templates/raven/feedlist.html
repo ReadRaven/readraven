@@ -9,7 +9,7 @@
         {% for feed in feeds %}
             <li class="feed-listing">
                 <div class="feed-listing-label {% if feed.unread_count %}unread{% endif %}">
-                    <a href="#/feed/{{feed.feed.id}}">
+                    <a href="#/feed/{{feed.id}}">
                     {% if feed.feed.title %}
                         {{ feed.feed.title }}
                     {% else %}
@@ -31,7 +31,7 @@
 {% for feed in untagged_feeds %}
     <li class="feed-listing untagged">
         <div class="feed-listing-label {% if feed.unread_count %}unread{% endif %}">
-            <a href="#/feed/{{feed.feed.id}}">
+            <a href="#/feed/{{feed.id}}">
             {% if feed.feed.title %}
                 {{ feed.feed.title }}
             {% else %}

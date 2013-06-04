@@ -32,13 +32,26 @@ $(document).bind('ajaxStart', function() {
 
 APP.Routers.Router = Backbone.Router.extend({
     default: function() {
+        if (this.strongSide === undefined) {
+            this.strongSide = new APP.Views.StrongSide();
+        } else {
+            this.strongSide.filter({});
+        }
+        this.leftSide.render();
+    },
+    feed: function(id) {
+        if (this.strongSide === undefined) {
+            this.strongSide = new APP.Views.StrongSide({params: {feed: id}});
+        } else {
+            this.strongSide.filter({feed: id});
+        }
         this.leftSide.render();
     },
     initialize: function(config) {
         this.leftSide = new APP.Views.LeftSide();
-        this.strongSide = new APP.Views.StrongSide();
     },
     routes: {
+        'feed/:id': 'feed',
         '*default': 'default'
     }
 });

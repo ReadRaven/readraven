@@ -73,13 +73,38 @@ APP.Views.StrongSide = Backbone.View.extend({
         'click .feeditem-loader': 'more',
         'scroll': 'scroll_'
     },
+    filter: function(config) {
+        /* Take a config of feed and/or tag, and add them as filters, and
+         * reset the items.
+         */
+        if (config.feed) {
+            this.items.params.feed = config.feed;
+        } else {
+            if (this.items.params.feed != undefined) {
+                delete this.items.params.feed;
+            }
+        }
+        if (config.tag) {
+            this.items.params.tag = config.tag;
+        } else {
+            if (this.items.params.tag != undefined) {
+                delete this.items.params.tag;
+            }
+        }
+        this.items.params.offset = 0;
+        this.items.fetch({reset: true, success: this.items.success});
+    },
     initialize: function(config) {
+        config = config||{};
+
+        Mousetrap.bind(['j', 'n', 'k', 'p'], _.bind(this.keys, this));
+
         this.items = new APP.Collections.Items();
         this.items.on('add', _.bind(this.add, this));
         this.items.on('reset', _.bind(this.render, this));
-        this.items.fetch({reset: true, success: this.items.success});
 
-        Mousetrap.bind(['j', 'n', 'k', 'p'], _.bind(this.keys, this));
+        var params = config.params||{};
+        this.filter(params);
     },
     keys: function(e, combo) {
         var selected = this.currentRow.find('.feeditem'),

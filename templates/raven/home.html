@@ -156,29 +156,28 @@
         </div>
       </div>
 
-      <div id="main" class="row-fluid"></div>
+      <div id="main" class="row-fluid">
+        <div class="span3 column" id="left-side">
+        {% comment %}
+        We should really have search, but holy shit that's a lot of work.
+          <form class="form-search">
+            <input type="text" class="input-medium search-query" />
+            <button type="submit" class="btn">Search</button>
+          </form>
+        {% endcomment %}
+          <form class="form-search">
+            <input type="text" class="input-medium" id="add-feed"/>
+            <button class="btn" id="add-feed-btn">Add Feed</button>
+          </form>
+          <div id="feed-list" class="css-treeview"></div>
+        </div>
+
+        <div class="span9 column" id="strong-side"></div>
+      </div>
     </div>
   </body>
 
   {% handlebars %}
-  <script type="text/x-handlebars" id="index-template">
-    <div class="span3 column" id="left-side">
-    {% endhandlebars %}{% comment %}
-    We should really have search, but holy shit that's a lot of work.
-      <form class="form-search">
-        <input type="text" class="input-medium search-query" />
-        <button type="submit" class="btn">Search</button>
-      </form>
-    {% endcomment %}{% handlebars %}
-      <form class="form-search">
-        <input type="text" class="input-medium" id="add-feed"/>
-        <button class="btn" id="add-feed">Add Feed</button>
-      </form>
-      <div id="feed-list" class="css-treeview"></div>
-    </div>
-    <div class="span9 column" id="strong-side">
-    </div>
-  </script>
   <script type="text/x-handlebars" id="feed-item-list-template">
     <div id="feeditem-container">
     </div>
@@ -214,8 +213,7 @@
   <script src="{% static 'js/vendor/mousetrap.min.js' %}"></script>
 
   <script src="{% static 'js/backbone-tastypie.js' %}"></script>
-  <script src="{% static 'js/backbone-relational.js' %}"></script>
-  <script src="{% static 'js/models.js' %}"></script>
-  <script src="{% static 'js/views.js' %}"></script>
-  <script src="{% static 'js/reader.js' %}"></script>
+  <script src="{% static 'js/reader/models.js' %}"></script>
+  <script src="{% static 'js/reader/views.js' %}"></script>
+  <script src="{% static 'js/reader/app.js' %}"></script>
 </html>

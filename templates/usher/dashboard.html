@@ -68,12 +68,13 @@
        <p>We have your <b>{{ user.customer.card_kind }}</b> ending in
        <b>{{ user.customer.card_last_4 }}</b> in our files.</p>
        {% else %}
-       <p>We don't have a credit card for you on file, sneaky goat!</p>
+       <p>We don't have a credit card for you on file.</p>
        {% endif %}
        <br>
-       <p>ReadRaven is currently free until we're worthy of your money, but
-       if you'd like to cancel your account, please email us at
-       <a href="mailto:help@readraven.com">help@readraven.com</a>.</p>
+       <p>ReadRaven is currently free until we're worthy of your money.
+       When we're good enough, we will ask for your credit card and charge
+       you $5 per month.</p>
+       <p>Read about our <a href="{% url 'raven.views.values' %}">values</a>.</p>
     </div>
     </script>
 

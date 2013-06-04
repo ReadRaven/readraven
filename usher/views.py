@@ -108,10 +108,10 @@ def sign_up(request):
             if settings.DEBUG is False:
                 return HttpResponseRedirect("/")
 
-    task = tasks.SyncFromReaderAPITask()
-    result = task.delay(request.user, loadLimit=150)
-    request.user.sync_task_id = result.task_id
-    request.user.save()
+    #task = tasks.SyncFromReaderAPITask()
+    #result = task.delay(request.user, loadLimit=150)
+    #request.user.sync_task_id = result.task_id
+    #request.user.save()
 
     return render_to_response(
         'usher/sign_up.html',
@@ -151,4 +151,10 @@ def google_auth_callback(request):
     user.backend = 'django.contrib.auth.backends.ModelBackend'
     login(request, user)
 
-    return HttpResponseRedirect("/usher/sign_up")
+    task = tasks.SyncFromReaderAPITask()
+    result = task.delay(user, loadLimit=150)
+    user.sync_task_id = result.task_id
+    user.save()
+
+    return HttpResponseRedirect("/")
+    #return HttpResponseRedirect("/usher/sign_up")

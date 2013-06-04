@@ -75,6 +75,12 @@ class User(AbstractBaseUser):
         feed.add_subscriber(self)
 
     def is_customer(self):
+        # 6/4/2013
+        # Enough early testers have said that the credit card is a
+        # significant gate. Since we're not charging for now anyway,
+        # let's just not ask for it.
+        return True
+
         if settings.DEBUG is True:
             return True
 

@@ -328,7 +328,7 @@ class FeedItem(models.Model):
         #   entry.id
         #   entry.title
         guid = hashlib.sha256()
-        guid.update(self.feed.link)
+        guid.update(self.feed.link.encode('utf-8'))
         guid.update(self.link)
         guid.update(self.atom_id)
         guid.update(self.title.encode('utf-8'))

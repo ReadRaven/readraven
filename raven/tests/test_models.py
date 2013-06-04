@@ -1,4 +1,5 @@
 from datetime import datetime
+import time
 import unittest
 
 from django.contrib.auth import get_user_model
@@ -175,6 +176,31 @@ class FeedTest(TestCase):
         total_feeds = Feed.objects.all().count()
         owner = User.objects.get(pk=owner.pk)
         self.assertEqual(owner.feeds.count(), total_feeds-1)
+
+    @unittest.skipUnless(network_available(), 'Network unavailable')
+    @override_settings(CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
+                       CELERY_ALWAYS_EAGER=True,
+                       BROKER_BACKEND='memory',)
+    def test_dates(self):
+        feed = Feed()
+        feed.link = 'http://theworstthingever.com/index.rdf'
+        feed.save()
+        feed.update()
+        first_update = feed.items.count()
+
+        # Pause a few seconds, so when we fetch again, utcnow() in the
+        # model will be a different time (and therefore potentially a
+        # different GUID)
+        time.sleep(3)
+        feed.update()
+        second_update = feed.items.count()
+
+        # If we don't parse dates properly, then on the second
+        # update, all the feeditems will have different GUIDs since we
+        # default to using utcnow(). This test ensures we parse every
+        # possible date field from feedparser. See feed.update() for
+        # details.
+        self.assertEqual(first_update, second_update)
 
     @unittest.skipUnless(network_available(), 'Network unavailable')
     def test_autodiscovery(self):

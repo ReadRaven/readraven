@@ -332,8 +332,8 @@ class FeedItem(models.Model):
         guid.update(self.link)
         guid.update(self.atom_id)
         guid.update(self.title.encode('utf-8'))
-        if self.reader_guid:
-            guid.update(self.reader_guid)
+        #if self.reader_guid:
+            #guid.update(self.reader_guid)
         return guid.hexdigest()
 
     # Currently unused RSS (optional) properties:

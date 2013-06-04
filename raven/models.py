@@ -136,7 +136,7 @@ class Feed(models.Model):
 
         updated = False
         try:
-            if self.title is not data.feed.title:
+            if self.title != data.feed.title:
                 self.title = data.feed.title
                 updated = True
         except AttributeError:
@@ -144,7 +144,7 @@ class Feed(models.Model):
             if data.bozo == 1:
                 logger.debug('Exception is %s' % data.bozo_exception)
         try:
-            if self.description is not data.feed.description:
+            if self.description != data.feed.description:
                 self.description = data.feed.description
                 updated = True
         except AttributeError:
@@ -152,7 +152,7 @@ class Feed(models.Model):
             if data.bozo == 1:
                 logger.debug('Exception is %s' % data.bozo_exception)
         try:
-            if self.generator is not data.feed.generator:
+            if self.generator != data.feed.generator:
                 self.generator = data.feed.generator
                 updated = True
         except AttributeError:
@@ -183,6 +183,7 @@ class Feed(models.Model):
                 logger.debug('Potential problem with feed id: %s' % self.pk)
                 if data.bozo == 1:
                     logger.debug('Exception is %s' % data.bozo_exception)
+
             try:
                 if entry.published_parsed is None:
                     # In this case, there's a "date", but it's unparseable,
@@ -195,8 +196,17 @@ class Feed(models.Model):
                     item.published = datetime.utcfromtimestamp(
                         calendar.timegm(entry.published_parsed))
             except AttributeError:
-                # Ugh. Some feeds don't have published dates...
-                item.published = datetime.utcnow()
+                try:
+                    item.published = datetime.utcfromtimestamp(
+                        calendar.timegm(entry.updated_parsed))
+                except AttributeError:
+                    try:
+                        item.published = datetime.utcfromtimestamp(
+                            calendar.timegm(entry.created_parsed))
+                    except AttributeError:
+                        logger.warn('Date parsing error, may lead to duplicates: %s' % self.pk)
+                        item.published = datetime.utcnow()
+
             try:
                 item.title = entry.title
             except AttributeError:

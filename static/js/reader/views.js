@@ -78,6 +78,7 @@ APP.Views.StrongSide = Backbone.View.extend({
         /* Take a config of feed and/or tag, and add them as filters, and
          * reset the items.
          */
+        this.$el.find(this.containerEl).empty();
         if (config.feed) {
             this.items.params.feed = config.feed;
         } else {

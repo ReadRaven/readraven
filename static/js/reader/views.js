@@ -36,6 +36,7 @@ APP.Views.LeftSide = Backbone.View.extend({
     },
     render: function() {
         this.$el.find(this.feedListEl).load('/raven/_feedlist/');
+        this.rendered = true;
         return this;
     }
 });

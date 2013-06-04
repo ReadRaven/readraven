@@ -37,7 +37,9 @@ APP.Routers.Router = Backbone.Router.extend({
         } else {
             this.strongSide.filter({});
         }
-        this.leftSide.render();
+        if (!this.leftSide.rendered) {
+            this.leftSide.render();
+        }
     },
     feed: function(id) {
         if (this.strongSide === undefined) {
@@ -45,7 +47,9 @@ APP.Routers.Router = Backbone.Router.extend({
         } else {
             this.strongSide.filter({feed: id});
         }
-        this.leftSide.render();
+        if (!this.leftSide.rendered) {
+            this.leftSide.render();
+        }
     },
     initialize: function(config) {
         this.leftSide = new APP.Views.LeftSide();

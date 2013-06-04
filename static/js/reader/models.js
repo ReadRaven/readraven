@@ -13,8 +13,16 @@ var Models = APP.Models.Item = Backbone.Model.extend({
     urlRoot: '/api/0.9.5/item/'
 });
 APP.Collections.Items = Backbone.Collection.extend({
+    defaultParams: {
+        read: false,
+        order_by: '-published'
+    },
     model: Models,
-    url: '/api/0.9.5/item/'
+    params: {},
+    url: function() {
+        var params = _.defaults(this.params, this.defaultParams);
+        return '/api/0.9.5/item/?' + $.param(params);
+    }
 });
 
 }());

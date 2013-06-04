@@ -88,12 +88,29 @@ class UpdateFeedTask(PeriodicTask):
             feeds = Feed.objects.filter(last_fetched__lt=age)[:self.SLICE_SIZE]
             never_fetched = Feed.objects.filter(last_fetched=None)
 
-        for feed in feeds:
-            feed.update()
+        for feed in never_fetched:
+            # If we imported feeds + feeditems from Reader, we have
+            # never marked them as fetched. So we find them here and
+            # fetch them for the first time. But as feedparser goes out
+            # and grabs feeds, there is absolutely no way to map those
+            # feeditems to the ones we've already grabbed from Reader.
+            #
+            # We do actually want those feeditems in our database, which
+            # is why we don't skip the update here. But we also don't
+            # want tons of duplicate or weird old entries to appear in
+            # the users' feeds.
+            #
+            # So we pass 'hack' and we use the heuristic where if the
+            # feeditem from feedparser is *older* than the most recent
+            # Reader imported feeditem, then import it but also mark it
+            # as read.
+            #
+            # Wow.
+            feed.update(hack=True)
             feed.last_fetched = datetime.utcnow()
             feed.save()
 
-        for feed in never_fetched:
+        for feed in feeds:
             feed.update()
             feed.last_fetched = datetime.utcnow()
             feed.save()

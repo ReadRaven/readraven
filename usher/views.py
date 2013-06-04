@@ -109,7 +109,7 @@ def sign_up(request):
                 return HttpResponseRedirect("/")
 
     task = tasks.SyncFromReaderAPITask()
-    result = task.delay(request.user, loadLimit=20)
+    result = task.delay(request.user, loadLimit=150)
     request.user.sync_task_id = result.task_id
     request.user.save()
 

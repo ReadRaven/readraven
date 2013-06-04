@@ -130,7 +130,7 @@ class Feed(models.Model):
         except feedfinder.TimeoutError:
             return None
 
-    def update(self, data=None):
+    def update(self, data=None, hack=False):
         if data is None:
             data = feedparser.parse(self.link)
 
@@ -159,6 +159,12 @@ class Feed(models.Model):
             pass
         if updated:
             self.save()
+
+        if hack is True:
+            try:
+                last_entry = self.items.all().latest('published')
+            except ObjectDoesNotExist:
+                last_entry = None
 
         for entry in data.entries:
             item = FeedItem()
@@ -191,6 +197,7 @@ class Feed(models.Model):
                 if data.bozo == 1:
                     logger.debug('Exception is %s' % data.bozo_exception)
 
+            hack_extra_sucky = False
             try:
                 if entry.published_parsed is None:
                     # In this case, there's a "date", but it's unparseable,
@@ -211,6 +218,7 @@ class Feed(models.Model):
                         item.published = datetime.utcfromtimestamp(
                             calendar.timegm(entry.created_parsed))
                     except AttributeError:
+                        hack_extra_sucky = True
                         item.published = datetime.utcnow()
 
             try:
@@ -227,7 +235,18 @@ class Feed(models.Model):
             else:
                 item.save()
 
-            UserFeedItem.add_to_users(self, item)
+            mark_as_read = False
+            if hack is True and last_entry is not None:
+                delta = last_entry.published - item.published
+                if delta.days > 0:
+                    mark_as_read = True
+                elif delta.days < 0 and hack_extra_sucky is True:
+                    # We hit this case when the feed being fetched does
+                    # not have a date and we stuffed in utcnow()
+                    mark_as_read = True
+
+            UserFeedItem.add_to_users(self, item, mark_as_read)
+
 
     # Currently unused RSS (optional) properties:
     # category: <category>Filthy pornography</category>
@@ -398,7 +417,7 @@ class UserFeedItem(models.Model):
     tags = TaggableManager()
 
     @classmethod
-    def add_to_users(Class, feed, item):
+    def add_to_users(Class, feed, item, mark_as_read=False):
         for user in feed.subscribers.all():
             ufi = UserFeedItem()
             ufi.user = user
@@ -407,7 +426,10 @@ class UserFeedItem(models.Model):
             try:
                 ufi.validate_unique()
             except ValidationError:
-                return
+                ufi = UserFeedItem.objects.get(user=user, item=item)
+
+            if mark_as_read is True:
+                ufi.read = True
 
             ufi.save()
 

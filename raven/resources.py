@@ -213,10 +213,11 @@ class UserFeedItemResource(ModelResource):
             tags = filters['tags'].split(',')
             #queryset = (Q(tags__name__in=[tags]))
             orm_filters.update({'tags': tags})
-        if 'feed_tags' in filters:
-            feed_tags = filters['feed_tags'].split(',')
-            #queryset = (Q(tags__name__in=[feed_tags]))
-            orm_filters.update({'feed_tags': feed_tags})
+        # Disabled until the above workaround is no longer needed.
+        #if 'feed_tags' in filters:
+        #    feed_tags = filters['feed_tags'].split(',')
+        #    #queryset = (Q(tags__name__in=[feed_tags]))
+        #    orm_filters.update({'feed_tags': feed_tags})
         return orm_filters
 
     def apply_filters(self, request, applicable_filters):

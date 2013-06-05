@@ -39,8 +39,8 @@ class Feed(models.Model):
 
     # link is the RSS feed link
     # site is the "real" web page (not required!)
-    link = models.URLField(max_length=500, unique=True)
-    site = models.URLField(max_length=500, null=True)
+    link = models.URLField(max_length=1023, unique=True)
+    site = models.URLField(max_length=1023, null=True)
     title = models.CharField(max_length=200)
 
     # Optional metadata
@@ -300,7 +300,7 @@ class FeedItem(models.Model):
     description = models.TextField()
     # It's possible to have longer urls, but anything longer than 2083
     # characters will break in IE.
-    link = models.URLField(max_length=500)
+    link = models.URLField(max_length=1023)
     title = models.TextField()
 
     # Various GUIDs

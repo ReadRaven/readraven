@@ -331,6 +331,69 @@ class UserFeedItemResourceTest(API095TestCase):
         content = json.loads(result.content)
         self.assertEqual(len(content['objects']), 2)
 
+    def test_lookup_by_feed_id_withoffset(self):
+        '''Filter items by feed.id.
+
+        A bug existed where a lookup by id would return items for a different
+        feed. This occurs if Feed.pk and UserFeed.pk were not the same, which
+        isn't normally the case in test data.
+        '''
+        # Test data
+        deadfeed = Feed.create_raw(
+            'Dead Feed 1', 'http://example.com/dead1.rss',
+            'http://example.com/dead1.html')
+        deadfeed2 = Feed.create_raw(
+            'Dead Feed 2', 'http://example.com/dead2.rss',
+            'http://example.com/dead2.html')
+
+        feed = Feed.create_and_subscribe(
+            'Paul Hummer', 'http://www.paulhummer.org/rss', None, self.user)
+
+        # Let's make sure they don't share ids
+        userfeed = UserFeed.objects.get(user=self.user, feed=feed)
+        self.assertNotEqual(feed.pk, userfeed.pk)
+
+        item = FeedItem()
+        item.feed = feed
+        item.title = 'Feed title'
+        item.link = 'http://www.paulhummer.org/rss/1'
+        item.guid = 'http://www.paulhummer.org/rss/1'
+        item.published = datetime.now()
+        item.save()
+
+        item = FeedItem()
+        item.feed = feed
+        item.title = 'Feed title 2'
+        item.link = 'http://www.paulhummer.org/rss/2'
+        item.guid = 'http://www.paulhummer.org/rss/2'
+        item.published = datetime.now()
+        item.save()
+
+        deadfeed3 = Feed.create_raw(
+            'Dead Feed 3', 'http://example.com/dead3.rss',
+            'http://example.com/dead3.html')
+
+        feed2 = Feed.create_and_subscribe(
+            'Gothamist', 'http://feeds.gothamistllc.com/gothamist05', None,
+            self.user)
+        item2 = FeedItem()
+        item2.feed = feed2
+        item2.title = 'Feed title'
+        item2.link = 'http://www.gothamist.com/rss/1'
+        item2.guid = 'http://www.gothamist.com/rss/1'
+        item2.published = datetime.now()
+        item2.save()
+
+        userfeed = UserFeed.objects.get(user=self.user, feed=feed)
+
+        # Actual test
+        result = self.api_client.get(
+            '/api/0.9.5/item/?feed={0}'.format(userfeed.pk))
+        self.assertEqual(200, result.status_code)
+
+        content = json.loads(result.content)
+        self.assertEqual(len(content['objects']), 2)
+
     def test_lookup_by_starred(self):
         '''Only return the unread items.'''
         # Test data

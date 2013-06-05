@@ -495,6 +495,7 @@ class UserFeedItemResourceTest(API095TestCase):
         content = json.loads(result.content)
         self.assertEqual(len(content['objects']), 2)
 
+    @unittest.skipUnless(False, 'Disabled until UserFeedItem.userfeed exists')
     def test_lookup_by_feed_tag(self):
         '''Only return the unread items.'''
         # Test data

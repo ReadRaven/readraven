@@ -203,6 +203,12 @@ class UserFeedItemResource(ModelResource):
         # performant, and it does what we want.
         orm_filters = super(UserFeedItemResource, self).build_filters(filters)
 
+        # This is a workaround while we sort out the proper fix in the
+        # database, which will require more work and thought. We don't want our
+        # users to be affected by our reticence.
+        if 'feed' in filters:
+            userfeed = models.UserFeed.objects.get(pk=filters.get('feed'))
+            orm_filters.update({'feed__exact': userfeed.feed.pk})
         if 'tags' in filters:
             tags = filters['tags'].split(',')
             #queryset = (Q(tags__name__in=[tags]))

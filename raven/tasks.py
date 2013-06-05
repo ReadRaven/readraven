@@ -45,7 +45,7 @@ def _new_user_item(user, feed, entry):
         try:
             paranoid_item = FeedItem.objects.get(guid=item.guid)
             item = paranoid_item
-            logger.error('Detected duplicate GUID for %s' % item.link)
+            logger.warn('Detected duplicate GUID for %s' % item.link)
         except ObjectDoesNotExist:
             item.save()
 

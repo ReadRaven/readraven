@@ -144,6 +144,9 @@ class Feed(models.Model):
             return None
 
     def update(self, data=None, hack=False):
+        # dead feeds so far:
+        # 223: http://www.aaronsw.com/2002/feeds/pgessays.rss
+        # 663: http://www.finderskeepers.gcgstudios.com/?p=rss
         if self.dead is True:
             return
 
@@ -209,7 +212,7 @@ class Feed(models.Model):
             except AttributeError:
                 # Set this to empty string so calculate_guid() doesn't die
                 item.atom_id = ''
-                logger.warn('No atom_id (%s: %s)' % (self.pk, self.link))
+                logger.debug('No atom_id (%s: %s)' % (self.pk, self.link))
                 if data.bozo == 1:
                     logger.debug('Exception is %s' % data.bozo_exception)
 
@@ -345,7 +348,7 @@ class FeedItem(models.Model):
         #   entry.title
         guid = hashlib.sha256()
         guid.update(self.feed.link.encode('utf-8'))
-        guid.update(self.link)
+        guid.update(self.link.encode('utf-8'))
         guid.update(self.atom_id)
         guid.update(self.title.encode('utf-8'))
         #if self.reader_guid:

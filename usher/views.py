@@ -137,11 +137,14 @@ def google_auth_callback(request):
     except FlowExchangeError:
         return HttpResponseRedirect(reverse('raven.views.values'))
 
+    new_user = False
     email = credential.id_token['email']
     try:
         user = User.objects.get(email=email)
     except User.DoesNotExist:
         user = User.objects.create_user(email, email)
+        logger.warn('New user signup: %s' % user.email)
+        new_user = True
 
     user.credential = credential
     user.flow = FLOW
@@ -152,7 +155,7 @@ def google_auth_callback(request):
     user.backend = 'django.contrib.auth.backends.ModelBackend'
     login(request, user)
 
-    if user.sync_task_id is None:
+    if new_user is True:
         logger.warn('SyncFromReader for %s' % user.email)
         task = tasks.SyncFromReaderAPITask()
         result = task.delay(user, loadLimit=150)

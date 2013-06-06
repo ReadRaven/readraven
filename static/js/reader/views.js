@@ -71,6 +71,7 @@ APP.Views.StrongSide = Backbone.View.extend({
     currentRow: null,
     el: '#strong-side',
     events: {
+        'click .feeditem': 'select_and_read',
         'click .feeditem-loader': 'more',
         'scroll': 'scroll_'
     },
@@ -109,7 +110,7 @@ APP.Views.StrongSide = Backbone.View.extend({
         this.filter(params);
     },
     keys: function(e, combo) {
-        var selected = this.currentRow.find('.feeditem'),
+        var selected = this.select_and_read(e),
             headline = selected.find('h3'),
             nextSelected = null,
             nextRow = null,
@@ -163,6 +164,37 @@ APP.Views.StrongSide = Backbone.View.extend({
         e.preventDefault();
         this.items.getNext();
     },
+    select_and_read: function(e) {
+        var selected = null,
+            item = null,
+            item2 = null;
+
+        switch (e.type) {
+        case 'click':
+            selected = $(e.currentTarget);
+            break;
+        case 'scroll':
+        case 'keypress':
+            selected = this.currentRow.find('.feeditem');
+            break;
+        }
+
+        selected.addClass('selected');
+        item = this.items.get(selected.parent().attr('data-feeditem'));
+        if (item.attributes.read === false) {
+            item.save({'read': true});
+        }
+
+        /* No idea why selected === this.currentRow => false */
+        item2 = this.items.get(this.currentRow.attr('data-feeditem'));
+        if (!_.isEqual(item, item2)) {
+            var prevSelected = this.currentRow.find('.feeditem');
+            prevSelected.removeClass('selected');
+            this.currentRow = selected.parent();
+        }
+
+        return selected;
+    },
     render: function() {
         var el = this.$el;
         el.html(this.template());
@@ -189,7 +221,7 @@ APP.Views.StrongSide = Backbone.View.extend({
         container.append(view.render().el);
     },
     scroll_: function(e) {
-        var selected = this.currentRow.find('.feeditem'),
+        var selected = this.select_and_read(e),
             nextSelected = null,
             nextRow = null,
             headline = null,
@@ -199,12 +231,6 @@ APP.Views.StrongSide = Backbone.View.extend({
         var scrollPosition = $(e.currentTarget).scrollTop();
         /* Scroll down */
         if (scrollPosition > this.scrollLast) {
-            selected.addClass('selected');
-            item = this.items.get(this.currentRow.attr('data-feeditem'));
-            if (item.attributes.read === false) {
-                item.save({'read': true});
-            }
-
             headline = selected.find('h3');
             nextRow = this.currentRow.next('div.row');
             nextSelected = nextRow.find('.feeditem');

@@ -349,7 +349,7 @@ class FeedItem(models.Model):
         guid = hashlib.sha256()
         guid.update(self.feed.link.encode('utf-8'))
         guid.update(self.link.encode('utf-8'))
-        guid.update(self.atom_id)
+        guid.update(self.atom_id.encode('utf-8'))
         guid.update(self.title.encode('utf-8'))
         #if self.reader_guid:
             #guid.update(self.reader_guid)

@@ -222,6 +222,7 @@ class Feed(models.Model):
                     # In this case, there's a "date", but it's unparseable,
                     # i.e. it's something silly like "No date found",
                     # which isn't a date.
+                    hack_extra_sucky = True
                     item.published = datetime.utcnow()
                 else:
                     # This warns about naive timestamps when timezone
@@ -230,12 +231,24 @@ class Feed(models.Model):
                         calendar.timegm(entry.published_parsed))
             except AttributeError:
                 try:
-                    item.published = datetime.utcfromtimestamp(
-                        calendar.timegm(entry.updated_parsed))
+                    if entry.updated_parsed is None:
+                        hack_extra_sucky = True
+                        item.published = datetime.utcnow()
+                        logger.warn('%s: updated_parsed broken: %s' %
+                                    (self.pk, self.link))
+                    else:
+                        item.published = datetime.utcfromtimestamp(
+                            calendar.timegm(entry.updated_parsed))
                 except AttributeError:
                     try:
-                        item.published = datetime.utcfromtimestamp(
-                            calendar.timegm(entry.created_parsed))
+                        if entry.created_parsed is None:
+                            hack_extra_sucky = True
+                            item.published = datetime.utcnow()
+                            logger.warn('%s: created_parsed broken: %s' %
+                                        (self.pk, self.link))
+                        else:
+                            item.published = datetime.utcfromtimestamp(
+                                calendar.timegm(entry.created_parsed))
                     except AttributeError:
                         hack_extra_sucky = True
                         item.published = datetime.utcnow()
@@ -248,10 +261,10 @@ class Feed(models.Model):
 
             item.guid = item.calculate_guid()
             try:
-                item.validate_unique()
-            except ValidationError:
+                # It's cleaner to do this than to monkey around with
+                # validate_unique().
                 item = FeedItem.objects.get(guid=item.guid)
-            else:
+            except ObjectDoesNotExist:
                 item.save()
 
             mark_as_read = False
@@ -443,9 +456,9 @@ class UserFeedItem(models.Model):
             ufi.feed = feed
             ufi.item = item
             try:
-                ufi.validate_unique()
-            except ValidationError:
                 ufi = UserFeedItem.objects.get(user=user, item=item)
+            except ObjectDoesNotExist:
+                pass
 
             if mark_as_read is True:
                 ufi.read = True

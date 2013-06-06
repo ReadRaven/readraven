@@ -158,7 +158,7 @@ def google_auth_callback(request):
     if new_user is True:
         logger.warn('SyncFromReader for %s' % user.email)
         task = tasks.SyncFromReaderAPITask()
-        result = task.delay(user, loadLimit=150)
+        result = task.delay(user, loadLimit=50)
         user.sync_task_id = result.task_id
         user.save()
 

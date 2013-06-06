@@ -212,7 +212,7 @@ class Feed(models.Model):
             except AttributeError:
                 # Set this to empty string so calculate_guid() doesn't die
                 item.atom_id = ''
-                logger.warn('No atom_id (%s: %s)' % (self.pk, self.link))
+                logger.debug('No atom_id (%s: %s)' % (self.pk, self.link))
                 if data.bozo == 1:
                     logger.debug('Exception is %s' % data.bozo_exception)
 

@@ -41,10 +41,10 @@ class Feed(models.Model):
     # site is the "real" web page (not required!)
     link = models.URLField(max_length=1023, unique=True)
     site = models.URLField(max_length=1023, null=True)
-    title = models.CharField(max_length=200)
+    title = models.CharField(max_length=1023)
 
     # Optional metadata
-    generator = models.CharField(max_length=100, blank=True)
+    generator = models.CharField(max_length=1023, blank=True)
 
     # Production battlescars
     dead = models.BooleanField(default=False)

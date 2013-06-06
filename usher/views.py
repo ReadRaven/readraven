@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timedelta
 
 from django.conf import settings
@@ -12,7 +13,6 @@ from django.template import RequestContext
 
 from django.forms import ModelForm
 
-
 from oauth2client import xsrfutil
 from oauth2client.client import flow_from_clientsecrets, FlowExchangeError
 
@@ -22,6 +22,7 @@ from raven import tasks
 from .models import UserTakeoutUpload
 
 User = get_user_model()
+logger = logging.getLogger('django')
 
 CLIENT_SECRETS = settings.GOOGLE_API_SECRETS
 SCOPE = [
@@ -151,10 +152,12 @@ def google_auth_callback(request):
     user.backend = 'django.contrib.auth.backends.ModelBackend'
     login(request, user)
 
-    task = tasks.SyncFromReaderAPITask()
-    result = task.delay(user, loadLimit=150)
-    user.sync_task_id = result.task_id
-    user.save()
+    if user.sync_task_id is None:
+        logger.warn('SyncFromReader for %s' % user.email)
+        task = tasks.SyncFromReaderAPITask()
+        result = task.delay(user, loadLimit=150)
+        user.sync_task_id = result.task_id
+        user.save()
 
     return HttpResponseRedirect("/")
     #return HttpResponseRedirect("/usher/sign_up")

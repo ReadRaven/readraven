@@ -110,7 +110,7 @@ APP.Views.StrongSide = Backbone.View.extend({
         this.filter(params);
     },
     keys: function(e, combo) {
-        var selected = this.currentRow.find('.feeditem'),
+        var selected = this.select_and_read(e),
             headline = selected.find('h3'),
             nextSelected = null,
             nextRow = null,
@@ -165,9 +165,19 @@ APP.Views.StrongSide = Backbone.View.extend({
         this.items.getNext();
     },
     select_and_read: function(e) {
-        var selected = $(e.currentTarget),
+        var selected = null,
             item = null,
             item2 = null;
+
+        switch (e.type) {
+        case 'click':
+            selected = $(e.currentTarget);
+            break;
+        case 'scroll':
+        case 'keypress':
+            selected = this.currentRow.find('.feeditem');
+            break;
+        }
 
         selected.addClass('selected');
         item = this.items.get(selected.parent().attr('data-feeditem'));
@@ -211,7 +221,7 @@ APP.Views.StrongSide = Backbone.View.extend({
         container.append(view.render().el);
     },
     scroll_: function(e) {
-        var selected = this.currentRow.find('.feeditem'),
+        var selected = this.select_and_read(e),
             nextSelected = null,
             nextRow = null,
             headline = null,
@@ -221,12 +231,6 @@ APP.Views.StrongSide = Backbone.View.extend({
         var scrollPosition = $(e.currentTarget).scrollTop();
         /* Scroll down */
         if (scrollPosition > this.scrollLast) {
-            selected.addClass('selected');
-            item = this.items.get(this.currentRow.attr('data-feeditem'));
-            if (item.attributes.read === false) {
-                item.save({'read': true});
-            }
-
             headline = selected.find('h3');
             nextRow = this.currentRow.next('div.row');
             nextSelected = nextRow.find('.feeditem');

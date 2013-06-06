@@ -248,10 +248,10 @@ class Feed(models.Model):
 
             item.guid = item.calculate_guid()
             try:
-                item.validate_unique()
-            except ValidationError:
+                # It's cleaner to do this than to monkey around with
+                # validate_unique().
                 item = FeedItem.objects.get(guid=item.guid)
-            else:
+            except ObjectDoesNotExist:
                 item.save()
 
             mark_as_read = False
@@ -443,9 +443,9 @@ class UserFeedItem(models.Model):
             ufi.feed = feed
             ufi.item = item
             try:
-                ufi.validate_unique()
-            except ValidationError:
                 ufi = UserFeedItem.objects.get(user=user, item=item)
+            except ObjectDoesNotExist:
+                pass
 
             if mark_as_read is True:
                 ufi.read = True

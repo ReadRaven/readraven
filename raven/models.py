@@ -46,6 +46,9 @@ class Feed(models.Model):
     # Optional metadata
     generator = models.CharField(max_length=100, blank=True)
 
+    # Production battlescars
+    dead = models.BooleanField(default=False)
+
     @property
     def subscribers(self):
         userfeeds = UserFeed.objects.filter(feed=self)
@@ -141,6 +144,9 @@ class Feed(models.Model):
             return None
 
     def update(self, data=None, hack=False):
+        if self.dead is True:
+            return
+
         if data is None:
             data = feedparser.parse(self.link)
 

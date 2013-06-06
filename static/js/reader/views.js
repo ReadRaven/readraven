@@ -71,6 +71,7 @@ APP.Views.StrongSide = Backbone.View.extend({
     currentRow: null,
     el: '#strong-side',
     events: {
+        'click .feeditem': 'select_and_read',
         'click .feeditem-loader': 'more',
         'scroll': 'scroll_'
     },
@@ -162,6 +163,27 @@ APP.Views.StrongSide = Backbone.View.extend({
     more: function(e) {
         e.preventDefault();
         this.items.getNext();
+    },
+    select_and_read: function(e) {
+        var selected = $(e.currentTarget),
+            item = null,
+            item2 = null;
+
+        selected.addClass('selected');
+        item = this.items.get(selected.parent().attr('data-feeditem'));
+        if (item.attributes.read === false) {
+            item.save({'read': true});
+        }
+
+        /* No idea why selected === this.currentRow => false */
+        item2 = this.items.get(this.currentRow.attr('data-feeditem'));
+        if (!_.isEqual(item, item2)) {
+            var prevSelected = this.currentRow.find('.feeditem');
+            prevSelected.removeClass('selected');
+            this.currentRow = selected.parent();
+        }
+
+        return selected;
     },
     render: function() {
         var el = this.$el;

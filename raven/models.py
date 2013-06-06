@@ -68,11 +68,21 @@ class Feed(models.Model):
 
         userfeed.save()
 
-        for item in self.items.all():
+        # Only add the 10 most recent items to the UserFeed. Otherwise,
+        # the user will see feeditems from years and years ago, which is
+        # not really what anyone wants.
+        count = 0
+        for item in self.items.order_by('-published'):
             user_item = UserFeedItem()
             user_item.item = item
             user_item.user = subscriber
             user_item.feed = self
+
+            if count < 10:
+                count = count + 1
+            else:
+                user_item.read = True
+
             user_item.save()
 
     def remove_subscriber(self, subscriber):

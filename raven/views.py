@@ -45,3 +45,18 @@ def feedlist(request):
     return render_to_response(
         'raven/feedlist.html', context,
         context_instance=RequestContext(request))
+
+
+@login_required
+@user_passes_test(lambda u: u.is_customer(), login_url='/usher/sign_up')
+def leftside(request):
+    '''Left side!'''
+    tags = UserFeed.userfeed_tags(request.user)
+    untagged_feeds = UserFeed.objects.filter(user=request.user).exclude(tags__in=tags).order_by('feed__title')
+    context = {
+        'tags': tags,
+        'untagged_feeds': untagged_feeds
+    }
+    return render_to_response(
+        'raven/leftside.html', context,
+        context_instance=RequestContext(request))

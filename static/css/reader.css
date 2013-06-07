@@ -1,0 +1,179 @@
+body {
+    color: #333;
+}
+a {
+    text-decoration: none;
+    color: #1b98f8;
+}
+
+/* LAYOUT CSS */
+#layout {
+    padding-left:150px; /* "left col (nav + list)" width */
+    position: relative;
+}
+
+#left-side, #list {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    overflow: auto;
+}
+#left-side {
+    margin-left:-150px; /* "left col (nav + list)" width */
+    width:150px;
+    background: rgb(37, 42, 58);
+    text-align: center;
+    padding: 2em 0;
+}
+
+#list {
+    margin-left: -350px;
+    width:350px;
+    border-right: 1px solid #ddd;
+}
+
+#strong-side {
+    width: 100%;
+}
+
+/* HELPER CLASSES */
+div.modal {
+    background-color: white;
+    z-index: 10;
+    height: 100px;
+    width: 300px;
+    border: 1px solid black;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    padding: 5px;
+    margin-left: -150px; /* 1/2 the width */
+    margin-top: -50px; /* 1/2 the height */
+}
+
+a.primary-button, a.secondary-button {
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+}
+a.primary-button {
+    color: #fff;
+    background: #1b98f8;
+    margin: 1em 0;
+}
+a.secondary-button {
+    background: #fff;
+    border: 1px solid #ddd;
+    color: #666;
+    padding: 0.5em 2em;
+    font-size: 80%;
+}
+
+
+
+/* Vertical Navigation Styles */
+#left-side .pure-menu {
+    background: transparent;
+    border: none;
+    text-align: left;
+}
+    #left-side .pure-menu a:hover {
+        background: rgb(55, 60, 90);
+    }
+    #left-side .pure-menu a {
+        color: #fff;
+        margin-left: 0.5em;
+    }
+    #left-side .pure-menu-heading {
+        border-bottom: none;
+        font-size:110%;
+        color: rgb(75, 113, 151);
+    }
+
+    #left-side .nav-menu-button {
+        display: none;
+    }
+
+    .feed-count {
+        color: rgb(75, 113, 151);
+    }
+
+/* Feed Content Styles */
+.feed-content-header, .feed-content-body, .feed-content-footer {
+    padding: 1em 2em;
+}
+    .feed-content-header {
+        border-bottom: 1px solid #ddd;
+    }
+
+        .feed-content-title {
+            margin: 0.5em 0 0;
+        }
+        .feed-content-subtitle {
+            font-size: 1em;
+            margin: 0;
+            font-weight: normal;
+        }
+            .feed-content-subtitle span {
+                color: #999;
+            }
+    .feed-content-controls {
+        margin-top: 2em;
+        text-align: right;
+    }
+        .feed-content-controls .secondary-button {
+            margin-bottom: 0.3em;
+        }
+
+
+@media (max-width: 867px) {
+
+    #list, #strong-side {
+        width: auto;
+    }
+    #layout {
+        padding-left: -150px;
+    }
+    #list {
+        width: auto;
+        height: 33%;
+        border-bottom: 1px solid #ddd;
+    }
+    #strong-side {
+        position: fixed;
+        top: 33%;
+        right: 0;
+        bottom: 0;
+        left: 150px;
+        overflow: auto;
+        width: auto; /* so that it's not 100% */
+    }
+}
+
+@media (max-width: 480px) {
+    #layout, #left-side, #list, #strong-side {
+        position: static;
+        margin: 0;
+        padding: 0;
+    }
+    #left-side {
+        width: 100%;
+        height: 40px;
+        position: relative;
+    }
+    #left-side .nav-menu-button {
+        display: block;
+        top: 0.5em;
+        right: 0.5em;
+        position: absolute;
+    }
+    #left-side.active {
+        height: 80%;
+    }
+    .nav-inner {
+        display: none;
+    }
+    #left-side.active .nav-inner {
+        display: block;
+    }
+}

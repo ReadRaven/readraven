@@ -35,9 +35,8 @@ $(document).bind('ajaxStart', function() {
 
 APP.Routers.Router = Backbone.Router.extend({
     reader: function() {
-console.log('reader');
         if (this.strongSide === undefined) {
-            this.strongSide = new APP.Views.StrongSide();
+            //this.strongSide = new APP.Views.StrongSide();
         } else {
             this.strongSide.filter({});
         }
@@ -59,8 +58,21 @@ console.log('reader');
         this.leftSide = new APP.Views.LeftSide();
     },
     routes: {
+        'all': 'reader',
         'feed/:id': 'feed',
-        '*reader': 'reader'
+        '*reader': 'reader',
+        'shared': 'shared', /* Not yet implemented. */
+        'starred': 'starred', /* Not yet implemented. */
+        'tag/:tag': 'tag' /* Not yet implemented. */
+    },
+    shared: function() {
+        console.log('shared view');
+    },
+    starred: function() {
+        console.log('shared view');
+    },
+    tag: function(tag) {
+        console.log('Tag view for tag: '+tag);
     }
 });
 

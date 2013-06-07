@@ -1,5 +1,5 @@
 from django.conf.urls import patterns, include, url
-
+from django.views.generic import TemplateView
 from tastypie.api import Api
 
 from raven import resources
@@ -17,6 +17,10 @@ urlpatterns = patterns(
     '',
     url(r'api/', include(v09.urls)),
     url(r'api/', include(v095.urls)),
+
+    url(r'^reader/leftside', 'raven.views.leftside', name='reader.leftside'),
+    url(r'^reader', TemplateView.as_view(template_name='raven/reader.html'),
+        name='reader'),
 
     url(r'^home', 'raven.views.home'),
     url(r'^values', 'raven.views.values'),

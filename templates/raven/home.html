@@ -204,9 +204,9 @@
   </script>
   {% endhandlebars %}
 
+  <script>window.CSRFTOKEN = '{{csrf_token}}';</script>
   <script src="{% static 'js/handlebars-1.0.0-rc.3.js' %}"></script>
   <script src="{% static 'js/jquery-1.9.1.js' %}"></script>
-  <script src="{% static 'js/jquery.cookie.js' %}"></script>
   <script src="{% static 'js/underscore.js' %}"></script>
   <script src="{% static 'js/backbone.js' %}"></script>
   <script src="{% static 'js/moment.min.js' %}"></script>

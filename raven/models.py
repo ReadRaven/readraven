@@ -145,6 +145,7 @@ class Feed(models.Model):
 
     def update(self, data=None, hack=False):
         # dead feeds so far:
+        # 22: http://blog.myspace.com/blog/rss.cfm?friendID=73367402
         # 223: http://www.aaronsw.com/2002/feeds/pgessays.rss
         # 663: http://www.finderskeepers.gcgstudios.com/?p=rss
         if self.dead is True:
@@ -204,17 +205,12 @@ class Feed(models.Model):
             try:
                 item.link = entry.link
             except AttributeError:
-                logger.warn('No link (%s: %s)' % (self.pk, self.link))
-                if data.bozo == 1:
-                    logger.debug('Exception is %s' % data.bozo_exception)
+                item.link = ''
             try:
                 item.atom_id = entry.id
             except AttributeError:
                 # Set this to empty string so calculate_guid() doesn't die
                 item.atom_id = ''
-                logger.debug('No atom_id (%s: %s)' % (self.pk, self.link))
-                if data.bozo == 1:
-                    logger.debug('Exception is %s' % data.bozo_exception)
 
             hack_extra_sucky = False
             try:

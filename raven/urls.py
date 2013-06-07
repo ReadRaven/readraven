@@ -21,6 +21,7 @@ urlpatterns = patterns(
     url(r'^home', 'raven.views.home'),
     url(r'^values', 'raven.views.values'),
     url(r'^logout/$', 'django.contrib.auth.views.logout', {'next_page': '/'}),
+    url(r'^jssucks', 'raven.views.jssucks'),
 
     url(r'^$', 'raven.views.index'),
     url(r'^raven/_feedlist', 'raven.views.feedlist'),

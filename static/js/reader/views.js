@@ -181,6 +181,14 @@ APP.Views.StrongSide = Backbone.View.extend({
 
         selected.addClass('selected');
         item = this.items.get(selected.parent().attr('data-feeditem'));
+
+        /* This happens when loading more items, the old items go out of
+         * scope and we'll get something undefined. Just return the
+         * current selected item.
+         */
+        if (item == undefined) {
+            return selected;
+        }
         if (item.attributes.read === false) {
             item.save({'read': true});
         }

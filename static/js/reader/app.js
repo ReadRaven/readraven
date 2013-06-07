@@ -18,8 +18,11 @@ $.ajaxSetup({
             // Send the token to same-origin, relative URLs only.
             // Send the token only if the method warrants CSRF protection
             // Using the CSRFToken value acquired earlier
+            /* For some reason, the cookie is only set *sometimes*. NFC.
             var csrftoken = $.cookie('csrftoken');
             xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            */
+            xhr.setRequestHeader("X-CSRFToken", window.CSRFTOKEN);
         }
     },
     crossDomain: false

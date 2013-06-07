@@ -41,7 +41,7 @@ APP.Views.LeftSide = Backbone.View.extend({
     }
 });
 
-$.fn.isOnScreen = function(){
+$.fn.isOnScreen = function(loc){
     /* Convenience method for checking to see if a node is in the viewport. */
     var win = $(window);
 
@@ -50,8 +50,12 @@ $.fn.isOnScreen = function(){
         left : win.scrollLeft()
     };
     viewport.right = viewport.left + win.width();
-    /* HACK! We only want the top quarter to trigger the event... */
-    viewport.bottom = viewport.top + (win.height() * .25);
+    if (loc === 'bottom' ) {
+        viewport.bottom = viewport.top + win.height();
+    } else {
+        /* HACK! We only want the top quarter to trigger the event... */
+        viewport.bottom = viewport.top + (win.height() * .25);
+    }
 
     var bounds = this.offset();
     if (bounds === undefined) { return; }
@@ -69,6 +73,7 @@ APP.Views.StrongSide = Backbone.View.extend({
     },
     containerEl: '#feeditem-container',
     currentRow: null,
+    infiniteLoader: null,
     el: '#strong-side',
     events: {
         'click .feeditem': 'select_and_read',
@@ -181,6 +186,14 @@ APP.Views.StrongSide = Backbone.View.extend({
 
         selected.addClass('selected');
         item = this.items.get(selected.parent().attr('data-feeditem'));
+
+        /* This happens when loading more items, the old items go out of
+         * scope and we'll get something undefined. Just return the
+         * current selected item.
+         */
+        if (item == undefined) {
+            return selected;
+        }
         if (item.attributes.read === false) {
             item.save({'read': true});
         }
@@ -212,6 +225,7 @@ APP.Views.StrongSide = Backbone.View.extend({
              * binding to set selected.
              */
             this.currentRow = container.find('div.row').first();
+            this.infiniteLoader = container.next('div.feeditem-loader');
         }
         return this;
     },
@@ -246,6 +260,11 @@ APP.Views.StrongSide = Backbone.View.extend({
 
                 this.currentRow = nextRow;
             }
+
+            if (this.infiniteLoader.isOnScreen('bottom')) {
+                this.more(e);
+            }
+
         /* Scroll up */
         } else if (scrollPosition < this.scrollLast) {
             headline = selected.find('h3');

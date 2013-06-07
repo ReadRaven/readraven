@@ -34,7 +34,8 @@ $(document).bind('ajaxStart', function() {
 });
 
 APP.Routers.Router = Backbone.Router.extend({
-    default: function() {
+    reader: function() {
+console.log('reader');
         if (this.strongSide === undefined) {
             this.strongSide = new APP.Views.StrongSide();
         } else {
@@ -59,7 +60,7 @@ APP.Routers.Router = Backbone.Router.extend({
     },
     routes: {
         'feed/:id': 'feed',
-        '*default': 'default'
+        '*reader': 'reader'
     }
 });
 

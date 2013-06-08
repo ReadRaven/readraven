@@ -2,14 +2,11 @@
 "use strict";
 window.APP=window.APP||{Routers:{},Collections:{},Models:{},Views:{}};
 
-APP.Views.LeftSide = Backbone.View.extend({
+APP.Views.AddFeedModal = Backbone.View.extend({
     addFeed: function(e) {
         e.preventDefault();
-        return;
 
-        /* TODO: Implement this properly */
-        var addFeedForm = this.$el.find(this.addFeedFormEl),
-            url = addFeedForm.val(),
+        var url = this.$el.find(this.feedInputEl).val(),
             urlregex = new RegExp(
                 "^(http:\/\/|https:\/\/|ftp:\/\/){1}([0-9A-Za-z]+)");
         if (urlregex.test(url)) {
@@ -18,24 +15,46 @@ APP.Views.LeftSide = Backbone.View.extend({
                 link: url
             });
             feed.save();
-            this.feeds.add(feed);
+
+            this.undelegateEvents();
+            this.remove();
+            Backbone.View.prototype.remove.call(this);
         } else {
             // TODO: handle the error
             console.log('not a url');
         }
-        addFeedForm.val('');
+    },
+    className: 'modal',
+    events: {
+        'click button.notice': 'addFeed'
+    },
+    feedInputEl: '#feed-url',
+    render: function() {
+        var el = this.$el;
+        el.html(this.template());
+        $('body').prepend(el);
+    },
+    template: Handlebars.compile($('#add-feed-modal').html())
+});
+
+APP.Views.LeftSide = Backbone.View.extend({
+    addFeed: function(e) {
+        e.preventDefault();
+
+        var view = new APP.Views.AddFeedModal();
+        view.render();
     },
     addFeedFormEl: '#add-feed',
     el: '#left-side',
     events: {
-        'click button#add-feed-btn': 'addFeed'
+        'click a#add-feed-btn': 'addFeed'
     },
     feedListEl: '#feed-list',
     initialize: function(config) {
         /* TODO: get feeds and add event listeners. */
     },
     render: function() {
-        this.$el.find(this.feedListEl).load('/raven/_feedlist/');
+        this.$el.load('/reader/leftside/');
         this.rendered = true;
         return this;
     }
@@ -54,7 +73,7 @@ $.fn.isOnScreen = function(loc){
         viewport.bottom = viewport.top + win.height();
     } else {
         /* HACK! We only want the top quarter to trigger the event... */
-        viewport.bottom = viewport.top + (win.height() * .25);
+        viewport.bottom = viewport.top + (win.height() * 0.25);
     }
 
     var bounds = this.offset();
@@ -88,14 +107,14 @@ APP.Views.StrongSide = Backbone.View.extend({
         if (config.feed) {
             this.items.params.feed = config.feed;
         } else {
-            if (this.items.params.feed != undefined) {
+            if (this.items.params.feed !== undefined) {
                 delete this.items.params.feed;
             }
         }
         if (config.tag) {
             this.items.params.tag = config.tag;
         } else {
-            if (this.items.params.tag != undefined) {
+            if (this.items.params.tag !== undefined) {
                 delete this.items.params.tag;
             }
         }
@@ -191,7 +210,7 @@ APP.Views.StrongSide = Backbone.View.extend({
          * scope and we'll get something undefined. Just return the
          * current selected item.
          */
-        if (item == undefined) {
+        if (item === undefined) {
             return selected;
         }
         if (item.attributes.read === false) {
@@ -214,7 +233,7 @@ APP.Views.StrongSide = Backbone.View.extend({
 
         var container = el.find(this.containerEl);
         container.children().remove();
-        if (this.items.length == 0) {
+        if (this.items.length === 0) {
             this.$el.html(this.templateEmpty());
         } else {
             _.each(this.items.models, _.bind(function(item) {
@@ -286,8 +305,8 @@ APP.Views.StrongSide = Backbone.View.extend({
         this.scrollLast = scrollPosition;
     },
     scrollLast: 0,
-    template: Handlebars.compile($('#feed-item-list-template').html()),
-    templateEmpty: Handlebars.compile($('#feed-item-empty-template').html())
+    template: Handlebars.compile($('#feed-item-list').html()),
+    templateEmpty: Handlebars.compile($('#feed-item-empty').html())
 });
 
 var ItemView = Backbone.View.extend({
@@ -306,7 +325,7 @@ var ItemView = Backbone.View.extend({
         el.find('.content a').attr('target', '_blank');
         return this;
     },
-    template: Handlebars.compile($('#feed-item-template').html())
+    template: Handlebars.compile($('#feed-item').html())
 });
 
 }());

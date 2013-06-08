@@ -9,7 +9,11 @@ Backbone.Tastypie.doGetOnEmptyPostResponse = true;
 Backbone.Tastypie.doGetOnEmptyPutResponse = true;
  */
 
-var Models = APP.Models.Item = Backbone.Model.extend({
+var Feed = APP.Models.Feed = Backbone.Model.extend({
+    urlRoot: '/api/0.9.5/feed/'
+});
+
+var Item = APP.Models.Item = Backbone.Model.extend({
     urlRoot: '/api/0.9.5/item/'
 });
 APP.Collections.Items = Backbone.Collection.extend({
@@ -26,9 +30,9 @@ APP.Collections.Items = Backbone.Collection.extend({
         this.fetch({success: this.onSuccess});
     },
     hasNext: function() {
-        return !(this.length == this._total);
+        return (this.length !== this._total);
     },
-    model: Models,
+    model: Item,
     params: {},
     success: function(self, res, options) {
         if (self.total != res.meta.total_count) {
@@ -43,7 +47,7 @@ APP.Collections.Items = Backbone.Collection.extend({
     url: function() {
         var params = _.defaults(this.params, this.defaultParams);
         var url = '/api/0.9.5/item/?' + $.param(params);
-        return url
+        return url;
     }
 });
 

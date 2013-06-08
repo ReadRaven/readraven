@@ -178,14 +178,14 @@
   </body>
 
   {% handlebars %}
-  <script type="text/x-handlebars" id="feed-item-list-template">
+  <script type="text/x-handlebars" id="feed-item-list">
     <div id="feeditem-container">
     </div>
     <div class="feeditem-loader">
       <a href="#" id="loader">Load more items</a>
     </div>
   </script>
-  <script type="text/x-handlebars" id="feed-item-template">
+  <script type="text/x-handlebars" id="feed-item">
     <div class="feeditem">
       <div class="pull-right ">{{formatDate item.published}}</div>
       <h3><a href="{{item.link}}" target="blank">{{item.title}}</a></h3>
@@ -197,10 +197,13 @@
       </div>
     </div>
   </script>
-  <script type="text/x-handlebars" id="feed-item-empty-template">
+  <script type="text/x-handlebars" id="feed-item-empty">
     <div class="feeditem-empty">
       Congratulations! You're all caught up.
     </div>
+  </script>
+  <script type="text/x-handlebars" id="add-feed-modal">
+    <div></div>
   </script>
   {% endhandlebars %}
 

@@ -99,40 +99,40 @@ a.secondary-button {
     }
 
 /* Feed Content Styles */
-.feed-content {
+.feeditem-content {
     border: 2px solid #ddd;
     margin: 20px;
 }
-.feed-content.selected {
+.feeditem-content.selected {
     border: 2px solid #888;
 }
-.feed-content-header, .feed-content-body, .feed-content-footer {
+.feeditem-content-header, .feeditem-content-body, .feeditem-content-footer {
     padding: 1em 2em;
 }
-    .feed-content-header {
+    .feeditem-content-header {
         border-bottom: 1px solid #ddd;
     }
 
-        .feed-content-title {
+        .feeditem-content-title {
             margin: 0.5em 0 0;
         }
-        .feed-content-subtitle {
+        .feeditem-content-subtitle {
             font-size: 1em;
             margin: 0;
             font-weight: normal;
         }
-        .feed-content-meta {
+        .feeditem-content-meta {
             color: #999;
             text-align: right;
         }
-    .feed-content-footer {
+    .feeditem-content-footer {
         text-align: right;
     }
-        .feed-content-controls {
+        .feeditem-content-controls {
             margin-top: 2em;
             text-align: right;
         }
-            .feed-content-controls .secondary-button {
+            .feeditem-content-controls .secondary-button {
                 margin-bottom: 0.3em;
             }
 

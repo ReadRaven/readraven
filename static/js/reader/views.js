@@ -49,11 +49,38 @@ APP.Views.LeftSide = Backbone.View.extend({
     events: {
         'click a#add-feed-btn': 'addFeed'
     },
+    feeditemRead: function(item) {
+        var countRegex = /^\((\d+)\)$/;
+
+        /* Decrement the 'All' */
+        var allCountNode = this.$el.find('.all').find('.feed-count'),
+            allCount = parseInt(allCountNode.text().match(countRegex)[1], 10);
+        allCount--;
+        allCountNode.text('('+allCount+')');
+
+        /* Decrement the specific feed */
+        var feedID = item.get('feed_id'),
+            feedEl = this.$el.find('[data-feed='+feedID+']'),
+            countNode = feedEl.find('.feed-count'),
+            count = parseInt(countNode.text().match(countRegex)[1], 10);
+        count--;
+        countNode.text('('+count+')');
+
+        /* Decrement the specific tag */
+        var tagEl = feedEl.prev('.tag').first(),
+            tagCountNoe = tagEl.find('.feed-count'),
+            tagCount = parseInt(tagCountNode.text().match(countRegex)[1], 10);
+        count--;
+        tagCountNode.text('('+tagCount+')');
+    },
     feedListEl: '#feed-list',
     initialize: function(config) {
         /* TODO: get feeds and add event listeners. */
     },
     render: function() {
+        Backbone.on('feeditemread', _.bind(this.feeditemRead, this));
+
+
         /* While we have two sets of UI, this is an agreeable workaround. */
         if (window.location.pathname.indexOf('home') > -1) {
             this.$el.load('/raven/_feedlist/');
@@ -282,6 +309,7 @@ APP.Views.StrongSide = Backbone.View.extend({
         }
         if (item.attributes.read === false) {
             item.save({'read': true});
+            Backbone.trigger('feeditemread', item);
         }
 
         /* No idea why selected === this.currentRow => false */

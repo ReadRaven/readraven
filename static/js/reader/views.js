@@ -34,7 +34,7 @@ APP.Views.AddFeedModal = Backbone.View.extend({
         el.html(this.template());
         $('body').prepend(el);
     },
-    template: Handlebars.compile($('#add-feed-modal-template').html())
+    template: Handlebars.compile($('#add-feed-modal').html())
 });
 
 APP.Views.LeftSide = Backbone.View.extend({
@@ -286,8 +286,8 @@ APP.Views.StrongSide = Backbone.View.extend({
         this.scrollLast = scrollPosition;
     },
     scrollLast: 0,
-    template: Handlebars.compile($('#feed-item-list-template').html()),
-    templateEmpty: Handlebars.compile($('#feed-item-empty-template').html())
+    template: Handlebars.compile($('#feed-item-list').html()),
+    templateEmpty: Handlebars.compile($('#feed-item-empty').html())
 });
 
 var ItemView = Backbone.View.extend({
@@ -306,7 +306,7 @@ var ItemView = Backbone.View.extend({
         el.find('.content a').attr('target', '_blank');
         return this;
     },
-    template: Handlebars.compile($('#feed-item-template').html())
+    template: Handlebars.compile($('#feed-item').html())
 });
 
 }());

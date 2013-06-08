@@ -74,8 +74,8 @@ $.fn.isOnScreen = function(loc){
         left : win.scrollLeft()
     };
     viewport.right = viewport.left + win.width();
-    if (loc === 'bottom' ) {
-        viewport.bottom = viewport.top + win.height();
+    if (loc === 'infinite' ) {
+        viewport.bottom = viewport.top + win.height() + 200;
     } else {
         /* HACK! We only want the top quarter to trigger the event... */
         viewport.bottom = viewport.top + (win.height() * 0.25);
@@ -230,13 +230,13 @@ APP.Views.StrongSide = Backbone.View.extend({
                 this.currentRow = nextRow;
             }
 
-            if (this.infiniteLoader.isOnScreen('bottom')) {
+            if (this.infiniteLoader.isOnScreen('infinite')) {
                 this.more(e);
             }
 
         /* Scroll up */
         } else if (scrollPosition < this.scrollLast) {
-            headline = selected.find('h3');
+            headline = selected.find('h1');
             nextRow = this.currentRow.prev('div.row');
             nextSelected = nextRow.find('.feeditem-content');
 

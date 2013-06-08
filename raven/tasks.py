@@ -87,12 +87,14 @@ class UpdateFeedBeat(PeriodicTask):
     '''A task for updating a set of feeds.'''
 
     SLICE_SIZE = 100
-    run_every = timedelta(seconds=60*5)
+    run_every = timedelta(seconds=60)
 
     def run(self):
-        age = datetime.utcnow() - timedelta(minutes=30)
-        feeds = Feed.objects.filter(last_fetched__lt=age)[:self.SLICE_SIZE]
-        update_feeds.apply_async([feeds])
+        for freq in [Feed.FETCH_FAST, Feed.FETCH_DEFAULT, Feed.FETCH_SLOW]:
+            age = datetime.utcnow() - timedelta(minutes=freq)
+            feeds = Feed.objects.filter(last_fetched__lt=age,
+                                        fetch_frequency=freq)[:self.SLICE_SIZE]
+            update_feeds.apply_async([feeds])
 
         # If we imported feeds + feeditems from Reader, we have
         # never marked them as fetched. So we find them here and

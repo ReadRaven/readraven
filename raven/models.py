@@ -50,6 +50,22 @@ class Feed(models.Model):
     # Production battlescars
     dead = models.BooleanField(default=False)
 
+    # Values are in minutes
+    FETCH_FAST = 5
+    FETCH_DEFAULT = 60
+    FETCH_SLOW = 60 * 24
+    FETCH_PUSH = 0
+    FETCH_NEVER = 0
+    FETCH_FREQUENCY = (
+        (FETCH_FAST, 'fast'),
+        (FETCH_DEFAULT, 'default'),
+        (FETCH_SLOW, 'slow'),
+        (FETCH_PUSH, 'push'),
+        (FETCH_NEVER, 'never'),
+    )
+    fetch_frequency = models.IntegerField(choices=FETCH_FREQUENCY,
+                                          default=FETCH_DEFAULT)
+
     @property
     def subscribers(self):
         userfeeds = UserFeed.objects.filter(feed=self)

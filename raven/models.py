@@ -159,6 +159,10 @@ class Feed(models.Model):
                 updated = True
         except AttributeError:
             pass
+        if 'links' in data.feed:
+            for link in data.feed.links:
+                if link.rel == 'hub':
+                    logger.warn('Hub detected: %s' % self.pk)
         if updated:
             self.save()
 

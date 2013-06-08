@@ -6,7 +6,7 @@ import zipfile
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.files.storage import default_storage
 
-from celery.task import Task, PeriodicTask
+from celery.task import task, Task, PeriodicTask
 from libgreader import ClientAuthMethod, OAuth2Method, GoogleReader
 import json
 import opml
@@ -76,45 +76,45 @@ def _new_user_item(user, feed, entry):
 
     return user_item
 
-class UpdateFeedTask(PeriodicTask):
+@task
+def update_feeds(feeds, *args, **kwargs):
+    for feed in feeds:
+        feed.update(hack=kwargs.get('hack', False))
+        feed.last_fetched = datetime.utcnow()
+        feed.save()
+
+class UpdateFeedBeat(PeriodicTask):
     '''A task for updating a set of feeds.'''
 
     SLICE_SIZE = 100
-    run_every = timedelta(seconds=60*5)
+    run_every = timedelta(seconds=60)
 
-    def run(self, feeds=[]):
-        if len(feeds) is 0:
-            age = datetime.utcnow() - timedelta(minutes=30)
-            feeds = Feed.objects.filter(last_fetched__lt=age)[:self.SLICE_SIZE]
-            never_fetched = Feed.objects.filter(last_fetched=None)
+    def run(self):
+        for freq in [Feed.FETCH_FAST, Feed.FETCH_DEFAULT, Feed.FETCH_SLOW]:
+            age = datetime.utcnow() - timedelta(minutes=freq)
+            feeds = Feed.objects.filter(last_fetched__lt=age,
+                                        fetch_frequency=freq)[:self.SLICE_SIZE]
+            update_feeds.apply_async([feeds])
 
-        for feed in never_fetched:
-            # If we imported feeds + feeditems from Reader, we have
-            # never marked them as fetched. So we find them here and
-            # fetch them for the first time. But as feedparser goes out
-            # and grabs feeds, there is absolutely no way to map those
-            # feeditems to the ones we've already grabbed from Reader.
-            #
-            # We do actually want those feeditems in our database, which
-            # is why we don't skip the update here. But we also don't
-            # want tons of duplicate or weird old entries to appear in
-            # the users' feeds.
-            #
-            # So we pass 'hack' and we use the heuristic where if the
-            # feeditem from feedparser is *older* than the most recent
-            # Reader imported feeditem, then import it but also mark it
-            # as read.
-            #
-            # Wow.
-            feed.update(hack=True)
-            feed.last_fetched = datetime.utcnow()
-            feed.save()
-
-        for feed in feeds:
-            feed.update()
-            feed.last_fetched = datetime.utcnow()
-            feed.save()
-
+        # If we imported feeds + feeditems from Reader, we have
+        # never marked them as fetched. So we find them here and
+        # fetch them for the first time. But as feedparser goes out
+        # and grabs feeds, there is absolutely no way to map those
+        # feeditems to the ones we've already grabbed from Reader.
+        #
+        # We do actually want those feeditems in our database, which
+        # is why we don't skip the update here. But we also don't
+        # want tons of duplicate or weird old entries to appear in
+        # the users' feeds.
+        #
+        # So we pass 'hack' and we use the heuristic where if the
+        # feeditem from feedparser is *older* than the most recent
+        # Reader imported feeditem, then import it but also mark it
+        # as read.
+        #
+        # Wow.
+        never_fetched = Feed.objects.filter(last_fetched=None)
+        update_feeds.apply_async([never_fetched], { 'hack' : True })
 
 class EatTakeoutTask(Task):
     '''A task for processing a Google Takeout file.'''

@@ -447,15 +447,9 @@ class UserFeedItem(models.Model):
     @classmethod
     def add_to_users(Class, feed, item, mark_as_read=False):
         for user in feed.subscribers.all():
-            ufi = UserFeedItem()
-            ufi.user = user
-            ufi.feed = feed
-            ufi.item = item
-            try:
-                ufi = UserFeedItem.objects.get(user=user, item=item)
-            except ObjectDoesNotExist:
-                pass
-
+            ufi, new = UserFeedItem.objects.get_or_create(user=user,
+                                                          feed=feed,
+                                                          item=item)
             if mark_as_read is True:
                 ufi.read = True
 

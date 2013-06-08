@@ -6,7 +6,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
-from raven.models import UserFeed
+from raven.models import UserFeed, UserFeedItem
 
 logger = logging.getLogger('django')
 User = get_user_model()
@@ -53,10 +53,12 @@ def feedlist(request):
 @user_passes_test(lambda u: u.is_customer(), login_url='/usher/sign_up')
 def leftside(request):
     '''Left side!'''
+    unread_count = UserFeedItem.objects.filter(read=False).count()
     tags = UserFeed.userfeed_tags(request.user)
     untagged_feeds = UserFeed.objects.filter(user=request.user).exclude(tags__in=tags).order_by('feed__title')
     context = {
         'tags': tags,
+        'unread_count': unread_count,
         'untagged_feeds': untagged_feeds
     }
     return render_to_response(

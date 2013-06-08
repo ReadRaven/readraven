@@ -6,7 +6,14 @@
 
     <div class="pure-menu pure-menu-open">
         <ul>
-            <li><a href="#all">All feeds <span class="feed-count">(2)</span></a></li>
+            <li>
+                <a href="#all">
+                    All feeds
+                {% if unread_count %}
+                    <span class="feed-count">({{unread_count}})</span>
+                {% endif %}
+                </a>
+            </li>
             <li><a href="#/starred">Starred</a></li>
             <li><a href="#/shared">Shared with me</a></li>
 
@@ -14,10 +21,12 @@
             {% for tag in tags %}
             {% tag_unread_count %}
             <li>
-                <a href="#/tag/{{tag.name}}">{{tag.name}}</a>
+                <a href="#/tag/{{tag.name}}">
+                    {{tag.name}}
                 {% if unread_count %}
                     <span class="feed-count">({{ unread_count }})</span>
                 {% endif %}
+                </a>
             </li>
             {% feeds_for_tag as feeds %}
             {% for feed in feeds %}
@@ -28,10 +37,10 @@
                 {% else %}
                     {{ feed.feed.link }}
                 {% endif %}
-                </a>
                 {% if feed.unread_count %}
                     <span class="feed-count">({{ feed.unread_count }})</span>
                 {% endif %}
+                </a>
             </li>
             {% endfor %}
             {% endfor %}
@@ -44,10 +53,10 @@
                 {% else %}
                     {{ feed.feed.link }}
                 {% endif %}
-                </a>
                 {% if feed.unread_count %}
                     <span class="feed-count">({{ feed.unread_count }})</span>
                 {% endif %}
+                </a>
             </li>
             {% endfor %}
         </ul>

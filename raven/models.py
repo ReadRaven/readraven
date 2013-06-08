@@ -52,7 +52,7 @@ class Feed(models.Model):
 
     # Values are in minutes
     FETCH_FAST = 5
-    FETCH_DEFAULT = 60
+    FETCH_DEFAULT = 30
     FETCH_SLOW = 60 * 24
     FETCH_PUSH = 0
     FETCH_NEVER = 0

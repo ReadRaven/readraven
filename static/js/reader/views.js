@@ -54,7 +54,12 @@ APP.Views.LeftSide = Backbone.View.extend({
         /* TODO: get feeds and add event listeners. */
     },
     render: function() {
-        this.$el.load('/reader/leftside/');
+        /* While we have two sets of UI, this is an agreeable workaround. */
+        if (window.location.pathname.indexOf('home') > -1) {
+            this.$el.load('/raven/_feedlist/');
+        } else {
+            this.$el.load('/reader/leftside/');
+        }
         this.rendered = true;
         return this;
     }

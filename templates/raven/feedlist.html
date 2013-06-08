@@ -1,4 +1,16 @@
 {% load tag_extras %}
+{% comment %}
+We should really have search, but holy shit that's a lot of work.
+  <form class="form-search">
+    <input type="text" class="input-medium search-query" />
+    <button type="submit" class="btn">Search</button>
+  </form>
+{% endcomment %}
+  <form class="form-search">
+    <input type="text" class="input-medium" id="add-feed"/>
+    <button class="btn" id="add-feed-btn">Add Feed</button>
+  </form>
+  <div id="feed-list" class="css-treeview">
 <ul>
 {% for tag in tags %}
     <li>
@@ -48,3 +60,4 @@
     </li>
 {% endfor %}
 </ul>
+</div>

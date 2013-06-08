@@ -96,8 +96,7 @@ APP.Views.StrongSide = Backbone.View.extend({
     el: '#strong-side',
     events: {
         'click .feeditem': 'select_and_read',
-        'click .feeditem-loader': 'more',
-        'scroll': 'scroll_'
+        'click .feeditem-loader': 'more'
     },
     filter: function(config) {
         /* Take a config of feed and/or tag, and add them as filters, and
@@ -188,46 +187,9 @@ APP.Views.StrongSide = Backbone.View.extend({
         e.preventDefault();
         this.items.getNext();
     },
-    select_and_read: function(e) {
-        var selected = null,
-            item = null,
-            item2 = null;
-
-        switch (e.type) {
-        case 'click':
-            selected = $(e.currentTarget);
-            break;
-        case 'scroll':
-        case 'keypress':
-            selected = this.currentRow.find('.feeditem');
-            break;
-        }
-
-        selected.addClass('selected');
-        item = this.items.get(selected.parent().attr('data-feeditem'));
-
-        /* This happens when loading more items, the old items go out of
-         * scope and we'll get something undefined. Just return the
-         * current selected item.
-         */
-        if (item === undefined) {
-            return selected;
-        }
-        if (item.attributes.read === false) {
-            item.save({'read': true});
-        }
-
-        /* No idea why selected === this.currentRow => false */
-        item2 = this.items.get(this.currentRow.attr('data-feeditem'));
-        if (!_.isEqual(item, item2)) {
-            var prevSelected = this.currentRow.find('.feeditem');
-            prevSelected.removeClass('selected');
-            this.currentRow = selected.parent();
-        }
-
-        return selected;
-    },
     render: function() {
+        $(window).scroll(_.bind(this.scroll_, this));
+
         var el = this.$el;
         el.html(this.template());
 
@@ -264,10 +226,10 @@ APP.Views.StrongSide = Backbone.View.extend({
         var scrollPosition = $(e.currentTarget).scrollTop();
         /* Scroll down */
         if (scrollPosition > this.scrollLast) {
-            headline = selected.find('h3');
+            headline = selected.find('h1');
             nextRow = this.currentRow.next('div.row');
-            nextSelected = nextRow.find('.feeditem');
-            nextHeadline = nextSelected.find('h3');
+            nextSelected = nextRow.find('.feeditem-content');
+            nextHeadline = nextSelected.find('h1');
 
             if (nextHeadline.isOnScreen() && !headline.isOnScreen()) {
                 selected.removeClass('selected');
@@ -305,12 +267,52 @@ APP.Views.StrongSide = Backbone.View.extend({
         this.scrollLast = scrollPosition;
     },
     scrollLast: 0,
+    select_and_read: function(e) {
+        var selected = null,
+            item = null,
+            item2 = null;
+
+        switch (e.type) {
+        case 'click':
+            selected = $(e.currentTarget);
+            break;
+        case 'scroll':
+        case 'keypress':
+            selected = this.currentRow.find('.feeditem-content');
+            break;
+        }
+
+        selected.addClass('selected');
+        item = this.items.get(selected.parent().attr('data-feeditem'));
+
+        /* This happens when loading more items, the old items go out of
+         * scope and we'll get something undefined. Just return the
+         * current selected item.
+         */
+        if (item === undefined) {
+            return selected;
+        }
+        if (item.attributes.read === false) {
+            item.save({'read': true});
+        }
+
+        /* No idea why selected === this.currentRow => false */
+        item2 = this.items.get(this.currentRow.attr('data-feeditem'));
+        if (!_.isEqual(item, item2)) {
+            var prevSelected = this.currentRow.find('.feeditem');
+            prevSelected.removeClass('selected');
+            this.currentRow = selected.parent();
+        }
+
+        return selected;
+    },
     template: Handlebars.compile($('#feed-item-list').html()),
     templateEmpty: Handlebars.compile($('#feed-item-empty').html())
 });
 
 var ItemView = Backbone.View.extend({
-    className: 'row',
+    /* We should kill the 'row' class, but not now... */
+    className: 'pure-g feeditem row',
     initialize: function(config) {
         this.item = config.item;
         this.$el.attr('data-feeditem', this.item.id);

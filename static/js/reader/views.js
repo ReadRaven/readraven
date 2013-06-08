@@ -236,7 +236,7 @@ APP.Views.StrongSide = Backbone.View.extend({
 
         /* Scroll up */
         } else if (scrollPosition < this.scrollLast) {
-            headline = selected.find('h3');
+            headline = selected.find('h1');
             nextRow = this.currentRow.prev('div.row');
             nextSelected = nextRow.find('.feeditem-content');
 

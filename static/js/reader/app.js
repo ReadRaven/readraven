@@ -36,7 +36,7 @@ $(document).bind('ajaxStart', function() {
 APP.Routers.Router = Backbone.Router.extend({
     reader: function() {
         if (this.strongSide === undefined) {
-            //this.strongSide = new APP.Views.StrongSide();
+            this.strongSide = new APP.Views.StrongSide();
         } else {
             this.strongSide.filter({});
         }

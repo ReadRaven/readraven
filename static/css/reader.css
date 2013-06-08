@@ -99,6 +99,13 @@ a.secondary-button {
     }
 
 /* Feed Content Styles */
+.feed-content {
+    border: 2px solid #ddd;
+    margin: 20px;
+}
+.feed-content.selected {
+    border: 2px solid #888;
+}
 .feed-content-header, .feed-content-body, .feed-content-footer {
     padding: 1em 2em;
 }
@@ -114,16 +121,20 @@ a.secondary-button {
             margin: 0;
             font-weight: normal;
         }
-            .feed-content-subtitle span {
-                color: #999;
-            }
-    .feed-content-controls {
-        margin-top: 2em;
+        .feed-content-meta {
+            color: #999;
+            text-align: right;
+        }
+    .feed-content-footer {
         text-align: right;
     }
-        .feed-content-controls .secondary-button {
-            margin-bottom: 0.3em;
+        .feed-content-controls {
+            margin-top: 2em;
+            text-align: right;
         }
+            .feed-content-controls .secondary-button {
+                margin-bottom: 0.3em;
+            }
 
 
 @media (max-width: 867px) {

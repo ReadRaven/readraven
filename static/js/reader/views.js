@@ -95,7 +95,7 @@ APP.Views.StrongSide = Backbone.View.extend({
     infiniteLoader: null,
     el: '#strong-side',
     events: {
-        'click .feeditem': 'select_and_read',
+        'click .feeditem-content': 'select_and_read',
         'click .feeditem-loader': 'more'
     },
     filter: function(config) {
@@ -134,11 +134,10 @@ APP.Views.StrongSide = Backbone.View.extend({
     },
     keys: function(e, combo) {
         var selected = this.select_and_read(e),
-            headline = selected.find('h3'),
+            headline = selected.find('h1'),
             nextSelected = null,
             nextRow = null,
             nextHeadline = null,
-            scrollTarget = 0,
             el = this.$el;
 
         if (combo === 'j' || combo === 'n') {
@@ -158,30 +157,14 @@ APP.Views.StrongSide = Backbone.View.extend({
         /* TODO: Remove this and actually fix your damn code. */
         if (nextRow.length === 0) { return; }
 
-        // We need to adjust the offset by the height of the current
-        // headline, which can be calculated as show below. This value
-        // is currently 63px.
-        //
-        // For some reason, trying to calculate it dynamically results
-        // in our math being off, and scrolling to the wrong place on
-        // the page, so hard code it and fix as necessary if we ever
-        // change the size of the headline.
-        //var headline = selected.find('h3');
-        //console.log(headline.offset().top);
-
-        // Calculate next offset
-        nextHeadline = nextRow.find('h3');
-        scrollTarget = this.scrollLast + nextHeadline.offset().top - 63;
-
-        el.animate({
-            scrollTop: scrollTarget
-        }, 1, function () {
+        $('body').animate({
+            scrollTop: nextRow.offset().top - 20 /* Podding of window */
+        }, 1, 'swing', _.bind(function () {
             selected.removeClass('selected');
-            nextSelected = nextRow.find('.feeditem');
-            nextSelected.addClass('selected');
-        });
+            nextRow.find('.feeditem-content').addClass('selected');
+            this.currentRow = nextRow;
+        }, this));
 
-        this.currentRow = nextRow;
     },
     more: function(e) {
         e.preventDefault();
@@ -250,7 +233,7 @@ APP.Views.StrongSide = Backbone.View.extend({
         } else if (scrollPosition < this.scrollLast) {
             headline = selected.find('h3');
             nextRow = this.currentRow.prev('div.row');
-            nextSelected = nextRow.find('.feeditem');
+            nextSelected = nextRow.find('.feeditem-content');
 
             if (nextRow.length === 0) {
                 this.scrollLast = scrollPosition;
@@ -299,7 +282,7 @@ APP.Views.StrongSide = Backbone.View.extend({
         /* No idea why selected === this.currentRow => false */
         item2 = this.items.get(this.currentRow.attr('data-feeditem'));
         if (!_.isEqual(item, item2)) {
-            var prevSelected = this.currentRow.find('.feeditem');
+            var prevSelected = this.currentRow.find('.feeditem-content');
             prevSelected.removeClass('selected');
             this.currentRow = selected.parent();
         }

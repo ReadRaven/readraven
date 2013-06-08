@@ -1,4 +1,5 @@
 from datetime import datetime
+from HTMLParser import HTMLParser
 import calendar
 import logging
 
@@ -158,6 +159,10 @@ class Feed(models.Model):
                 updated = True
         except AttributeError:
             pass
+        if 'links' in data.feed:
+            for link in data.feed.links:
+                if link.rel == 'hub':
+                    logger.warn('Hub detected: %s' % self.pk)
         if updated:
             self.save()
 
@@ -231,7 +236,7 @@ class Feed(models.Model):
                         tmp.published = datetime.utcnow()
 
             try:
-                tmp.title = entry.title
+                tmp.title = HTMLParser().unescape(entry.title).encode('utf-8')
             except AttributeError:
                 # Fuck you LiveJournal.
                 tmp.title = u'(none)'
@@ -344,7 +349,7 @@ class FeedItem(models.Model):
         guid.update(self.feed.link.encode('utf-8'))
         guid.update(self.link.encode('utf-8'))
         guid.update(self.atom_id.encode('utf-8'))
-        guid.update(self.title.encode('utf-8'))
+        guid.update(self.title)
         #if self.reader_guid:
             #guid.update(self.reader_guid)
         return guid.hexdigest()

@@ -417,40 +417,6 @@ class FeedItemTest(TestCase):
         userfeeditems = FeedItem.objects.for_user(owner)
         self.assertEqual(userfeeditems.count(), 1)
 
-        # Feed with deleted, then republished items. Testing that
-        # calculate_guid() is hashing on enough fields to allow us to
-        # add these FeedItems to the database in this valid but
-        # confusing scenario.
-        title = u'Jeff Vyduna'
-        link = u'http://invalid.invalid'
-        site = u'http://invalid.invalid'
-        feed = Feed.create_and_subscribe(title, link, site, owner)
-
-        item = FeedItem()
-        item.feed = feed
-        item.title = u'Does anyone know Hebrew so I can access Facebook?'
-        item.link = u'http://blog.jeffvyduna.com/does-anyone-know-hebrew-so-i-can-access-faceb'
-        item.description = u'<p>\n          <img src="https://phaven-prod.s3.amazonaws.com/files/image_part/asset/54170/TCyYxjMjvRBb-BqvaoscWjl5G7s/medium_photo.jpg">\n        </p>'
-        item.published = datetime.utcfromtimestamp(1367035858)
-        item.atom_id = ''
-        item.reader_guid = u'tag:google.com,2005:reader/item/2646bc2232535aa2'
-        item.guid = item.calculate_guid()
-        item.save()
-
-        item2 = FeedItem()
-        item2.feed = feed
-        item2.title = u'Does anyone know Hebrew so I can access Facebook?'
-        item2.link = u'http://blog.jeffvyduna.com/does-anyone-know-hebrew-so-i-can-access-faceb'
-        item2.description = u'<p>\n\t<div>\n<a href="http://getfile4.posterous.com/getfile/files.posterous.com/jeff/nNppFvf3RyxHnzrzEv2qh0MZjTvm60DFWhmtgZX6YoSiwwrc6GEoWKaJyIt2/photo.jpg"><img alt="Photo" height="334" src="http://getfile5.posterous.com/getfile/files.posterous.com/jeff/QRSlKVXdpkNzSm5sw49bGvBzcnczXh2eMiRRrX4GyrFLp1N7v1vSlAUWtHQp/photo.jpg.scaled.500.jpg" width="500"></a>\n</div>\n\n\t\n</p>\n\n<p><a href="http://blog.jeffvyduna.com/does-anyone-know-hebrew-so-i-can-access-faceb">Permalink</a> \n\n\t| <a href="http://blog.jeffvyduna.com/does-anyone-know-hebrew-so-i-can-access-faceb#comment">Leave a comment\xa0\xa0\xbb</a>\n\n</p>'
-        item2.published = datetime.utcfromtimestamp(1323637539)
-        item2.atom_id = ''
-        item2.reader_guid = u'tag:google.com,2005:reader/item/b9e84d464361f1ac'
-        item2.guid = item2.calculate_guid()
-        item2.save()
-
-        userfeeditems = FeedItem.objects.for_user(owner)
-        self.assertEqual(userfeeditems.count(), 3)
-
 
 class UserFeedItemTest(TestCase):
     '''Test the UserFeedItem model.'''

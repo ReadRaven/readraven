@@ -61,25 +61,15 @@ class Feed(models.Model):
         This not only adds an entry in the FeedUser join table, but also
         populates UserFeedItem with unread FeedItems from the feed.
         '''
-        userfeed = UserFeed()
-        userfeed.feed = self
-        userfeed.user = subscriber
-        try:
-            userfeed.validate_unique()
-        except ValidationError:
-            return
-
-        userfeed.save()
+        userfeed, new = UserFeed.objects.get_or_create(user=subscriber,
+                                                       feed=self)
 
         # Only add the 10 most recent items to the UserFeed. Otherwise,
         # the user will see feeditems from years and years ago, which is
         # not really what anyone wants.
         count = 0
         for item in self.items.order_by('-published'):
-            user_item = UserFeedItem()
-            user_item.item = item
-            user_item.user = subscriber
-            user_item.feed = self
+            user_item, new = UserFeedItem.objects.get_or_create(user=subscriber, feed=self, item=item)
 
             if count < 10:
                 count = count + 1
@@ -102,18 +92,9 @@ class Feed(models.Model):
 
     @classmethod
     def create_raw(Class, title, link, site):
-        feed = Class()
-        feed.title = title
-        feed.link = link
-        feed.site = site
-
-        try:
-            # It's cleaner to do this than to monkey around with
-            # validate_unique().
-            feed = Feed.objects.get(link=link)
-        except ObjectDoesNotExist:
-            feed.save()
-
+        feed, new = Feed.objects.get_or_create(link=link,
+                        defaults = { 'title' : title,
+                                     'site' : site })
         return feed
 
     @classmethod
@@ -187,30 +168,30 @@ class Feed(models.Model):
                 last_entry = None
 
         for entry in data.entries:
-            item = FeedItem()
-            item.feed = self
+            tmp = FeedItem()
+            tmp.feed = self
             try:
-                item.description = entry.content[0]['value'].strip()
+                tmp.description = entry.content[0]['value'].strip()
             except AttributeError:
                 try:
-                    item.description = entry.summary_detail['value'].strip()
+                    tmp.description = entry.summary_detail['value'].strip()
                 except AttributeError:
                     try:
-                        item.description = entry.summary.strip()
+                        tmp.description = entry.summary.strip()
                     except AttributeError:
                         logger.warn('No content (%s: %s)' % (self.pk, self.link))
                         if data.bozo == 1:
                             logger.warn('Exception is %s' % data.bozo_exception)
                         continue
             try:
-                item.link = entry.link
+                tmp.link = entry.link
             except AttributeError:
-                item.link = ''
+                tmp.link = ''
             try:
-                item.atom_id = entry.id
+                tmp.atom_id = entry.id
             except AttributeError:
                 # Set this to empty string so calculate_guid() doesn't die
-                item.atom_id = ''
+                tmp.atom_id = ''
 
             hack_extra_sucky = False
             try:
@@ -219,49 +200,50 @@ class Feed(models.Model):
                     # i.e. it's something silly like "No date found",
                     # which isn't a date.
                     hack_extra_sucky = True
-                    item.published = datetime.utcnow()
+                    tmp.published = datetime.utcnow()
                 else:
                     # This warns about naive timestamps when timezone
                     # support is enabled.
-                    item.published = datetime.utcfromtimestamp(
+                    tmp.published = datetime.utcfromtimestamp(
                         calendar.timegm(entry.published_parsed))
             except AttributeError:
                 try:
                     if entry.updated_parsed is None:
                         hack_extra_sucky = True
-                        item.published = datetime.utcnow()
+                        tmp.published = datetime.utcnow()
                         logger.warn('%s: updated_parsed broken: %s' %
                                     (self.pk, self.link))
                     else:
-                        item.published = datetime.utcfromtimestamp(
+                        tmp.published = datetime.utcfromtimestamp(
                             calendar.timegm(entry.updated_parsed))
                 except AttributeError:
                     try:
                         if entry.created_parsed is None:
                             hack_extra_sucky = True
-                            item.published = datetime.utcnow()
+                            tmp.published = datetime.utcnow()
                             logger.warn('%s: created_parsed broken: %s' %
                                         (self.pk, self.link))
                         else:
-                            item.published = datetime.utcfromtimestamp(
+                            tmp.published = datetime.utcfromtimestamp(
                                 calendar.timegm(entry.created_parsed))
                     except AttributeError:
                         hack_extra_sucky = True
-                        item.published = datetime.utcnow()
+                        tmp.published = datetime.utcnow()
 
             try:
-                item.title = entry.title
+                tmp.title = entry.title
             except AttributeError:
                 # Fuck you LiveJournal.
-                item.title = u'(none)'
+                tmp.title = u'(none)'
 
-            item.guid = item.calculate_guid()
-            try:
-                # It's cleaner to do this than to monkey around with
-                # validate_unique().
-                item = FeedItem.objects.get(guid=item.guid)
-            except ObjectDoesNotExist:
-                item.save()
+            tmp.guid = tmp.calculate_guid()
+            item, new = FeedItem.objects.get_or_create(guid=tmp.guid,
+                               feed=tmp.feed,
+                               defaults={ 'published': tmp.published,
+                                          'description': tmp.description,
+                                          'link' : tmp.link,
+                                          'atom_id': tmp.atom_id,
+                                          'title' : tmp.title })
 
             mark_as_read = False
             if hack is True and last_entry is not None:
@@ -321,6 +303,9 @@ class FeedItem(models.Model):
     '''A model for representing an item in a RSS feed.'''
 
     objects = FeedItemManager()
+
+    class Meta:
+        unique_together = ('feed', 'guid')
 
     feed = models.ForeignKey(Feed, related_name='items')
 
@@ -430,7 +415,7 @@ class UserFeedItem(models.Model):
     '''A model for user metadata on a post.'''
 
     class Meta:
-        unique_together = ('user', 'item',)
+        unique_together = ('user', 'feed', 'item',)
         index_together = [
             ['user', 'feed', 'read', 'item'],
         ]
@@ -447,9 +432,7 @@ class UserFeedItem(models.Model):
     @classmethod
     def add_to_users(Class, feed, item, mark_as_read=False):
         for user in feed.subscribers.all():
-            ufi, new = UserFeedItem.objects.get_or_create(user=user,
-                                                          feed=feed,
-                                                          item=item)
+            ufi, new = UserFeedItem.objects.get_or_create(user=user, feed=feed, item=item)
             if mark_as_read is True:
                 ufi.read = True
 

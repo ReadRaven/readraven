@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from HTMLParser import HTMLParser
 import calendar
 import logging
@@ -141,6 +141,21 @@ class Feed(models.Model):
         except feedfinder.TimeoutError:
             return None
 
+    def calculate_stats(self):
+        # I consider this to be a lot for 1 day. Why aren't they using
+        # pubsubhubbub? As for the magic number...
+        # http://www.youtube.com/watch?v=tpQqH4H_SUQ#t=2m31s
+        age = datetime.utcnow() - timedelta(days=1)
+        if self.items.filter(published__gt=age).count() >= 37:
+            self.fetch_frequency = self.FETCH_FAST
+            logger.warn('Freq (fast): %s: %s' % (self.pk, self.link))
+
+        # No posts in a year? Let's fetch slower.
+        age = datetime.utcnow() - timedelta(days=365)
+        if self.items.filter(published__gt=age).count() <= 0:
+            self.fetch_frequency = self.FETCH_SLOW
+            logger.warn('Freq (slow): %s: %s' % (self.pk, self.link))
+
     def update(self, data=None, hack=False):
         # dead feeds so far:
         # 22: http://blog.myspace.com/blog/rss.cfm?friendID=73367402
@@ -156,7 +171,6 @@ class Feed(models.Model):
         try:
             if self.title != data.feed.title:
                 self.title = data.feed.title
-                updated = True
         except AttributeError:
             logger.debug('Potential problem with feed id: %s' % self.pk)
             if data.bozo == 1:
@@ -164,7 +178,6 @@ class Feed(models.Model):
         try:
             if self.description != data.feed.description:
                 self.description = data.feed.description
-                updated = True
         except AttributeError:
             logger.debug('Potential problem with feed id: %s' % self.pk)
             if data.bozo == 1:
@@ -172,15 +185,14 @@ class Feed(models.Model):
         try:
             if self.generator != data.feed.generator:
                 self.generator = data.feed.generator
-                updated = True
         except AttributeError:
             pass
         if 'links' in data.feed:
             for link in data.feed.links:
                 if link.rel == 'hub':
                     logger.warn('Hub detected: %s' % self.pk)
-        if updated:
-            self.save()
+        self.calculate_stats()
+        self.save()
 
         if hack is True:
             try:

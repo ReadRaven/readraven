@@ -216,6 +216,31 @@
   <script src="{% static 'js/vendor/mousetrap.min.js' %}"></script>
 
   <script src="{% static 'js/backbone-tastypie.js' %}"></script>
+
+  <script>
+    jQuery(function() { window.documentIsReady = true; });
+
+    // report a maximum of 5 errors
+    window.MaximumErrorCount = 5;
+
+    window.onerror = function(errorMsg, file, lineNumber) {
+        window.errorCount || (window.errorCount = 0);
+        console.log('here');
+
+        if (window.errorCount <= window.MaximumErrorCount) {
+            window.errorCount += 1;
+
+        // post the error with all the information we need.
+        jQuery.post('/jssucks', {
+            error: errorMsg,
+            file: file,
+            location: window.location.href,
+            lineNumber: lineNumber,
+            documentReady: window.documentIsReady,
+            ua: navigator.userAgent});
+        }
+    }
+  </script>
   <script src="{% static 'js/reader/models.js' %}"></script>
   <script src="{% static 'js/reader/views.js' %}"></script>
   <script src="{% static 'js/reader/app.js' %}"></script>

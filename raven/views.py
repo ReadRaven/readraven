@@ -1,3 +1,4 @@
+import logging
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.urlresolvers import reverse
@@ -7,6 +8,7 @@ from django.template import RequestContext
 
 from raven.models import UserFeed
 
+logger = logging.getLogger('django')
 User = get_user_model()
 
 
@@ -59,4 +61,20 @@ def leftside(request):
     }
     return render_to_response(
         'raven/leftside.html', context,
+        context_instance=RequestContext(request))
+
+
+@login_required
+def jssucks(request):
+    if request.method == 'POST':
+        logger.error('*** JS Error ***')
+        logger.error(' user:\t%s, %s' % (request.user, request.user.pk))
+        logger.error(' url:\t%s' % request.POST['location'])
+        logger.error(' file:\t%s' % ':'.join((request.POST['file'], request.POST['lineNumber'])))
+        logger.error(' error:\t%s' % request.POST['error'])
+        logger.error(' ua:\t%s' % request.POST['ua'])
+        logger.error('*** JS Error End ***')
+
+    return render_to_response(
+        'raven/home.html',
         context_instance=RequestContext(request))

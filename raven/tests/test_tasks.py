@@ -44,6 +44,38 @@ class UpdateFeedTaskTest(TestCase):
         self.assertNotEqual(feed.last_fetched, last_fetched)
         self.assertEqual(feed.items.count(), 20)
 
+    @unittest.skipUnless(network_available(), 'Network unavailable')
+    @override_settings(CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
+                       CELERY_ALWAYS_EAGER=True,
+                       BROKER_BACKEND='memory',)
+    def test_duplicates(self):
+        user = User()
+        user.email = 'Bob'
+        user.save()
+
+        tmp = Feed()
+        tmp.title = 'Marginal Revolution'
+        tmp.link = 'http://feeds.feedburner.com/marginalrevolution/feed'
+        tmp.site = 'http://marginalrevolution.com/'
+        last_fetched = datetime.now() - timedelta(minutes=31)
+        tmp.last_fetched = last_fetched
+        # Fetch #1
+        feed = Feed.create_and_subscribe(tmp.title, tmp.link, tmp.site, user)
+
+        # Fetch #2
+        task1 = tasks.UpdateFeedTask()
+        result1 = task1.delay()
+
+        # Force fetch #3
+        last_fetched = datetime.now() - timedelta(minutes=31)
+        feed.last_fetched = last_fetched
+        feed.save()
+
+        task2 = tasks.UpdateFeedTask()
+        result2 = task2.delay()
+
+        self.assertEqual(feed.feeditems.count(), 15)
+
 
 class EatTakeoutTaskTest(TestCase):
     '''Test EatTakeoutTask.'''

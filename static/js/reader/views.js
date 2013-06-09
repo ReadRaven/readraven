@@ -94,8 +94,11 @@ APP.Views.LeftSide = Backbone.View.extend({
         countNode.text('('+count+')');
 
         /* Decrement the specific tag */
-        var tagEl = feedEl.prev('.tag').first(),
-            tagCountNode = tagEl.find('.feed-count'),
+        var tagEl = feedEl.prev('.tag').first();
+        if (tagEl.length === 0) {
+            tagEl = this.$el.find('.untagged');
+        }
+        var tagCountNode = tagEl.find('.feed-count'),
             tagCountMatch = tagCountNode.text().match(countRegex),
             tagCount = null;
         if (tagCountMatch !== null && tagCountMatch.length === 2) {

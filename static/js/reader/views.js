@@ -76,7 +76,7 @@ APP.Views.LeftSide = Backbone.View.extend({
         var allCountNode = this.$el.find('.all').find('.feed-count'),
             allMatch = allCountNode.text().match(countRegex),
             allCount = null;
-        if (allMatch.length === 2) {
+        if (allMatch !== null && allMatch.length === 2) {
             allCount = parseInt(allMatch[1], 10);
             if (allCount === 0) {
                 allCountNode.text('');
@@ -368,6 +368,9 @@ APP.Views.StrongSide = Backbone.View.extend({
 var ItemView = Backbone.View.extend({
     /* We should kill the 'row' class, but not now... */
     className: 'pure-g feeditem row',
+    events: {
+        'click a.star': 'star'
+    },
     initialize: function(config) {
         this.item = config.item;
         this.$el.attr('data-feeditem', this.item.id);
@@ -379,8 +382,20 @@ var ItemView = Backbone.View.extend({
                 item: this.item.attributes
             };
         el.html(this.template(context));
-        el.find('.content a').attr('target', '_blank');
+        el.find('.feeditem-content-body a').attr('target', '_blank');
         return this;
+    },
+    star: function(e) {
+        e.preventDefault();
+
+        var target = $(e.currentTarget);
+        if (this.item.get('starred')) {
+            this.item.save({starred: false});
+            target.text('Star');
+        } else {
+            this.item.save({starred: true});
+            target.text('Un-star');
+        }
     },
     template: Handlebars.compile($('#feed-item').html())
 });

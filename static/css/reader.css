@@ -132,6 +132,9 @@ a.secondary-button {
         .feeditem-content-title {
             margin: 0.5em 0 0;
         }
+            .feeditem-content-title a {
+                color: #271D25;
+            }
         .feeditem-content-subtitle {
             font-size: 1em;
             margin: 0;
@@ -142,8 +145,20 @@ a.secondary-button {
             text-align: right;
         }
     .feeditem-content-footer {
-        text-align: right;
     }
+        .feeditem-meta {
+            margin-top: 2.3em;
+        }
+            .feeditem-meta a {
+                margin-top: -0.3em;
+                margin-left: 1em;
+                color: #333;
+                display: inline-block;
+                padding: 3px 5px;
+                border: 1px solid #888;
+                background-color: #eee;
+                border-radius: 3px;
+            }
         .feeditem-content-controls {
             margin-top: 2em;
             text-align: right;

@@ -19,15 +19,12 @@
     </div>
 
     <div class="feeditem-content-footer pure-g">
-        <div class="feeditem-meta pure-u-2-3">
-        {{#if item.feed_tags }}
-            Tagged as:
+        <div class="feeditem-meta pure-u-1-3">
         {{#each item.feed_tags}}
             <a href="#/tag/{{this}}">{{this}}</a>
         {{/each}}
-        {{/if}}
         </div>
-        <div class="feeditem-content-controls pure-u-1-3">
+        <div class="feeditem-content-controls pure-u-2-3">
         {{#if item.starred}}
             <a class="pure-button secondary-button star">Un-star</a>
         {{else}}

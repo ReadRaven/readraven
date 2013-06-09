@@ -122,6 +122,13 @@ a.secondary-button {
     #left-side .feed-count {
         color: rgb(193,192,193);
     }
+    #left-side .toolbox {
+        margin-top: -2em;
+        font-size: .8em;
+    }
+        #left-side .toolbox .toolbox-inner {
+            display: none;
+        }
 
 /* Feed Content Styles */
 .feeditem-content {

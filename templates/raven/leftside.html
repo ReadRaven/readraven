@@ -2,6 +2,9 @@
 <a href="#nav" class="nav-menu-button">Menu</a>
 
 <div class="nav-inner">
+    <div class="toolbox">
+        <a href="{% url 'django.contrib.auth.views.logout' %}">Log out</a>
+    </div>
     <a class="pure-button primary-button" id="add-feed-btn" href="#">Add feed</a>
 
     <div class="pure-menu pure-menu-open">
@@ -34,7 +37,7 @@
             {% feeds_for_tag as feeds %}
             {% for feed in feeds %}
             <li class="feed" data-feed="{{feed.id}}">
-                <a href="#/feed/{{feed.id}}">
+                <a href="#/feed/{{feed.id}}" alt="{{feed.feed.link}}" title="{{feed.feed.link}}">
                     <span class="label"></span>
                     <span class="clippable">
                     {% if feed.feed.title %}
@@ -61,7 +64,7 @@
             </li>
             {% for feed in untagged_feeds %}
             <li class="feed" data-feed="{{feed.id}}">
-                <a href="#/feed/{{feed.id}}">
+                <a href="#/feed/{{feed.id}}" alt="{{feed.feed.link}}" title="{{feed.feed.link}}">
                     <span class="label"></span>
                     <span class="clippable">
                     {% if feed.feed.title %}

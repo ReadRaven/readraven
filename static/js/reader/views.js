@@ -16,15 +16,21 @@ APP.Views.AddFeedModal = Backbone.View.extend({
             });
             feed.save();
 
-            this.undelegateEvents();
-            this.remove();
-            Backbone.View.prototype.remove.call(this);
+            this.close();
         } else {
             // TODO: handle the error
             console.log('not a url');
         }
     },
     className: 'modal',
+    close: function() {
+        this.shim.remove();
+        this.shim = null;
+
+        this.undelegateEvents();
+        this.remove();
+        Backbone.View.prototype.remove.call(this);
+    },
     events: {
         'click button.notice': 'addFeed'
     },
@@ -32,8 +38,13 @@ APP.Views.AddFeedModal = Backbone.View.extend({
     render: function() {
         var el = this.$el;
         el.html(this.template());
+
+        $('body').prepend('<div class="modal-shim"></div>');
+        this.shim = $('.modal-shim');
+        this.shim.click(_.bind(function(e) { this.close(); }, this));
         $('body').prepend(el);
     },
+    shim: null,
     template: Handlebars.compile($('#add-feed-modal').html())
 });
 
@@ -287,6 +298,7 @@ APP.Views.StrongSide = Backbone.View.extend({
             nextHeadline = null,
             item = null;
 
+        if (selected === undefined) { return; }
         var scrollPosition = $(e.currentTarget).scrollTop();
         /* Scroll down */
         if (scrollPosition > this.scrollLast) {
@@ -342,6 +354,7 @@ APP.Views.StrongSide = Backbone.View.extend({
             break;
         case 'scroll':
         case 'keypress':
+            if (this.currentRow === null) { return; }
             selected = this.currentRow.find('.feeditem-content');
             break;
         }

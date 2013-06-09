@@ -43,6 +43,15 @@ div.modal {
     margin-top: -50px; /* 1/2 the height */
 }
 
+.modal-shim {
+    height: 100%;
+    width: 100%;
+    position: fixed;
+    z-index: 5;
+    background-color: #ddd;
+    opacity: 0.3;
+}
+
 a.primary-button, a.secondary-button {
     -webkit-box-shadow: none;
     -moz-box-shadow: none;

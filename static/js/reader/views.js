@@ -78,10 +78,10 @@ APP.Views.LeftSide = Backbone.View.extend({
             allCount = null;
         if (allMatch !== null && allMatch.length === 2) {
             allCount = parseInt(allMatch[1], 10);
+            allCount--;
             if (allCount === 0) {
                 allCountNode.text('');
             } else {
-                allCount--;
                 allCountNode.text('('+allCount+')');
             }
         }
@@ -91,7 +91,11 @@ APP.Views.LeftSide = Backbone.View.extend({
             countNode = feedEl.find('.feed-count'),
             count = parseInt(countNode.text().match(countRegex)[1], 10);
         count--;
-        countNode.text('('+count+')');
+        if (count === 0) {
+            countNode.text('');
+        } else {
+            countNode.text('('+count+')');
+        }
 
         /* Decrement the specific tag */
         var tagEl = feedEl.prev('.tag').first();
@@ -239,7 +243,13 @@ APP.Views.StrongSide = Backbone.View.extend({
     },
     more: function(e) {
         e.preventDefault();
-        this.items.getNext();
+        if (this.$el.find('.feeditem-loader').length !== 0) {
+            if (!this.items.hasNext()) {
+                this.items.getNext();
+            } else {
+                this.$el.find('.feeditem-loader').remove();
+            }
+        }
     },
     render: function() {
         $(window).scroll(_.bind(this.scroll_, this));

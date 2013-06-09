@@ -45,9 +45,27 @@ APP.Views.LeftSide = Backbone.View.extend({
         view.render();
     },
     addFeedFormEl: '#add-feed',
+    clickTag: function(e) {
+        /* For now, we prevent default. I think we need to figure out the tag
+         * specific view's method for surfacing soon though.
+         */
+        e.preventDefault();
+
+        var target = $(e.currentTarget),
+            topNode = target.parent(),
+            first = topNode.next('.feed');
+        if (first.is(':visible')) {
+            topNode.find('.label').removeClass('open').addClass('closed');
+            topNode.nextUntil('.tag').hide();
+        } else {
+            topNode.find('.label').removeClass('closed').addClass('open');
+            topNode.nextUntil('.tag').show();
+        }
+    },
     el: '#left-side',
     events: {
-        'click a#add-feed-btn': 'addFeed'
+        'click a#add-feed-btn': 'addFeed',
+        'click li.tag a': 'clickTag'
     },
     feeditemRead: function(item) {
         var countRegex = /^\((\d+)\)$/;

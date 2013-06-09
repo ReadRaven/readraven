@@ -71,6 +71,19 @@ a.secondary-button {
     border: none;
     text-align: left;
 }
+    #left-side span.label {
+        width: 15px;
+        height: 15px;
+        display: inline-block;
+        margin-right: 0.5em;
+        border-radius: 3px;
+    }
+    #left-side .tag span.label.closed {
+        background: #ffc94c;
+    }
+    #left-side .tag span.label.open {
+        background: #41ccb4;
+    }
     #left-side .clippable {
         display: inline-block;
         max-width: 175px;

@@ -203,6 +203,13 @@ APP.Views.StrongSide = Backbone.View.extend({
                 delete this.items.params.tag;
             }
         }
+        if (config.starred) {
+            this.items.params.starred = config.starred;
+            this.items.params.read = ' ';
+        } else {
+            delete this.items.params.starred;
+            delete this.items.params.read;
+        }
         this.items.params.offset = 0;
         this.items.fetch({reset: true, success: this.items.success});
     },

@@ -17,16 +17,16 @@
                 {% endif %}
                 </a>
             </li>
+            <li><a href="#starred">Starred</a></li>
             {% comment %}
-            <li><a href="#/starred">Starred</a></li>
-            <li><a href="#/shared">Shared with me</a></li>
+            <li><a href="#shared">Shared with me</a></li>
             {% endcomment %}
 
             <li class="pure-menu-heading">Tags</li>
             {% for tag in tags %}
             {% tag_unread_count %}
             <li class="tag">
-                <a href="#/tag/{{tag.name}}">
+                <a href="#tag/{{tag.name}}">
                     <span class="label closed"></span>
                     <span class="clippable">{{tag.name}}</span>
                 {% if unread_count %}
@@ -37,7 +37,7 @@
             {% feeds_for_tag as feeds %}
             {% for feed in feeds %}
             <li class="feed" data-feed="{{feed.id}}">
-                <a href="#/feed/{{feed.id}}" alt="{{feed.feed.link}}" title="{{feed.feed.link}}">
+                <a href="#feed/{{feed.id}}" alt="{{feed.feed.link}}" title="{{feed.feed.link}}">
                     <span class="label"></span>
                     <span class="clippable">
                     {% if feed.feed.title %}
@@ -54,7 +54,7 @@
             {% endfor %}
             {% endfor %}
             <li class="untagged tag">
-                <a href="#/untagged">
+                <a href="#untagged">
                     <span class="label closed"></span>
                     (Untagged)
                 {% if untagged_unread_count %}
@@ -64,7 +64,7 @@
             </li>
             {% for feed in untagged_feeds %}
             <li class="feed" data-feed="{{feed.id}}">
-                <a href="#/feed/{{feed.id}}" alt="{{feed.feed.link}}" title="{{feed.feed.link}}">
+                <a href="#feed/{{feed.id}}" alt="{{feed.feed.link}}" title="{{feed.feed.link}}">
                     <span class="label"></span>
                     <span class="clippable">
                     {% if feed.feed.title %}

@@ -56,10 +56,10 @@ APP.Views.LeftSide = Backbone.View.extend({
             first = topNode.next('.feed');
         if (first.is(':visible')) {
             topNode.find('.label').removeClass('open').addClass('closed');
-            topNode.nextUntil('.tag').hide();
+            topNode.nextUntil('.tag').hide(700);
         } else {
             topNode.find('.label').removeClass('closed').addClass('open');
-            topNode.nextUntil('.tag').show();
+            topNode.nextUntil('.tag').show(700);
         }
     },
     el: '#left-side',

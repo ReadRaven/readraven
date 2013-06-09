@@ -131,8 +131,10 @@ APP.Views.LeftSide = Backbone.View.extend({
     }
 });
 
-$.fn.isOnScreen = function(loc){
-    /* Convenience method for checking to see if a node is in the viewport. */
+$.fn.isOnScreen = function(percentage){
+    /* Convenience method for checking to see if a node is in the viewport.
+     * Specify a percentage of the viewport that the node should be in.
+     */
     var win = $(window);
 
     var viewport = {
@@ -140,12 +142,7 @@ $.fn.isOnScreen = function(loc){
         left : win.scrollLeft()
     };
     viewport.right = viewport.left + win.width();
-    if (loc === 'infinite' ) {
-        viewport.bottom = viewport.top + win.height() + 200;
-    } else {
-        /* HACK! We only want the top quarter to trigger the event... */
-        viewport.bottom = viewport.top + (win.height() * 0.25);
-    }
+    viewport.bottom = viewport.top + (win.height() * percentage);
 
     var bounds = this.offset();
     if (bounds === undefined) { return; }
@@ -218,7 +215,7 @@ APP.Views.StrongSide = Backbone.View.extend({
             // feeditem if we are in the middle of it, rather than going
             // all the way to the previous feeditem (which would be
             // jarring and weird).
-            if (!headline.isOnScreen()) {
+            if (!headline.isOnScreen(0.25)) {
                 nextRow = this.currentRow;
             } else {
                 nextRow = this.currentRow.prev('div.row');
@@ -285,7 +282,7 @@ APP.Views.StrongSide = Backbone.View.extend({
             nextSelected = nextRow.find('.feeditem-content');
             nextHeadline = nextSelected.find('h1');
 
-            if (nextHeadline.isOnScreen() && !headline.isOnScreen()) {
+            if (nextHeadline.isOnScreen(0.25) && !headline.isOnScreen(0.25)) {
                 selected.removeClass('selected');
                 nextSelected.addClass('selected');
                 item = this.items.get(nextRow.attr('data-feeditem'));
@@ -296,7 +293,7 @@ APP.Views.StrongSide = Backbone.View.extend({
                 this.currentRow = nextRow;
             }
 
-            if (this.infiniteLoader.isOnScreen('infinite')) {
+            if (this.infiniteLoader.isOnScreen(4.0)) {
                 this.more(e);
             }
 
@@ -311,7 +308,7 @@ APP.Views.StrongSide = Backbone.View.extend({
                 return;
             }
 
-            if (!headline.isOnScreen() && nextRow.isOnScreen()) {
+            if (!headline.isOnScreen(0.25) && nextRow.isOnScreen(0.25)) {
                 selected.removeClass('selected');
                 nextSelected.addClass('selected');
 

@@ -53,7 +53,7 @@ def feedlist(request):
 @user_passes_test(lambda u: u.is_customer(), login_url='/usher/sign_up')
 def leftside(request):
     '''Left side!'''
-    unread_count = UserFeedItem.objects.filter(read=False).count()
+    unread_count = UserFeedItem.objects.filter(read=False, user=request.user).count()
     tags = UserFeed.userfeed_tags(request.user)
     untagged_feeds = UserFeed.objects.filter(user=request.user).exclude(tags__in=tags).order_by('feed__title')
 

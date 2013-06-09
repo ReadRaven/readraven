@@ -54,10 +54,17 @@ APP.Views.LeftSide = Backbone.View.extend({
 
         /* Decrement the 'All' */
         var allCountNode = this.$el.find('.all').find('.feed-count'),
-            allCount = parseInt(allCountNode.text().match(countRegex)[1], 10);
-        allCount--;
-        allCountNode.text('('+allCount+')');
-
+            allMatch = allCountNode.text().match(countRegex),
+            allCount = null;
+        if (allMatch.length === 2) {
+            allCount = parseInt(allMatch[1], 10);
+            if (allCount === 0) {
+                allCountNode.text('');
+            } else {
+                allCount--;
+                allCountNode.text('('+allCount+')');
+            }
+        }
         /* Decrement the specific feed */
         var feedID = item.get('feed_id'),
             feedEl = this.$el.find('[data-feed='+feedID+']'),
@@ -68,24 +75,36 @@ APP.Views.LeftSide = Backbone.View.extend({
 
         /* Decrement the specific tag */
         var tagEl = feedEl.prev('.tag').first(),
-            tagCountNoe = tagEl.find('.feed-count'),
-            tagCount = parseInt(tagCountNode.text().match(countRegex)[1], 10);
-        count--;
-        tagCountNode.text('('+tagCount+')');
+            tagCountNode = tagEl.find('.feed-count'),
+            tagCountMatch = tagCountNode.text().match(countRegex),
+            tagCount = null;
+        if (tagCountMatch !== null && tagCountMatch.length === 2) {
+            tagCount = parseInt(tagCountMatch[1], 10);
+            if (tagCount) {
+                tagCount--;
+                if (tagCount === 0) {
+                    tagCountNode.text('');
+                } else {
+                    tagCountNode.text('('+tagCount+')');
+                }
+            }
+        }
     },
     feedListEl: '#feed-list',
     initialize: function(config) {
         /* TODO: get feeds and add event listeners. */
     },
+    loaded: function() {
+        this.$el.find('.feed').hide();
+    },
     render: function() {
         Backbone.on('feeditemread', _.bind(this.feeditemRead, this));
-
 
         /* While we have two sets of UI, this is an agreeable workaround. */
         if (window.location.pathname.indexOf('home') > -1) {
             this.$el.load('/raven/_feedlist/');
         } else {
-            this.$el.load('/reader/leftside/');
+            this.$el.load('/reader/leftside/', _.bind(this.loaded, this));
         }
         this.rendered = true;
         return this;

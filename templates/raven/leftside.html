@@ -24,7 +24,7 @@
             {% tag_unread_count %}
             <li class="tag">
                 <a href="#/tag/{{tag.name}}">
-                    {{tag.name}}
+                    <span class="clippable">{{tag.name}}</span>
                 {% if unread_count %}
                     <span class="feed-count">({{ unread_count }})</span>
                 {% endif %}
@@ -34,11 +34,13 @@
             {% for feed in feeds %}
             <li class="feed" data-feed="{{feed.id}}">
                 <a href="#/feed/{{feed.id}}">
-                {% if feed.feed.title %}
-                    {{ feed.feed.title }}
-                {% else %}
-                    {{ feed.feed.link }}
-                {% endif %}
+                    <span class="clippable">
+                    {% if feed.feed.title %}
+                        {{ feed.feed.title }}
+                    {% else %}
+                        {{ feed.feed.link }}
+                    {% endif %}
+                    </span>
                 {% if feed.unread_count %}
                     <span class="feed-count">({{ feed.unread_count }})</span>
                 {% endif %}
@@ -46,15 +48,24 @@
             </li>
             {% endfor %}
             {% endfor %}
-            <li><a href="">(Untagged)</a></li>
+            <li>
+                <a href="" class="tag">
+                    (Untagged)
+                {% if untagged_unread_count %}
+                    <span class="feed-count">({{ untagged_unread_count }})</span>
+                {% endif %}
+                </a>
+            </li>
             {% for feed in untagged_feeds %}
             <li class="feed" data-feed="{{feed.id}}">
                 <a href="#/feed/{{feed.id}}">
-                {% if feed.feed.title %}
-                    {{ feed.feed.title }}
-                {% else %}
-                    {{ feed.feed.link }}
-                {% endif %}
+                    <span class="clippable">
+                    {% if feed.feed.title %}
+                        {{ feed.feed.title }}
+                    {% else %}
+                        {{ feed.feed.link }}
+                    {% endif %}
+                    </span>
                 {% if feed.unread_count %}
                     <span class="feed-count">({{ feed.unread_count }})</span>
                 {% endif %}

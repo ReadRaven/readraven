@@ -56,10 +56,16 @@ def leftside(request):
     unread_count = UserFeedItem.objects.filter(read=False).count()
     tags = UserFeed.userfeed_tags(request.user)
     untagged_feeds = UserFeed.objects.filter(user=request.user).exclude(tags__in=tags).order_by('feed__title')
+
+    untagged_unread_count = 0
+    for userfeed in untagged_feeds:
+        untagged_unread_count = untagged_unread_count + userfeed.unread_count()
+
     context = {
         'tags': tags,
         'unread_count': unread_count,
-        'untagged_feeds': untagged_feeds
+        'untagged_feeds': untagged_feeds,
+        'untagged_unread_count': untagged_unread_count
     }
     return render_to_response(
         'raven/leftside.html', context,

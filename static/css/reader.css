@@ -8,28 +8,22 @@ a {
 
 /* LAYOUT CSS */
 #layout {
-    padding-left:150px; /* "left col (nav + list)" width */
+    padding-left:250px; /* "left col (nav + list)" width */
     position: relative;
 }
 
-#left-side, #list {
+#left-side {
     position: fixed;
     top: 0;
     bottom: 0;
     overflow: auto;
 }
 #left-side {
-    margin-left:-150px; /* "left col (nav + list)" width */
-    width:150px;
+    margin-left:-250px; /* "left col (nav + list)" width */
+    width:250px;
     background: rgb(37, 42, 58);
     text-align: center;
     padding: 2em 0;
-}
-
-#list {
-    margin-left: -350px;
-    width:350px;
-    border-right: 1px solid #ddd;
 }
 
 #strong-side {
@@ -77,6 +71,13 @@ a.secondary-button {
     border: none;
     text-align: left;
 }
+    #left-side .clippable {
+        display: inline-block;
+        max-width: 175px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis
+    }
     #left-side .pure-menu a:hover {
         background: rgb(55, 60, 90);
     }
@@ -139,23 +140,18 @@ a.secondary-button {
 
 @media (max-width: 867px) {
 
-    #list, #strong-side {
+    #strong-side {
         width: auto;
     }
     #layout {
-        padding-left: -150px;
-    }
-    #list {
-        width: auto;
-        height: 33%;
-        border-bottom: 1px solid #ddd;
+        padding-left: -250px;
     }
     #strong-side {
         position: fixed;
-        top: 33%;
+        top: 0;
         right: 0;
         bottom: 0;
-        left: 150px;
+        left: 250px;
         overflow: auto;
         width: auto; /* so that it's not 100% */
     }

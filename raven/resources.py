@@ -275,8 +275,10 @@ class UserFeedItemResource(ModelResource):
 
         # Shortcut methods, so we don't need relations.
         bundle.data['feed_title'] = bundle.obj.feed.title
-        bundle.data['feed_id'] = models.UserFeed.objects.get(
-            user=bundle.obj.user, feed=bundle.obj.feed).pk
+        userfeed = models.UserFeed.objects.get(
+            user=bundle.obj.user, feed=bundle.obj.feed)
+        bundle.data['feed_id'] = userfeed.pk
+        bundle.data['feed_tags'] = [tag.name for tag in userfeed.tags.all()]
 
         bundle.data['tags'] = [tag.name for tag in bundle.obj.tags.all()]
         return bundle

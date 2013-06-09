@@ -1,9 +1,9 @@
 body {
-    color: #333;
+    color: #271D25;
 }
 a {
     text-decoration: none;
-    color: #1b98f8;
+    color: #DF4E53
 }
 
 /* LAYOUT CSS */
@@ -17,11 +17,9 @@ a {
     top: 0;
     bottom: 0;
     overflow: auto;
-}
-#left-side {
     margin-left:-250px; /* "left col (nav + list)" width */
     width:250px;
-    background: rgb(37, 42, 58);
+    background: rgb(39,29,37);
     text-align: center;
     padding: 2em 0;
 }
@@ -52,7 +50,7 @@ a.primary-button, a.secondary-button {
 }
 a.primary-button {
     color: #fff;
-    background: #1b98f8;
+    background: #DF4E53;
     margin: 1em 0;
 }
 a.secondary-button {
@@ -78,11 +76,15 @@ a.secondary-button {
         margin-right: 0.5em;
         border-radius: 3px;
     }
+    #left-side .tag span.label.closed,
+    #left-side .tag span.label.open {
+        background-image: url(../img/feedlistsprites.png);
+    }
     #left-side .tag span.label.closed {
-        background: #ffc94c;
+        background-position: 0px 0px;
     }
     #left-side .tag span.label.open {
-        background: #41ccb4;
+        background-position: -15px 0px;
     }
     #left-side .clippable {
         display: inline-block;
@@ -92,24 +94,24 @@ a.secondary-button {
         text-overflow: ellipsis
     }
     #left-side .pure-menu a:hover {
-        background: rgb(55, 60, 90);
+        background: rgb(218, 111, 116);
     }
     #left-side .pure-menu a {
-        color: #fff;
+        color: rgb(211, 212, 217);
         margin-left: 0.5em;
     }
     #left-side .pure-menu-heading {
         border-bottom: none;
         font-size:110%;
-        color: rgb(75, 113, 151);
+        color: rgb(193,192,193);
     }
 
     #left-side .nav-menu-button {
         display: none;
     }
 
-    .feed-count {
-        color: rgb(75, 113, 151);
+    #left-side .feed-count {
+        color: rgb(193,192,193);
     }
 
 /* Feed Content Styles */

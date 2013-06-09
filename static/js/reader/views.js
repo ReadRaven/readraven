@@ -55,11 +55,13 @@ APP.Views.LeftSide = Backbone.View.extend({
             topNode = target.parent(),
             first = topNode.next('.feed');
         if (first.is(':visible')) {
-            topNode.find('.label').removeClass('open').addClass('closed');
-            topNode.nextUntil('.tag').hide(700);
+            topNode.nextUntil('.tag').hide(700, function() {
+                topNode.find('.label').removeClass('open').addClass('closed');
+            });
         } else {
-            topNode.find('.label').removeClass('closed').addClass('open');
-            topNode.nextUntil('.tag').show(700);
+            topNode.nextUntil('.tag').show(700, function() {
+                topNode.find('.label').removeClass('closed').addClass('open');
+            });
         }
     },
     el: '#left-side',

@@ -339,6 +339,10 @@ class FeedItem(models.Model):
 
     class Meta:
         unique_together = ('feed', 'guid')
+        index_together = [
+            ['feed', 'guid'],
+            ['feed', 'published'],
+        ]
 
     feed = models.ForeignKey(Feed, related_name='items')
 

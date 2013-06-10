@@ -162,6 +162,16 @@ class Feed(models.Model):
         # 223: http://www.aaronsw.com/2002/feeds/pgessays.rss
         # 663: http://www.finderskeepers.gcgstudios.com/?p=rss
         if self.dead is True:
+            self.fetch_frequency = self.FETCH_NEVER
+            self.save()
+            logger.warn('Converting dead: %s - %s' % (self.pk, self.link))
+            return
+
+        # u'user/00109242490472324272/source/com.google/link'
+        if self.link.startswith('user/'):
+            self.fetch_frequency = self.FETCH_NEVER
+            self.save()
+            logger.warn('NEVER fetch reader_id: %s - %s' % (self.pk, self.link))
             return
 
         if data is None:

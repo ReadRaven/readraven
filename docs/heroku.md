@@ -5,7 +5,7 @@ DEPLOY CHECKLIST
 The way to publish static assets:
 	s3cmd ls
 	s3cmd sync static s3://readraven
-	go to AWS dashboard and ensure everything is made public
+	s3cmd setacl --acl-public --recursive  s3://readraven/static
 
 
 Local Setup

@@ -264,7 +264,7 @@ class Feed(models.Model):
                         tmp.published = datetime.utcnow()
 
             try:
-                tmp.title = HTMLParser().unescape(entry.title).encode('utf-8')
+                tmp.title = HTMLParser().unescape(entry.title)
             except AttributeError:
                 # Fuck you LiveJournal.
                 tmp.title = u'(none)'
@@ -276,7 +276,7 @@ class Feed(models.Model):
                                           'description': tmp.description,
                                           'link' : tmp.link,
                                           'atom_id': tmp.atom_id,
-                                          'title' : tmp.title })
+                                          'title' : tmp.title.encode('utf-8') })
 
             mark_as_read = False
             if hack is True and last_entry is not None:
@@ -377,7 +377,7 @@ class FeedItem(models.Model):
         guid.update(self.feed.link.encode('utf-8'))
         guid.update(self.link.encode('utf-8'))
         guid.update(self.atom_id.encode('utf-8'))
-        guid.update(self.title)
+        guid.update(self.title.encode('utf-8'))
         #if self.reader_guid:
             #guid.update(self.reader_guid)
         return guid.hexdigest()

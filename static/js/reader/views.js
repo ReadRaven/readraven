@@ -311,7 +311,9 @@ APP.Views.StrongSide = Backbone.View.extend({
                 nextSelected.addClass('selected');
                 item = this.items.get(nextRow.attr('data-feeditem'));
                 if (item.get('read') === false) {
-                    item.save({'read': true});
+                    item.save({'read': true}, {success: _.bind(function() {
+                        Backbone.trigger('feeditemread', item);
+                    }, this)});
                 }
 
                 this.currentRow = nextRow;
@@ -368,9 +370,10 @@ APP.Views.StrongSide = Backbone.View.extend({
         if (item === undefined) {
             return selected;
         }
-        if (item.attributes.read === false) {
-            item.save({'read': true});
-            Backbone.trigger('feeditemread', item);
+        if (item.get('read') === false) {
+            item.save({'read': true}, {success: _.bind(function() {
+                Backbone.trigger('feeditemread', item);
+            }, this)});
         }
 
         /* No idea why selected === this.currentRow => false */

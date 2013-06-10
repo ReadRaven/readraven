@@ -254,7 +254,7 @@ APP.Views.StrongSide = Backbone.View.extend({
     more: function(e) {
         e.preventDefault();
         if (this.$el.find('.feeditem-loader').length !== 0) {
-            if (!this.items.hasNext()) {
+            if (this.items.hasNext()) {
                 this.items.getNext();
             } else {
                 this.$el.find('.feeditem-loader').remove();

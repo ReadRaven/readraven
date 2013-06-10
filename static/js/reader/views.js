@@ -310,7 +310,7 @@ APP.Views.StrongSide = Backbone.View.extend({
                 selected.removeClass('selected');
                 nextSelected.addClass('selected');
                 item = this.items.get(nextRow.attr('data-feeditem'));
-                if (item.attributes.read === false) {
+                if (item.get('read') === false) {
                     item.save({'read': true});
                 }
 

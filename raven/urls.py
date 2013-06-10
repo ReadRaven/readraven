@@ -22,7 +22,7 @@ urlpatterns = patterns(
     url(r'^reader/leftside', 'raven.views.leftside', name='reader.leftside'),
     url(r'^reader',
         login_required(TemplateView.as_view(template_name='raven/reader.html')),
-        name='reader'),
+        name='raven.reader'),
 
     url(r'^home', 'raven.views.home'),
     url(r'^values', 'raven.views.values'),

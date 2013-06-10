@@ -2,7 +2,7 @@ import logging
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.urlresolvers import reverse
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
@@ -29,9 +29,7 @@ def values(request):
 @login_required
 @user_passes_test(lambda u: u.is_customer(), login_url='/usher/sign_up')
 def home(request):
-    return render_to_response(
-        'raven/home.html',
-        context_instance=RequestContext(request))
+    return HttpResponseRedirect(reverse('raven.reader'))
 
 
 @login_required
@@ -83,6 +81,4 @@ def jssucks(request):
         logger.error(' ua:\t%s' % request.POST['ua'])
         logger.error('*** JS Error End ***')
 
-    return render_to_response(
-        'raven/home.html',
-        context_instance=RequestContext(request))
+    return HttpResponse('')

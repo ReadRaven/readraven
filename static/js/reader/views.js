@@ -75,58 +75,50 @@ APP.Views.LeftSide = Backbone.View.extend({
             });
         }
     },
+    decrement: function(ele) {
+        var countRegex = /^\((\d+)\)/;
+
+        var countNode = ele.find('.feed-count');
+        if (countNode.length === 0) {
+            return;
+        }
+
+        var match = countNode.text().match(countRegex);
+        if (match === null || match.length !== 2) {
+            console.log('invalid match was: '+match);
+            return;
+        }
+
+        var count = parseInt(match[1], 10);
+        count--;
+        if (count === 0) {
+            countNode.remove();
+        } else {
+            countNode.text('('+count+')');
+        }
+    },
     el: '#left-side',
     events: {
         'click a#add-feed-btn': 'addFeed',
         'click li.tag a': 'clickTag'
     },
     feeditemRead: function(item) {
-        var countRegex = /^\((\d+)\)$/;
+        var el = this.$el;
 
-        /* Decrement the 'All' */
-        var allCountNode = this.$el.find('.all').find('.feed-count'),
-            allMatch = allCountNode.text().match(countRegex),
-            allCount = null;
-        if (allMatch !== null && allMatch.length === 2) {
-            allCount = parseInt(allMatch[1], 10);
-            allCount--;
-            if (allCount === 0) {
-                allCountNode.text('');
-            } else {
-                allCountNode.text('('+allCount+')');
-            }
-        }
-        /* Decrement the specific feed */
+        /* Decrement the 'All'. */
+        this.decrement(el.find('.all'));
+
+        /* Decrement the feed itself. */
         var feedID = item.get('feed_id'),
-            feedEl = this.$el.find('[data-feed='+feedID+']'),
-            countNode = feedEl.find('.feed-count'),
-            count = parseInt(countNode.text().match(countRegex)[1], 10);
-        count--;
-        if (count === 0) {
-            countNode.text('');
-        } else {
-            countNode.text('('+count+')');
-        }
+            feedElement = el.find('[data-feed='+feedID+']');
+        this.decrement(feedElement);
 
-        /* Decrement the specific tag */
-        var tagEl = feedEl.prev('.tag').first();
-        if (tagEl.length === 0) {
-            tagEl = this.$el.find('.untagged');
+        /* Decrement the group. */
+        var tagElement = feedElement.prev('.tag').first();
+        if (tagElement.length === 0) {
+            tagElement = el.find('.untagged');
         }
-        var tagCountNode = tagEl.find('.feed-count'),
-            tagCountMatch = tagCountNode.text().match(countRegex),
-            tagCount = null;
-        if (tagCountMatch !== null && tagCountMatch.length === 2) {
-            tagCount = parseInt(tagCountMatch[1], 10);
-            if (tagCount) {
-                tagCount--;
-                if (tagCount === 0) {
-                    tagCountNode.text('');
-                } else {
-                    tagCountNode.text('('+tagCount+')');
-                }
-            }
-        }
+        this.decrement(tagElement);
     },
     feedListEl: '#feed-list',
     initialize: function(config) {

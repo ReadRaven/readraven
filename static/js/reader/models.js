@@ -27,7 +27,7 @@ APP.Collections.Items = Backbone.Collection.extend({
             console.log('All feeds already fetched.');
             return -1;
         }
-        this.fetch({success: this.onSuccess});
+        this.fetch({add: true, success: this.onSuccess});
     },
     hasNext: function() {
         return (this.length !== this._total);

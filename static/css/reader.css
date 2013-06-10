@@ -1,35 +1,27 @@
 body {
-    color: #333;
+    color: #271D25;
 }
 a {
     text-decoration: none;
-    color: #1b98f8;
+    color: #DF4E53
 }
 
 /* LAYOUT CSS */
 #layout {
-    padding-left:150px; /* "left col (nav + list)" width */
+    padding-left:250px; /* "left col (nav + list)" width */
     position: relative;
 }
 
-#left-side, #list {
+#left-side {
     position: fixed;
     top: 0;
     bottom: 0;
     overflow: auto;
-}
-#left-side {
-    margin-left:-150px; /* "left col (nav + list)" width */
-    width:150px;
-    background: rgb(37, 42, 58);
+    margin-left:-250px; /* "left col (nav + list)" width */
+    width:250px;
+    background: rgb(39,29,37);
     text-align: center;
     padding: 2em 0;
-}
-
-#list {
-    margin-left: -350px;
-    width:350px;
-    border-right: 1px solid #ddd;
 }
 
 #strong-side {
@@ -51,6 +43,15 @@ div.modal {
     margin-top: -50px; /* 1/2 the height */
 }
 
+.modal-shim {
+    height: 100%;
+    width: 100%;
+    position: fixed;
+    z-index: 5;
+    background-color: #ddd;
+    opacity: 0.3;
+}
+
 a.primary-button, a.secondary-button {
     -webkit-box-shadow: none;
     -moz-box-shadow: none;
@@ -58,7 +59,7 @@ a.primary-button, a.secondary-button {
 }
 a.primary-button {
     color: #fff;
-    background: #1b98f8;
+    background: #DF4E53;
     margin: 1em 0;
 }
 a.secondary-button {
@@ -77,26 +78,57 @@ a.secondary-button {
     border: none;
     text-align: left;
 }
+    #left-side span.label {
+        width: 15px;
+        height: 15px;
+        display: inline-block;
+        margin-right: 0.5em;
+        border-radius: 3px;
+    }
+    #left-side .tag span.label.closed,
+    #left-side .tag span.label.open {
+        background-image: url(../img/feedlistsprites.png);
+    }
+    #left-side .tag span.label.closed {
+        background-position: 0px 0px;
+    }
+    #left-side .tag span.label.open {
+        background-position: -15px 0px;
+    }
+    #left-side .clippable {
+        display: inline-block;
+        max-width: 175px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis
+    }
     #left-side .pure-menu a:hover {
-        background: rgb(55, 60, 90);
+        background: rgb(218, 111, 116);
     }
     #left-side .pure-menu a {
-        color: #fff;
+        color: rgb(211, 212, 217);
         margin-left: 0.5em;
     }
     #left-side .pure-menu-heading {
         border-bottom: none;
         font-size:110%;
-        color: rgb(75, 113, 151);
+        color: rgb(193,192,193);
     }
 
     #left-side .nav-menu-button {
         display: none;
     }
 
-    .feed-count {
-        color: rgb(75, 113, 151);
+    #left-side .feed-count {
+        color: rgb(193,192,193);
     }
+    #left-side .toolbox {
+        margin-top: -2em;
+        font-size: .8em;
+    }
+        #left-side .toolbox .toolbox-inner {
+            display: none;
+        }
 
 /* Feed Content Styles */
 .feeditem-content {
@@ -116,6 +148,9 @@ a.secondary-button {
         .feeditem-content-title {
             margin: 0.5em 0 0;
         }
+            .feeditem-content-title a {
+                color: #271D25;
+            }
         .feeditem-content-subtitle {
             font-size: 1em;
             margin: 0;
@@ -126,8 +161,20 @@ a.secondary-button {
             text-align: right;
         }
     .feeditem-content-footer {
-        text-align: right;
     }
+        .feeditem-meta {
+            margin-top: 2.3em;
+        }
+            .feeditem-meta a {
+                margin-top: -0.3em;
+                margin-left: 1em;
+                color: #333;
+                display: inline-block;
+                padding: 3px 5px;
+                border: 1px solid #888;
+                background-color: #eee;
+                border-radius: 3px;
+            }
         .feeditem-content-controls {
             margin-top: 2em;
             text-align: right;
@@ -139,23 +186,18 @@ a.secondary-button {
 
 @media (max-width: 867px) {
 
-    #list, #strong-side {
+    #strong-side {
         width: auto;
     }
     #layout {
-        padding-left: -150px;
-    }
-    #list {
-        width: auto;
-        height: 33%;
-        border-bottom: 1px solid #ddd;
+        padding-left: -250px;
     }
     #strong-side {
         position: fixed;
-        top: 33%;
+        top: 0;
         right: 0;
         bottom: 0;
-        left: 150px;
+        left: 250px;
         overflow: auto;
         width: auto; /* so that it's not 100% */
     }

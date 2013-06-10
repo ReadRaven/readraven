@@ -2,11 +2,11 @@ import logging
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.urlresolvers import reverse
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 
-from raven.models import UserFeed
+from raven.models import UserFeed, UserFeedItem
 
 logger = logging.getLogger('django')
 User = get_user_model()
@@ -29,9 +29,7 @@ def values(request):
 @login_required
 @user_passes_test(lambda u: u.is_customer(), login_url='/usher/sign_up')
 def home(request):
-    return render_to_response(
-        'raven/home.html',
-        context_instance=RequestContext(request))
+    return HttpResponseRedirect(reverse('raven.reader'))
 
 
 @login_required
@@ -53,11 +51,19 @@ def feedlist(request):
 @user_passes_test(lambda u: u.is_customer(), login_url='/usher/sign_up')
 def leftside(request):
     '''Left side!'''
+    unread_count = UserFeedItem.objects.filter(read=False, user=request.user).count()
     tags = UserFeed.userfeed_tags(request.user)
     untagged_feeds = UserFeed.objects.filter(user=request.user).exclude(tags__in=tags).order_by('feed__title')
+
+    untagged_unread_count = 0
+    for userfeed in untagged_feeds:
+        untagged_unread_count = untagged_unread_count + userfeed.unread_count()
+
     context = {
         'tags': tags,
-        'untagged_feeds': untagged_feeds
+        'unread_count': unread_count,
+        'untagged_feeds': untagged_feeds,
+        'untagged_unread_count': untagged_unread_count
     }
     return render_to_response(
         'raven/leftside.html', context,
@@ -75,6 +81,4 @@ def jssucks(request):
         logger.error(' ua:\t%s' % request.POST['ua'])
         logger.error('*** JS Error End ***')
 
-    return render_to_response(
-        'raven/home.html',
-        context_instance=RequestContext(request))
+    return HttpResponse('')

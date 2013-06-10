@@ -60,16 +60,25 @@ APP.Routers.Router = Backbone.Router.extend({
     routes: {
         'all': 'reader',
         'feed/:id': 'feed',
-        '*reader': 'reader',
         'shared': 'shared', /* Not yet implemented. */
         'starred': 'starred', /* Not yet implemented. */
-        'tag/:tag': 'tag' /* Not yet implemented. */
+        'tag/:tag': 'tag', /* Not yet implemented. */
+        '*reader': 'reader'
     },
     shared: function() {
         console.log('shared view');
     },
     starred: function() {
-        console.log('shared view');
+        if (this.strongSide === undefined) {
+            this.strongSide = new APP.Views.StrongSide({params: {starred: true}});
+        } else {
+            this.strongSide.filter({
+                starred: true
+            });
+        }
+        if (!this.leftSide.rendered) {
+            this.leftSide.render();
+        }
     },
     tag: function(tag) {
         console.log('Tag view for tag: '+tag);

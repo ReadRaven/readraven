@@ -16,15 +16,21 @@ APP.Views.AddFeedModal = Backbone.View.extend({
             });
             feed.save();
 
-            this.undelegateEvents();
-            this.remove();
-            Backbone.View.prototype.remove.call(this);
+            this.close();
         } else {
             // TODO: handle the error
             console.log('not a url');
         }
     },
     className: 'modal',
+    close: function() {
+        this.shim.remove();
+        this.shim = null;
+
+        this.undelegateEvents();
+        this.remove();
+        Backbone.View.prototype.remove.call(this);
+    },
     events: {
         'click button.notice': 'addFeed'
     },
@@ -32,8 +38,13 @@ APP.Views.AddFeedModal = Backbone.View.extend({
     render: function() {
         var el = this.$el;
         el.html(this.template());
+
+        $('body').prepend('<div class="modal-shim"></div>');
+        this.shim = $('.modal-shim');
+        this.shim.click(_.bind(function(e) { this.close(); }, this));
         $('body').prepend(el);
     },
+    shim: null,
     template: Handlebars.compile($('#add-feed-modal').html())
 });
 
@@ -45,28 +56,95 @@ APP.Views.LeftSide = Backbone.View.extend({
         view.render();
     },
     addFeedFormEl: '#add-feed',
+    clickTag: function(e) {
+        /* For now, we prevent default. I think we need to figure out the tag
+         * specific view's method for surfacing soon though.
+         */
+        e.preventDefault();
+
+        var target = $(e.currentTarget),
+            topNode = target.parent(),
+            first = topNode.next('.feed');
+        if (first.is(':visible')) {
+            topNode.nextUntil('.tag').hide(700, function() {
+                topNode.find('.label').removeClass('open').addClass('closed');
+            });
+        } else {
+            topNode.nextUntil('.tag').show(700, function() {
+                topNode.find('.label').removeClass('closed').addClass('open');
+            });
+        }
+    },
+    decrement: function(ele) {
+        var countRegex = /^\((\d+)\)/;
+
+        var countNode = ele.find('.feed-count');
+        if (countNode.length === 0) {
+            return;
+        }
+
+        var match = countNode.text().match(countRegex);
+        if (match === null || match.length !== 2) {
+            console.log('invalid match was: '+match);
+            return;
+        }
+
+        var count = parseInt(match[1], 10);
+        count--;
+        if (count === 0) {
+            countNode.remove();
+        } else {
+            countNode.text('('+count+')');
+        }
+    },
     el: '#left-side',
     events: {
-        'click a#add-feed-btn': 'addFeed'
+        'click a#add-feed-btn': 'addFeed',
+        'click li.tag a': 'clickTag'
+    },
+    feeditemRead: function(item) {
+        var el = this.$el;
+
+        /* Decrement the 'All'. */
+        this.decrement(el.find('.all'));
+
+        /* Decrement the feed itself. */
+        var feedID = item.get('feed_id'),
+            feedElement = el.find('[data-feed='+feedID+']');
+        this.decrement(feedElement);
+
+        /* Decrement the group. */
+        var tagElement = feedElement.prev('.tag').first();
+        if (tagElement.length === 0) {
+            tagElement = el.find('.untagged');
+        }
+        this.decrement(tagElement);
     },
     feedListEl: '#feed-list',
     initialize: function(config) {
         /* TODO: get feeds and add event listeners. */
     },
+    loaded: function() {
+        this.$el.find('.feed').hide();
+    },
     render: function() {
+        Backbone.on('feeditemread', _.bind(this.feeditemRead, this));
+
         /* While we have two sets of UI, this is an agreeable workaround. */
         if (window.location.pathname.indexOf('home') > -1) {
             this.$el.load('/raven/_feedlist/');
         } else {
-            this.$el.load('/reader/leftside/');
+            this.$el.load('/reader/leftside/', _.bind(this.loaded, this));
         }
         this.rendered = true;
         return this;
     }
 });
 
-$.fn.isOnScreen = function(loc){
-    /* Convenience method for checking to see if a node is in the viewport. */
+$.fn.isOnScreen = function(percentage){
+    /* Convenience method for checking to see if a node is in the viewport.
+     * Specify a percentage of the viewport that the node should be in.
+     */
     var win = $(window);
 
     var viewport = {
@@ -74,12 +152,7 @@ $.fn.isOnScreen = function(loc){
         left : win.scrollLeft()
     };
     viewport.right = viewport.left + win.width();
-    if (loc === 'infinite' ) {
-        viewport.bottom = viewport.top + win.height() + 200;
-    } else {
-        /* HACK! We only want the top quarter to trigger the event... */
-        viewport.bottom = viewport.top + (win.height() * 0.25);
-    }
+    viewport.bottom = viewport.top + (win.height() * percentage);
 
     var bounds = this.offset();
     if (bounds === undefined) { return; }
@@ -122,6 +195,13 @@ APP.Views.StrongSide = Backbone.View.extend({
                 delete this.items.params.tag;
             }
         }
+        if (config.starred) {
+            this.items.params.starred = config.starred;
+            this.items.params.read = ' ';
+        } else {
+            delete this.items.params.starred;
+            delete this.items.params.read;
+        }
         this.items.params.offset = 0;
         this.items.fetch({reset: true, success: this.items.success});
     },
@@ -152,7 +232,7 @@ APP.Views.StrongSide = Backbone.View.extend({
             // feeditem if we are in the middle of it, rather than going
             // all the way to the previous feeditem (which would be
             // jarring and weird).
-            if (!headline.isOnScreen()) {
+            if (!headline.isOnScreen(0.25)) {
                 nextRow = this.currentRow;
             } else {
                 nextRow = this.currentRow.prev('div.row');
@@ -173,7 +253,13 @@ APP.Views.StrongSide = Backbone.View.extend({
     },
     more: function(e) {
         e.preventDefault();
-        this.items.getNext();
+        if (this.$el.find('.feeditem-loader').length !== 0) {
+            if (this.items.hasNext()) {
+                this.items.getNext();
+            } else {
+                this.$el.find('.feeditem-loader').remove();
+            }
+        }
     },
     render: function() {
         $(window).scroll(_.bind(this.scroll_, this));
@@ -211,6 +297,7 @@ APP.Views.StrongSide = Backbone.View.extend({
             nextHeadline = null,
             item = null;
 
+        if (selected === undefined) { return; }
         var scrollPosition = $(e.currentTarget).scrollTop();
         /* Scroll down */
         if (scrollPosition > this.scrollLast) {
@@ -219,18 +306,18 @@ APP.Views.StrongSide = Backbone.View.extend({
             nextSelected = nextRow.find('.feeditem-content');
             nextHeadline = nextSelected.find('h1');
 
-            if (nextHeadline.isOnScreen() && !headline.isOnScreen()) {
+            if (nextHeadline.isOnScreen(0.25) && !headline.isOnScreen(0.25)) {
                 selected.removeClass('selected');
                 nextSelected.addClass('selected');
                 item = this.items.get(nextRow.attr('data-feeditem'));
-                if (item.attributes.read === false) {
+                if (item.get('read') === false) {
                     item.save({'read': true});
                 }
 
                 this.currentRow = nextRow;
             }
 
-            if (this.infiniteLoader.isOnScreen('infinite')) {
+            if (this.infiniteLoader.isOnScreen(4.0)) {
                 this.more(e);
             }
 
@@ -245,7 +332,7 @@ APP.Views.StrongSide = Backbone.View.extend({
                 return;
             }
 
-            if (!headline.isOnScreen() && nextRow.isOnScreen()) {
+            if (!headline.isOnScreen(0.25) && nextRow.isOnScreen(0.25)) {
                 selected.removeClass('selected');
                 nextSelected.addClass('selected');
 
@@ -266,6 +353,7 @@ APP.Views.StrongSide = Backbone.View.extend({
             break;
         case 'scroll':
         case 'keypress':
+            if (this.currentRow === null) { return; }
             selected = this.currentRow.find('.feeditem-content');
             break;
         }
@@ -282,6 +370,7 @@ APP.Views.StrongSide = Backbone.View.extend({
         }
         if (item.attributes.read === false) {
             item.save({'read': true});
+            Backbone.trigger('feeditemread', item);
         }
 
         /* No idea why selected === this.currentRow => false */
@@ -301,6 +390,9 @@ APP.Views.StrongSide = Backbone.View.extend({
 var ItemView = Backbone.View.extend({
     /* We should kill the 'row' class, but not now... */
     className: 'pure-g feeditem row',
+    events: {
+        'click a.star': 'star'
+    },
     initialize: function(config) {
         this.item = config.item;
         this.$el.attr('data-feeditem', this.item.id);
@@ -312,8 +404,20 @@ var ItemView = Backbone.View.extend({
                 item: this.item.attributes
             };
         el.html(this.template(context));
-        el.find('.content a').attr('target', '_blank');
+        el.find('.feeditem-content-body a').attr('target', '_blank');
         return this;
+    },
+    star: function(e) {
+        e.preventDefault();
+
+        var target = $(e.currentTarget);
+        if (this.item.get('starred')) {
+            this.item.save({starred: false});
+            target.text('Star');
+        } else {
+            this.item.save({starred: true});
+            target.text('Un-star');
+        }
     },
     template: Handlebars.compile($('#feed-item').html())
 });

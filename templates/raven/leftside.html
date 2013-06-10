@@ -2,38 +2,87 @@
 <a href="#nav" class="nav-menu-button">Menu</a>
 
 <div class="nav-inner">
-    <a class="pure-button primary-button" id="add-feed-btn" href="#">Add feed</a>
+    <div class="toolbox">
+        <a href="{% url 'django.contrib.auth.views.logout' %}">Log out</a>
+    </div>
 
     <div class="pure-menu pure-menu-open">
         <ul>
-            <li><a href="#all">All feeds <span class="feed-count">(2)</span></a></li>
-            <li><a href="#/starred">Starred</a></li>
-            <li><a href="#/shared">Shared with me</a></li>
+            <li>
+                <a href="#all" class="all">
+                    All feeds
+                {% if unread_count %}
+                    <span class="feed-count">({{unread_count}})</span>
+                {% endif %}
+                </a>
+            </li>
+            <li><a href="#starred">Starred</a></li>
+            {% comment %}
+            <li><a href="#shared">Shared with me</a></li>
+            {% endcomment %}
 
+            {% comment %}
             <li class="pure-menu-heading">Tags</li>
+            {% endcomment %}
             {% for tag in tags %}
-            <li><a href="#/tag/{{tag.name}}">{{tag.name}}</a></li>
+            {% tag_unread_count %}
+            <li class="tag">
+                <a href="#tag/{{tag.name}}">
+                    <span class="label closed"></span>
+                    <span class="clippable">{{tag.name}}</span>
+                {% if unread_count %}
+                    <span class="feed-count">({{ unread_count }})</span>
+                {% endif %}
+                </a>
+            </li>
             {% feeds_for_tag as feeds %}
             {% for feed in feeds %}
-            <li><a href="#/feed/{{feed.id}}">
-            {% if feed.feed.title %}
-                {{ feed.feed.title }}
-            {% else %}
-                {{ feed.feed.link }}
-            {% endif %}
-            </a></li>
+            <li class="feed" data-feed="{{feed.id}}">
+                <a href="#feed/{{feed.id}}" alt="{{feed.feed.link}}" title="{{feed.feed.link}}">
+                    <span class="label"></span>
+                    <span class="clippable">
+                    {% if feed.feed.title %}
+                        {{ feed.feed.title }}
+                    {% else %}
+                        {{ feed.feed.link }}
+                    {% endif %}
+                    </span>
+                {% if feed.unread_count %}
+                    <span class="feed-count">({{ feed.unread_count }})</span>
+                {% endif %}
+                </a>
+            </li>
             {% endfor %}
             {% endfor %}
-            <li><a href="">(Untagged)</a></li>
+            <li class="untagged tag">
+                <a href="#untagged">
+                    <span class="label closed"></span>
+                    (Untagged)
+                {% if untagged_unread_count %}
+                    <span class="feed-count">({{ untagged_unread_count }})</span>
+                {% endif %}
+                </a>
+            </li>
             {% for feed in untagged_feeds %}
-            <li><a href="#/feed/{{feed.id}}">
-            {% if feed.feed.title %}
-                {{ feed.feed.title }}
-            {% else %}
-                {{ feed.feed.link }}
-            {% endif %}
-            </a></li>
+            <li class="feed" data-feed="{{feed.id}}">
+                <a href="#feed/{{feed.id}}" alt="{{feed.feed.link}}" title="{{feed.feed.link}}">
+                    <span class="label"></span>
+                    <span class="clippable">
+                    {% if feed.feed.title %}
+                        {{ feed.feed.title }}
+                    {% else %}
+                        {{ feed.feed.link }}
+                    {% endif %}
+                    </span>
+                {% if feed.unread_count %}
+                    <span class="feed-count">({{ feed.unread_count }})</span>
+                {% endif %}
+                </a>
+            </li>
             {% endfor %}
         </ul>
     </div>
+
+    <a class="pure-button primary-button" id="add-feed-btn" href="#">Add feed</a>
+
 </div>

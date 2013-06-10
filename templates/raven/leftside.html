@@ -5,7 +5,6 @@
     <div class="toolbox">
         <a href="{% url 'django.contrib.auth.views.logout' %}">Log out</a>
     </div>
-    <a class="pure-button primary-button" id="add-feed-btn" href="#">Add feed</a>
 
     <div class="pure-menu pure-menu-open">
         <ul>
@@ -22,7 +21,9 @@
             <li><a href="#shared">Shared with me</a></li>
             {% endcomment %}
 
+            {% comment %}
             <li class="pure-menu-heading">Tags</li>
+            {% endcomment %}
             {% for tag in tags %}
             {% tag_unread_count %}
             <li class="tag">
@@ -81,4 +82,7 @@
             {% endfor %}
         </ul>
     </div>
+
+    <a class="pure-button primary-button" id="add-feed-btn" href="#">Add feed</a>
+
 </div>

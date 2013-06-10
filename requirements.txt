@@ -13,7 +13,7 @@ mock==1.0.1
 newrelic
 opml==0.5
 psycopg2==2.5
-South==0.7.6
+South==0.8.1
 Unipath==1.0
 http://chizang.net/libgreader/libgreader-0.7.2.tar.gz
 git+git://github.com/achiang/django-stripe-payments

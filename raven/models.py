@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.core.exceptions import ValidationError, ObjectDoesNotExist, MultipleObjectsReturned
 from taggit.managers import TaggableManager
 from taggit.models import TaggedItem
 
@@ -156,6 +156,70 @@ class Feed(models.Model):
             self.fetch_frequency = self.FETCH_SLOW
             logger.warn('Freq (slow): %s: %s' % (self.pk, self.link))
 
+    def _update_entry(self, item, tmp):
+        # item is retrieved object, tmp is newly fetched object
+        if item.published > tmp.published:
+            return item
+
+        # Assume newer is better... as long as it exists
+        for attr in ['atom_id', 'link', 'title', 'guid', 'published',
+                     'description']:
+            if hasattr(tmp, attr):
+                setattr(item, attr, getattr(tmp, attr))
+
+        item.save()
+        return item
+
+    def _get_or_create(self, tmp):
+        # Search for atom_id first
+        try:
+            item = FeedItem.objects.get(atom_id=tmp.atom_id)
+            return self._update_entry(item, tmp)
+        except ObjectDoesNotExist:
+            pass
+        except MultipleObjectsReturned:
+            qs = FeedItem.objects.filter(atom_id=tmp.atom_id).order_by('-published')
+            for item in qs[1:]:
+                logger.warn('Deleting duplicate atom_id: %s' % item.atom_id)
+                item.delete()
+            return self._update_entry(qs[0], tmp)
+
+        # Search for link next
+        try:
+            item = FeedItem.objects.get(link=tmp.link)
+            return self._update_entry(item, tmp)
+        except ObjectDoesNotExist:
+            pass
+        except MultipleObjectsReturned:
+            qs = FeedItem.objects.filter(link=tmp.link).order_by('-published')
+            for item in qs[1:]:
+                logger.warn('Deleting duplicate link: %s' % item.link)
+                item.delete()
+            return self._update_entry(qs[0], tmp)
+
+        # Search title last
+        try:
+            item = FeedItem.objects.get(title=tmp.title)
+            return self._update_entry(item, tmp)
+        except ObjectDoesNotExist:
+            pass
+        except MultipleObjectsReturned:
+            qs = FeedItem.objects.filter(title=tmp.title).order_by('-published')
+            for item in qs[1:]:
+                logger.warn('Deleting duplicate title: %s' % item.title)
+                item.delete()
+            return self._update_entry(qs[0], tmp)
+
+        # Last resort, get_or_create our own GUID
+        item, new = FeedItem.objects.get_or_create(guid=tmp.guid,
+                           feed=tmp.feed,
+                           defaults={ 'published': tmp.published,
+                                      'description': tmp.description,
+                                      'link' : tmp.link,
+                                      'atom_id': tmp.atom_id,
+                                      'title' : tmp.title })
+        return item
+
     def update(self, data=None, hack=False):
         # dead feeds so far:
         # 22: http://blog.myspace.com/blog/rss.cfm?friendID=73367402
@@ -281,13 +345,7 @@ class Feed(models.Model):
                         tmp.published = datetime.utcnow()
 
             tmp.guid = tmp.calculate_guid()
-            item, new = FeedItem.objects.get_or_create(guid=tmp.guid,
-                               feed=tmp.feed,
-                               defaults={ 'published': tmp.published,
-                                          'description': tmp.description,
-                                          'link' : tmp.link,
-                                          'atom_id': tmp.atom_id,
-                                          'title' : tmp.title.encode('utf-8') })
+            item = self._get_or_create(tmp)
 
             mark_as_read = False
             if hack is True and last_entry is not None:
@@ -352,6 +410,9 @@ class FeedItem(models.Model):
         unique_together = ('feed', 'guid')
         index_together = [
             ['feed', 'guid'],
+            ['feed', 'link'],
+            ['feed', 'title'],
+            ['feed', 'atom_id'],
             ['feed', 'published'],
         ]
 
@@ -368,7 +429,7 @@ class FeedItem(models.Model):
     #   guid        - internally calculated
     #   atom_id     - supplied by feedparser, optional
     guid = models.CharField(max_length=128, unique=True)
-    atom_id = models.TextField(null=True)
+    atom_id = models.TextField(default='', db_index=True)
 
     # Legacy google reader longform unique id
     # https://code.google.com/p/google-reader-api/wiki/ItemId

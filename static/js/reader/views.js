@@ -78,24 +78,21 @@ APP.Views.LeftSide = Backbone.View.extend({
     decrement: function(ele) {
         var countRegex = /^\((\d+)\)/;
 
-        var countNode = ele.find('.feed-count');
-        if (countNode.length === 0) {
-            return;
+        var countNode = ele.find('.feed-count'),
+            countNodeLength = countNode.length;
+        for (var i=0; i<countNodeLength; i++) {
+            var node = countNode[i],
+                match = $(node).text().match(countRegex),
+                count = parseInt(match[1], 10);
+
+            count--;
+            if (count === 0) {
+                countNode.remove();
+            } else {
+                countNode.text('('+count+')');
+            }
         }
 
-        var match = countNode.text().match(countRegex);
-        if (match === null || match.length !== 2) {
-            console.log('invalid match was: '+match);
-            return;
-        }
-
-        var count = parseInt(match[1], 10);
-        count--;
-        if (count === 0) {
-            countNode.remove();
-        } else {
-            countNode.text('('+count+')');
-        }
     },
     el: '#left-side',
     events: {

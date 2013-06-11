@@ -528,9 +528,13 @@ class UserFeedItem(models.Model):
 
     @classmethod
     def add_to_users(Class, feed, item, mark_as_read=False):
+        threshold = datetime(2013, 3, 13)
         for user in feed.subscribers.all():
             ufi, new = UserFeedItem.objects.get_or_create(user=user, feed=feed, item=item)
             if mark_as_read is True:
+                ufi.read = True
+
+            if item.published < threshold:
                 ufi.read = True
 
             ufi.save()

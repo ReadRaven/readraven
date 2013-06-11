@@ -34,11 +34,12 @@ $(document).bind('ajaxStart', function() {
 });
 
 APP.Routers.Router = Backbone.Router.extend({
-    reader: function() {
+    all: function() {
+        var params = {read: '~~~'};
         if (this.strongSide === undefined) {
-            this.strongSide = new APP.Views.StrongSide();
+            this.strongSide = new APP.Views.StrongSide({params: params});
         } else {
-            this.strongSide.filter({});
+            this.strongSide.filter(params);
         }
         if (!this.leftSide.rendered) {
             this.leftSide.render();
@@ -58,12 +59,13 @@ APP.Routers.Router = Backbone.Router.extend({
         this.leftSide = new APP.Views.LeftSide();
     },
     routes: {
-        'all': 'reader',
+        'all': 'all',
         'feed/:id': 'feed',
         'shared': 'shared', /* Not yet implemented. */
-        'starred': 'starred', /* Not yet implemented. */
+        'starred': 'starred',
         'tag/:tag': 'tag', /* Not yet implemented. */
-        '*reader': 'reader'
+        'unread': 'unread',
+        '*unread': 'unread'
     },
     shared: function() {
         console.log('shared view');
@@ -82,6 +84,16 @@ APP.Routers.Router = Backbone.Router.extend({
     },
     tag: function(tag) {
         console.log('Tag view for tag: '+tag);
+    },
+    unread: function() {
+        if (this.strongSide === undefined) {
+            this.strongSide = new APP.Views.StrongSide();
+        } else {
+            this.strongSide.filter();
+        }
+        if (!this.leftSide.rendered) {
+            this.leftSide.render();
+        }
     }
 });
 

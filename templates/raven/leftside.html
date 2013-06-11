@@ -9,11 +9,16 @@
     <div class="pure-menu pure-menu-open">
         <ul>
             <li>
-                <a href="#all" class="all">
-                    All feeds
+                <a href="#unread" class="unread">
+                    Unread items
                 {% if unread_count %}
                     <span class="feed-count">({{unread_count}})</span>
                 {% endif %}
+                </a>
+            </li>
+            <li>
+                <a href="#all" class="all">
+                    All items
                 </a>
             </li>
             <li><a href="#starred">Starred</a></li>

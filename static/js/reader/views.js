@@ -106,7 +106,7 @@ APP.Views.LeftSide = Backbone.View.extend({
         var el = this.$el;
 
         /* Decrement the 'All'. */
-        this.decrement(el.find('.all'));
+        this.decrement(el.find('.unread'));
 
         /* Decrement the feed itself. */
         var feedID = item.get('feed_id'),
@@ -180,6 +180,8 @@ APP.Views.StrongSide = Backbone.View.extend({
         /* Take a config of feed and/or tag, and add them as filters, and
          * reset the items.
          */
+        config = config || {};
+
         this.$el.find(this.containerEl).empty();
         if (config.feed) {
             this.items.params.feed = config.feed;
@@ -197,9 +199,13 @@ APP.Views.StrongSide = Backbone.View.extend({
         }
         if (config.starred) {
             this.items.params.starred = config.starred;
-            this.items.params.read = ' ';
+            this.items.params.read = '~~~';
         } else {
             delete this.items.params.starred;
+        }
+        if (config.read) {
+            this.items.params.read = config.read;
+        } else {
             delete this.items.params.read;
         }
         this.items.params.offset = 0;

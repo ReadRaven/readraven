@@ -213,6 +213,22 @@ class Feed(models.Model):
         for entry in data.entries:
             tmp = FeedItem()
             tmp.feed = self
+
+            try:
+                tmp.title = HTMLParser().unescape(entry.title)
+            except AttributeError:
+                # Fuck you LiveJournal.
+                tmp.title = u'(none)'
+            try:
+                tmp.link = entry.link
+            except AttributeError:
+                tmp.link = ''
+            try:
+                tmp.atom_id = entry.id
+            except AttributeError:
+                # Set this to empty string so calculate_guid() doesn't die
+                tmp.atom_id = ''
+
             try:
                 tmp.description = entry.content[0]['value'].strip()
             except AttributeError:
@@ -226,15 +242,6 @@ class Feed(models.Model):
                         if data.bozo == 1:
                             logger.warn('Exception is %s' % data.bozo_exception)
                         continue
-            try:
-                tmp.link = entry.link
-            except AttributeError:
-                tmp.link = ''
-            try:
-                tmp.atom_id = entry.id
-            except AttributeError:
-                # Set this to empty string so calculate_guid() doesn't die
-                tmp.atom_id = ''
 
             hack_extra_sucky = False
             try:
@@ -272,12 +279,6 @@ class Feed(models.Model):
                     except AttributeError:
                         hack_extra_sucky = True
                         tmp.published = datetime.utcnow()
-
-            try:
-                tmp.title = HTMLParser().unescape(entry.title)
-            except AttributeError:
-                # Fuck you LiveJournal.
-                tmp.title = u'(none)'
 
             tmp.guid = tmp.calculate_guid()
             item, new = FeedItem.objects.get_or_create(guid=tmp.guid,

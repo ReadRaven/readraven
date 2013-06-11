@@ -407,8 +407,9 @@ class FeedItem(models.Model):
     def _get_or_create(tmp):
         # Search for atom_id first
         try:
-            item = FeedItem.objects.get(atom_id=tmp.atom_id)
-            return FeedItem._update_entry(item, tmp)
+            if tmp.atom_id != '':
+                item = FeedItem.objects.get(atom_id=tmp.atom_id)
+                return FeedItem._update_entry(item, tmp)
         except ObjectDoesNotExist:
             pass
         except MultipleObjectsReturned:
@@ -420,8 +421,9 @@ class FeedItem(models.Model):
 
         # Search for link next
         try:
-            item = FeedItem.objects.get(link=tmp.link)
-            return FeedItem._update_entry(item, tmp)
+            if tmp.link != '':
+                item = FeedItem.objects.get(link=tmp.link)
+                return FeedItem._update_entry(item, tmp)
         except ObjectDoesNotExist:
             pass
         except MultipleObjectsReturned:
@@ -440,7 +442,6 @@ class FeedItem(models.Model):
                                       'atom_id': tmp.atom_id,
                                       'title' : tmp.title })
         return item
-
 
 
 # User monkeypatches

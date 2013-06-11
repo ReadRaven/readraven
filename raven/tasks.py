@@ -294,9 +294,10 @@ class SyncFromReaderAPITask(Task):
 
         reader = GoogleReader(auth)
 
-        if not reader.buildSubscriptionList():
-            # XXX: better error recovery here?
-            return False
+        try:
+            reader.buildSubscriptionList()
+        except TypeError, exc:
+            SyncFromReaderAPITask().retry(exc=exc)
 
         feeds = {}
         # First loop quickly creates Feed objects... for speedier UI?

@@ -431,19 +431,6 @@ class FeedItem(models.Model):
                 item.delete()
             return FeedItem._update_entry(qs[0], tmp)
 
-        # Search title last
-        try:
-            item = FeedItem.objects.get(title=tmp.title)
-            return FeedItem._update_entry(item, tmp)
-        except ObjectDoesNotExist:
-            pass
-        except MultipleObjectsReturned:
-            qs = FeedItem.objects.filter(title=tmp.title).order_by('-published')
-            for item in qs[1:]:
-                logger.warn('Deleting duplicate title: %s' % item.title)
-                item.delete()
-            return FeedItem._update_entry(qs[0], tmp)
-
         # Last resort, get_or_create our own GUID
         item, new = FeedItem.objects.get_or_create(guid=tmp.guid,
                            feed=tmp.feed,

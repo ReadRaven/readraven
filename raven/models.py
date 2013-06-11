@@ -47,9 +47,6 @@ class Feed(models.Model):
     # Optional metadata
     generator = models.TextField(blank=True)
 
-    # Production battlescars
-    dead = models.BooleanField(default=False)
-
     # Values are in minutes
     FETCH_FAST = 5
     FETCH_DEFAULT = 30
@@ -221,16 +218,6 @@ class Feed(models.Model):
         return item
 
     def update(self, data=None, hack=False):
-        # dead feeds so far:
-        # 22: http://blog.myspace.com/blog/rss.cfm?friendID=73367402
-        # 223: http://www.aaronsw.com/2002/feeds/pgessays.rss
-        # 663: http://www.finderskeepers.gcgstudios.com/?p=rss
-        if self.dead is True:
-            self.fetch_frequency = self.FETCH_NEVER
-            self.save()
-            logger.warn('Converting dead: %s - %s' % (self.pk, self.link))
-            return
-
         # u'user/00109242490472324272/source/com.google/link'
         if self.link.startswith('user/'):
             self.fetch_frequency = self.FETCH_NEVER

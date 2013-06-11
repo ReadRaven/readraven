@@ -40,12 +40,12 @@ class Feed(models.Model):
 
     # link is the RSS feed link
     # site is the "real" web page (not required!)
-    link = models.URLField(max_length=1023, unique=True)
-    site = models.URLField(max_length=1023, null=True)
-    title = models.CharField(max_length=1023)
+    link = models.TextField(unique=True)
+    site = models.TextField(null=True)
+    title = models.TextField()
 
     # Optional metadata
-    generator = models.CharField(max_length=1023, blank=True)
+    generator = models.TextField(blank=True)
 
     # Production battlescars
     dead = models.BooleanField(default=False)
@@ -367,7 +367,7 @@ class FeedItem(models.Model):
     #   guid        - internally calculated
     #   atom_id     - supplied by feedparser, optional
     guid = models.CharField(max_length=128, unique=True)
-    atom_id = models.CharField(max_length=500, null=True)
+    atom_id = models.TextField(null=True)
 
     # Legacy google reader longform unique id
     # https://code.google.com/p/google-reader-api/wiki/ItemId

@@ -41,7 +41,7 @@ def _new_user_item(user, feed, entry):
         tmp.description = entry.content
         tmp.reader_guid = entry.id
         tmp.published = datetime.utcfromtimestamp(entry.time)
-        tmp.guid = item.calculate_guid()
+        tmp.guid = tmp.calculate_guid()
 
         item = FeedItem._get_or_create(tmp)
 

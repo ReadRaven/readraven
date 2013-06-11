@@ -32,22 +32,18 @@ def _new_user_item(user, feed, entry):
     try:
         item = FeedItem.objects.get(reader_guid=entry.id)
     except ObjectDoesNotExist:
-        item = FeedItem()
-        item.feed = feed
-        item.title = entry.title
-        item.link = entry.url
-        item.description = entry.content
+        tmp = FeedItem()
+        tmp.feed = feed
+        tmp.title = entry.title
+        tmp.link = entry.url
+        tmp.atom_id = ''
 
-        item.atom_id = ''
-        item.reader_guid = entry.id
-        item.published = datetime.utcfromtimestamp(entry.time)
-        item.guid = item.calculate_guid()
-        try:
-            paranoid_item = FeedItem.objects.get(guid=item.guid)
-            item = paranoid_item
-            logger.warn('Detected duplicate GUID for %s' % item.link)
-        except ObjectDoesNotExist:
-            item.save()
+        tmp.description = entry.content
+        tmp.reader_guid = entry.id
+        tmp.published = datetime.utcfromtimestamp(entry.time)
+        tmp.guid = item.calculate_guid()
+
+        item = FeedItem._get_or_create(tmp)
 
     try:
         user_item = item.userfeeditem(user)

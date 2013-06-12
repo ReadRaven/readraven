@@ -9,6 +9,9 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.exceptions import ValidationError, ObjectDoesNotExist, MultipleObjectsReturned
+
+from django_push.subscriber.models import Subscription
+from django_push.subscriber.signals import updated
 from taggit.managers import TaggableManager
 from taggit.models import TaggedItem
 
@@ -46,6 +49,8 @@ class Feed(models.Model):
 
     # Optional metadata
     generator = models.TextField(blank=True)
+
+    subscription = models.ForeignKey(Subscription, related_name='feed', null=True)
 
     # Values are in minutes
     FETCH_FAST = 5
@@ -138,6 +143,11 @@ class Feed(models.Model):
         except feedfinder.TimeoutError:
             return None
 
+    @receiver(updated)
+    def pubsubhubbub_listener(notification, **kwargs):
+        logger.warn('Pubsubhubbbub event received!')
+        Feed.calculate_stats()
+
     def calculate_stats(self):
         # I consider this to be a lot for 1 day. Why aren't they using
         # pubsubhubbub? As for the magic number...
@@ -188,6 +198,7 @@ class Feed(models.Model):
             for link in data.feed.links:
                 if link.rel == 'hub':
                     logger.warn('Hub detected: %s' % self.pk)
+                    self.subscription = Subscription.objects.subscribe(self.link, hub=link.href)
         self.calculate_stats()
         self.save()
 

@@ -17,3 +17,4 @@ South==0.8.1
 Unipath==1.0
 http://chizang.net/libgreader/libgreader-0.7.2.tar.gz
 git+git://github.com/achiang/django-stripe-payments
+git+git://github.com/brutasse/django-push.git@9bb999397d426d7d

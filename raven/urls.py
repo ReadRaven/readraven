@@ -27,7 +27,6 @@ urlpatterns = patterns(
     url(r'^home', 'raven.views.home'),
     url(r'^values', 'raven.views.values'),
     url(r'^logout/$', 'django.contrib.auth.views.logout', {'next_page': '/'}),
-    url(r'^jssucks', 'raven.views.jssucks'),
 
     url(r'^$', 'raven.views.index'),
     url(r'^raven/_feedlist', 'raven.views.feedlist'),
@@ -39,5 +38,8 @@ urlpatterns = patterns(
     url(r'^usher/dashboard', 'usher.views.dashboard'),
     url(r'^usher/import_takeout', 'usher.views.import_takeout'),
     url(r'^usher/google_auth', 'usher.views.google_auth'),
+
+    url(r'^jssucks', 'raven.views.jssucks'),
     url(r'^google_auth_callback', 'usher.views.google_auth_callback'),
+    url(r'^subscriber', include('django_push.subscriber.urls')),
 )

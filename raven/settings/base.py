@@ -119,6 +119,7 @@ INSTALLED_APPS = (
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 
+    'django_push.subscriber',
     'djangosecure',
     'djcelery',
     'south',
@@ -197,3 +198,6 @@ SECURE_SSL_REDIRECT = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 API_LIMIT_PER_PAGE = 0
+
+# django-push setting, use https for callback urls
+PUSH_SSL_CALLBACK = True

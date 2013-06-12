@@ -34,54 +34,107 @@ $(document).bind('ajaxStart', function() {
 });
 
 APP.Routers.Router = Backbone.Router.extend({
-    reader: function() {
-        if (this.strongSide === undefined) {
-            this.strongSide = new APP.Views.StrongSide();
-        } else {
-            this.strongSide.filter({});
-        }
+    account: function() {
         if (!this.leftSide.rendered) {
             this.leftSide.render();
+        }
+        if (this.feedItemList !== undefined) {
+            this.feedItemList.hide();
+        }
+
+        if (this.accountManage === undefined) {
+            this.accountManage = new APP.Views.AccountManageView();
+            this.accountManage.render();
+        } else {
+            this.accountManage.show();
+        }
+    },
+    all: function() {
+        if (!this.leftSide.rendered) {
+            this.leftSide.render();
+        }
+        if (this.accountManage !== undefined) {
+            this.accountManage.hide();
+        }
+
+        var params = {read: '~~~'};
+        if (this.feedItemList === undefined) {
+            this.feedItemList = new APP.Views.FeedItemList({params: params});
+        } else {
+            this.feedItemList.filter(params);
         }
     },
     feed: function(id) {
-        if (this.strongSide === undefined) {
-            this.strongSide = new APP.Views.StrongSide({params: {feed: id}});
-        } else {
-            this.strongSide.filter({feed: id});
-        }
         if (!this.leftSide.rendered) {
             this.leftSide.render();
+        }
+        if (this.accountManage !== undefined) {
+            this.accountManage.hide();
+        }
+        if (this.feedItemList === undefined) {
+            this.feedItemList = new APP.Views.FeedItemList({params: {feed: id}});
+        } else {
+            this.feedItemList.filter({feed: id});
+        }
+    },
+    feeds: function() {
+        if (!this.leftSide.rendered) {
+            this.leftSide.render();
+        }
+        if (this.accountManage !== undefined) {
+            this.accountManage.hide();
+        }
+        if (this.feedItemList !== undefined) {
+            this.feedItemList.hide();
         }
     },
     initialize: function(config) {
         this.leftSide = new APP.Views.LeftSide();
     },
     routes: {
-        'all': 'reader',
+        'account': 'account',
+        'all': 'all',
+        'feeds': 'feeds',
         'feed/:id': 'feed',
         'shared': 'shared', /* Not yet implemented. */
-        'starred': 'starred', /* Not yet implemented. */
+        'starred': 'starred',
         'tag/:tag': 'tag', /* Not yet implemented. */
-        '*reader': 'reader'
+        'unread': 'unread',
+        '*unread': 'unread'
     },
     shared: function() {
         console.log('shared view');
     },
     starred: function() {
-        if (this.strongSide === undefined) {
-            this.strongSide = new APP.Views.StrongSide({params: {starred: true}});
-        } else {
-            this.strongSide.filter({
-                starred: true
-            });
-        }
         if (!this.leftSide.rendered) {
             this.leftSide.render();
+        }
+        if (this.accountManage !== undefined) {
+            this.accountManage.hide();
+        }
+        if (this.feedItemList === undefined) {
+            this.feedItemList = new APP.Views.FeedItemList({params: {starred: true}});
+        } else {
+            this.feedItemList.filter({
+                starred: true
+            });
         }
     },
     tag: function(tag) {
         console.log('Tag view for tag: '+tag);
+    },
+    unread: function() {
+        if (!this.leftSide.rendered) {
+            this.leftSide.render();
+        }
+        if (this.accountManage !== undefined) {
+            this.accountManage.hide();
+        }
+        if (this.feedItemList === undefined) {
+            this.feedItemList = new APP.Views.FeedItemList();
+        } else {
+            this.feedItemList.filter();
+        }
     }
 });
 

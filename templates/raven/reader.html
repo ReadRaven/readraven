@@ -15,13 +15,18 @@
     <body>
         <div class="pure-g-r content" id="layout">
             <div class="pure-u" id="left-side"></div>
-            <div class="pure-u" id="strong-side"></div>
+            <div class="pure-u" id="strong-side">
+                <div id="feed-manage"></div>
+                <div id="account-manage"></div>
+                <div id="feeditem-list"></div>
+            </div>
         </div>
 
     </body>
     {% load_handlebars_template raven/feed-item-list.handlebars feed-item-list %}
     {% load_handlebars_template raven/feed-item.handlebars feed-item %}
     {% load_handlebars_template raven/feed-item-empty.handlebars feed-item-empty %}
+    {% load_handlebars_template raven/account-manage.handlebars account-manage-template %}
     {% load_handlebars_template raven/add-feed-modal.handlebars add-feed-modal %}
 
     <script>window.CSRFTOKEN = '{{csrf_token}}';</script>

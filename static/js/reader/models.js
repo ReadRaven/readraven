@@ -46,6 +46,11 @@ APP.Collections.Items = Backbone.Collection.extend({
     total: 0,
     url: function() {
         var params = _.defaults(this.params, this.defaultParams);
+        for (var param in params) { if (params.hasOwnProperty(param)) {
+            if (params[param] == '~~~') {
+                delete params[param];
+            }
+        }}
         var url = '/api/0.9.5/item/?' + $.param(params);
         return url;
     }

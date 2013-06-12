@@ -28,6 +28,10 @@ a {
     width: 100%;
 }
 
+#account-manage {
+    margin: 20px;
+}
+
 /* HELPER CLASSES */
 div.modal {
     background-color: white;

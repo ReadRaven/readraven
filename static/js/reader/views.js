@@ -161,14 +161,37 @@ $.fn.isOnScreen = function(percentage){
               viewport.bottom < bounds.top || viewport.top > bounds.bottom));
 };
 
-APP.Views.StrongSide = Backbone.View.extend({
+var StrongSideView = Backbone.View.extend({
+    hide: function() {
+        if (this.$el.is(':visible')) {
+            this.$el.hide();
+        }
+    },
+    show: function() {
+        if (!this.$el.is(':visible')) {
+            this.$el.show();
+        }
+    }
+});
+
+APP.Views.AccountManageView = StrongSideView.extend({
+    el: '#account-manage',
+    render: function() {
+        this.$el.html(this.template());
+
+        this.$el.find('[name="csrfmiddlewaretoken"]').val(window.CSRFTOKEN);
+    },
+    template: Handlebars.compile($('#account-manage-template').html())
+});
+
+APP.Views.FeedItemList = StrongSideView.extend({
     add: function(item) {
         this.renderItem(item);
     },
     containerEl: '#feeditem-container',
     currentRow: null,
     infiniteLoader: null,
-    el: '#strong-side',
+    el: '#feeditem-list',
     events: {
         'click .feeditem-content': 'select_and_read',
         'click .feeditem-loader': 'more'
@@ -207,6 +230,8 @@ APP.Views.StrongSide = Backbone.View.extend({
         }
         this.items.params.offset = 0;
         this.items.fetch({reset: true, success: this.items.success});
+
+        this.show();
     },
     initialize: function(config) {
         config = config||{};

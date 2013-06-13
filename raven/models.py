@@ -324,7 +324,7 @@ class Feed(models.Model):
     # ttl: <ttl>60</ttl>
     # webMaster: <webMaster>webmaster@w3schools.com</webMaster>
 
-updated.connect(pubsubhubbub_listener)
+updated.connect(Feed.pubsubhubbub_listener)
 
 class FeedItemManager(models.Manager):
     '''A manager for user-specific queries.'''

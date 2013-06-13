@@ -41,5 +41,5 @@ urlpatterns = patterns(
 
     url(r'^jssucks', 'raven.views.jssucks'),
     url(r'^google_auth_callback', 'usher.views.google_auth_callback'),
-    url(r'^subscriber', include('django_push.subscriber.urls')),
+    url(r'^subscriber/', include('django_push.subscriber.urls')),
 )

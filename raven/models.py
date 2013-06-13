@@ -143,9 +143,8 @@ class Feed(models.Model):
         except feedfinder.TimeoutError:
             return None
 
-    @receiver(updated)
-    def pubsubhubbub_listener(notification, **kwargs):
-        logger.warn('Pubsubhubbbub event received!')
+    def pubsubhubbub_listener(sender, notification, **kwargs):
+        logger.warn('Pubsubhubbbub event received! %s: %s' % (sender.id, sender.topic))
         Feed.calculate_stats()
 
     def calculate_stats(self):
@@ -325,6 +324,7 @@ class Feed(models.Model):
     # ttl: <ttl>60</ttl>
     # webMaster: <webMaster>webmaster@w3schools.com</webMaster>
 
+updated.connect(pubsubhubbub_listener)
 
 class FeedItemManager(models.Manager):
     '''A manager for user-specific queries.'''

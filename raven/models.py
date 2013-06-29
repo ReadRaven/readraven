@@ -196,7 +196,6 @@ class Feed(models.Model):
         if 'links' in data.feed:
             for link in data.feed.links:
                 if link.rel == 'hub':
-                    logger.warn('Hub detected: %s' % self.pk)
                     self.subscription = Subscription.objects.subscribe(self.link, hub=link.href)
         self.calculate_stats()
         self.save()

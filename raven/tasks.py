@@ -87,7 +87,7 @@ class UpdateFeedBeat(PeriodicTask):
     '''A task for updating a set of feeds.'''
 
     SLICE_SIZE = 50
-    run_every = timedelta(seconds=60*3)
+    run_every = timedelta(seconds=60*6)
 
     def run(self):
         for freq in [Feed.FETCH_FAST, Feed.FETCH_DEFAULT, Feed.FETCH_SLOW]:

@@ -196,7 +196,7 @@ class Feed(models.Model):
         if 'links' in data.feed:
             for link in data.feed.links:
                 if link.rel == 'hub':
-                    self.subscription = Subscription.objects.subscribe(self.link, hub=link.href)
+                    self.subscription = Subscription.objects.subscribe(self.link.encode('utf-8'), hub=link.href.encode('utf-8'))
         self.calculate_stats()
         self.save()
 

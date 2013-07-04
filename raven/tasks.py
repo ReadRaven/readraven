@@ -93,7 +93,7 @@ class UpdateFeedBeat(PeriodicTask):
         for freq in [Feed.FETCH_FAST, Feed.FETCH_DEFAULT, Feed.FETCH_SLOW]:
             age = datetime.utcnow() - timedelta(minutes=freq)
             feeds = Feed.objects.filter(last_fetched__lt=age,
-                                        fetch_frequency=freq)[:self.SLICE_SIZE]
+                                        fetch_frequency=freq).order_by('last_fetched')[:self.SLICE_SIZE]
             update_feeds.apply_async([feeds])
 
         # If we imported feeds + feeditems from Reader, we have

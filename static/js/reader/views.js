@@ -193,8 +193,7 @@ APP.Views.FeedItemList = StrongSideView.extend({
     infiniteLoader: null,
     el: '#feeditem-list',
     events: {
-        'click .feeditem-content': 'select_and_read',
-        'click .feeditem-loader': 'more'
+        'click .feeditem-content': 'select_and_read'
     },
     filter: function(config) {
         /* Take a config of feed and/or tag, and add them as filters, and
@@ -281,12 +280,10 @@ APP.Views.FeedItemList = StrongSideView.extend({
     },
     more: function(e) {
         e.preventDefault();
-        if (this.$el.find('.feeditem-loader').length !== 0) {
-            if (this.items.hasNext()) {
-                this.items.getNext();
-            } else {
-                this.$el.find('.feeditem-loader').remove();
-            }
+        if (this.items.hasNext()) {
+            this.items.getNext();
+        } else {
+            this.infiniteLoader.remove();
         }
     },
     render: function() {
@@ -391,13 +388,6 @@ APP.Views.FeedItemList = StrongSideView.extend({
         selected.addClass('selected');
         item = this.items.get(selected.parent().attr('data-feeditem'));
 
-        /* This happens when loading more items, the old items go out of
-         * scope and we'll get something undefined. Just return the
-         * current selected item.
-         */
-        if (item === undefined) {
-            return selected;
-        }
         if (item.get('read') === false) {
             item.save({'read': true}, {success: _.bind(function() {
                 Backbone.trigger('feeditemread', item);

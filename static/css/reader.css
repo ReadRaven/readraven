@@ -127,7 +127,6 @@ a.secondary-button {
         background-position: -15px 0px;
     }
     #left-side .clippable {
-        display: inline-block;
         max-width: 175px;
         white-space: nowrap;
         overflow: hidden;

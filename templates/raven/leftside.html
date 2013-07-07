@@ -2,10 +2,6 @@
 <a href="#nav" class="nav-menu-button">Menu</a>
 
 <div class="nav-inner">
-    <div class="toolbox">
-        <a href="{% url 'django.contrib.auth.views.logout' %}">Log out</a>
-    </div>
-
     <div class="pure-menu pure-menu-open">
         <ul>
             <li>
@@ -104,8 +100,11 @@
                     Account settings
                 </a>
             </li>
+            <li>
+                <a href="{% url 'django.contrib.auth.views.logout' %}">
+                    Log out
+                </a>
+            </li>
         </ul>
     </div>
-
-
 </div>

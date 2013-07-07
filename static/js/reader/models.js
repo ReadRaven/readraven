@@ -22,15 +22,15 @@ APP.Collections.Items = Backbone.Collection.extend({
         order_by: '-published'
     },
     getNext: function() {
-        if (this.length == this._total) {
+        if (!this.hasNext()) {
             /* We have all the feeds. */
             console.log('All feeds already fetched.');
             return -1;
         }
-        this.fetch({add: true, success: this.onSuccess});
+        this.fetch({remove: false, success: this.success});
     },
     hasNext: function() {
-        return (this.length !== this._total);
+        return (this.length !== this.total);
     },
     model: Item,
     params: {},

@@ -8,8 +8,7 @@ DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
-    ('Alex Chiang', 'alex@chizang.net'),
-    ('Paul Hummer', 'paul@eventuallyanyway.com'),
+    ('Alex Chiang', 'alex@readraven.com'),
 )
 
 MANAGERS = ADMINS
@@ -20,7 +19,7 @@ LOGIN_URL = '/usher/sign_in'
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = ['www.readraven.com', '.herokuapp.com']
+ALLOWED_HOSTS = ['www.readraven.com']
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name

@@ -9,10 +9,8 @@ class Migration(DataMigration):
     def forwards(self, orm):
         # http://stackoverflow.com/questions/3314173/how-to-call-a-static-methods-on-a-django-model-class-during-a-south-migration
         import hashlib
-        for item in orm['raven.FeedItem'].objects.all():
-            link_hash = hashlib.sha256()
-            link_hash.update(item.link.encode('utf-8'))
-            item.link_hash = link_hash.hexdigest()
+        for item in orm['raven.FeedItem'].objects.filter(link_hash__exact=''):
+            item.link_hash = hashlib.sha256(item.link.encode('utf-8')).hexdigest()
             item.save()
 
     def backwards(self, orm):

@@ -4,8 +4,6 @@ from .base import *
 import djcelery
 djcelery.setup_loader()
 BROKER_URL = os.environ.get('CLOUDAMQP_URL', '')
-# Only set to 1 for staging/free heroku
-#BROKER_POOL = 1
 
 # URL prefix for static files.
 # Example: "http://example.com/static/", "http://static.example.com/"

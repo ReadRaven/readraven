@@ -269,7 +269,7 @@ APP.Views.FeedItemList = StrongSideView.extend({
         /* TODO: Remove this and actually fix your damn code. */
         if (nextRow.length === 0) { return; }
 
-        $('body').animate({
+        $('body,html').animate({
             scrollTop: nextRow.offset().top - 20 /* Podding of window */
         }, 1, 'swing', _.bind(function () {
             selected.removeClass('selected');

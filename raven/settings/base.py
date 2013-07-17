@@ -201,3 +201,17 @@ API_LIMIT_PER_PAGE = 0
 
 # django-push setting, use https for callback urls
 PUSH_SSL_CALLBACK = True
+
+import dj_database_url
+DATABASES = {'default' : dj_database_url.config() }
+DATABASES['default']['ENGINE'] = 'django_postgrespool'
+
+SOUTH_DATABASE_ADAPTERS = {
+    'default': 'south.db.postgresql_psycopg2'
+}
+
+DATABASE_POOL_ARGS = {
+    'max_overflow': 50,
+    'pool_size': 5,
+    'recycle': 300
+}

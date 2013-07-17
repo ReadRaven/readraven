@@ -6,6 +6,7 @@ django-secure==0.1.2
 django-storages==1.1.8
 django-tastypie==0.9.14
 django-taggit==0.10a1
+dj-database-url==0.2.2
 feedparser==5.1.3
 google-api-python-client==1.1
 gunicorn==0.17.2
@@ -15,6 +16,8 @@ opml==0.5
 psycopg2==2.5
 South==0.8.1
 Unipath==1.0
+uwsgi==1.9.13
 http://chizang.net/libgreader/libgreader-0.7.2.tar.gz
+git+git://github.com/kennethreitz/django-postgrespool@5cb1ccedba0ac764
 git+git://github.com/achiang/django-stripe-payments
 git+git://github.com/brutasse/django-push.git@9bb999397d426d7d

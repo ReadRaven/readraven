@@ -1,11 +1,9 @@
 import logging
-from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, get_user_model
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.files.storage import default_storage
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect, HttpResponseBadRequest
 from django.shortcuts import render_to_response
@@ -42,6 +40,7 @@ class UserTakeoutUploadForm(ModelForm):
         model = UserTakeoutUpload
         fields = ['zipfile']
 
+
 @login_required
 def import_takeout(request):
     if request.method == 'POST':
@@ -51,11 +50,12 @@ def import_takeout(request):
             takeout = form.save()
 
             task = tasks.EatTakeoutTask()
-            result = task.delay(request.user, takeout.zipfile.name)
+            task.delay(request.user, takeout.zipfile.name)
 
     # This isn't the prettiest, but it works.
     #return HttpResponseRedirect(reverse('usher.views.dashboard'))
-    return HttpResponseRedirect('/usher/dashboard#import')
+    return HttpResponseRedirect('/reader#account')
+
 
 @login_required
 def dashboard(request):
@@ -69,9 +69,10 @@ def dashboard(request):
 
     return render_to_response(
         'usher/dashboard.html',
-        { 'last_upload' : last_upload,
-          'zipfile' : zipfile },
+        {'last_upload': last_upload,
+         'zipfile': zipfile},
         context_instance=RequestContext(request))
+
 
 def sign_in(request):
     page = request.GET.get('next', '')
@@ -81,6 +82,7 @@ def sign_in(request):
             context_instance=RequestContext(request))
     else:
         return HttpResponseRedirect('/usher/google_auth')
+
 
 @login_required
 def sign_up(request):

@@ -8,7 +8,10 @@ from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.core.exceptions import ValidationError, ObjectDoesNotExist, MultipleObjectsReturned
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
+
+from django_push.subscriber.models import Subscription
+from django_push.subscriber.signals import updated
 from taggit.managers import TaggableManager
 from taggit.models import TaggedItem
 
@@ -46,6 +49,8 @@ class Feed(models.Model):
 
     # Optional metadata
     generator = models.TextField(blank=True)
+
+    subscription = models.ForeignKey(Subscription, related_name='feed', null=True)
 
     # Values are in minutes
     FETCH_FAST = 5
@@ -138,6 +143,10 @@ class Feed(models.Model):
         except feedfinder.TimeoutError:
             return None
 
+    def pubsubhubbub_listener(sender, notification, **kwargs):
+        logger.warn('Pubsubhubbbub event received! %s: %s' % (sender.id, sender.topic))
+        Feed.calculate_stats()
+
     def calculate_stats(self):
         # I consider this to be a lot for 1 day. Why aren't they using
         # pubsubhubbub? As for the magic number...
@@ -187,7 +196,7 @@ class Feed(models.Model):
         if 'links' in data.feed:
             for link in data.feed.links:
                 if link.rel == 'hub':
-                    logger.warn('Hub detected: %s' % self.pk)
+                    self.subscription = Subscription.objects.subscribe(self.link.encode('utf-8'), hub=link.href.encode('utf-8'))
         self.calculate_stats()
         self.save()
 
@@ -208,6 +217,7 @@ class Feed(models.Model):
                 tmp.title = u'(none)'
             try:
                 tmp.link = entry.link
+                tmp.update_link_hash()
             except AttributeError:
                 tmp.link = ''
             try:
@@ -314,6 +324,7 @@ class Feed(models.Model):
     # ttl: <ttl>60</ttl>
     # webMaster: <webMaster>webmaster@w3schools.com</webMaster>
 
+updated.connect(Feed.pubsubhubbub_listener)
 
 class FeedItemManager(models.Manager):
     '''A manager for user-specific queries.'''
@@ -346,6 +357,10 @@ class FeedItem(models.Model):
     # It's possible to have longer urls, but anything longer than 2083
     # characters will break in IE.
     link = models.URLField(max_length=1023)
+    # We need an index on 'link' but 99% will all start with 'http://'
+    # so let's index on a hash of the link instead.
+    # http://inessential.com/2013/03/18/brians_stupid_feed_tricks
+    link_hash = models.CharField(max_length=128, default='', db_index=True)
     title = models.TextField()
 
     # Various GUIDs
@@ -365,6 +380,11 @@ class FeedItem(models.Model):
         userfeeditem = UserFeedItem.objects.get(
             user=user, item=self)
         return userfeeditem
+
+    def update_link_hash(self):
+        link_hash = hashlib.sha256()
+        link_hash.update(self.link.encode('utf-8'))
+        self.link_hash = link_hash.hexdigest()
 
     def calculate_guid(self):
         # guid is the sha256 of:
@@ -400,7 +420,10 @@ class FeedItem(models.Model):
                      'description']:
             if hasattr(tmp, attr):
                 setattr(item, attr, getattr(tmp, attr))
+                if attr == 'link':
+                    item.update_link_hash()
 
+        item.guid = item.calculate_guid()
         item.save()
         return item
 
@@ -422,12 +445,12 @@ class FeedItem(models.Model):
         # Search for link next
         try:
             if tmp.link != '':
-                item = FeedItem.objects.get(link=tmp.link)
+                item = FeedItem.objects.get(link_hash=tmp.link_hash)
                 return FeedItem._update_entry(item, tmp)
         except ObjectDoesNotExist:
             pass
         except MultipleObjectsReturned:
-            qs = FeedItem.objects.filter(link=tmp.link).order_by('-published')
+            qs = FeedItem.objects.filter(link_hash=tmp.link_hash).order_by('-published')
             for item in qs[1:]:
                 logger.warn('Deleting duplicate link: %s' % item.link)
                 item.delete()

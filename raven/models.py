@@ -423,6 +423,7 @@ class FeedItem(models.Model):
                 if attr == 'link':
                     item.update_link_hash()
 
+        item.guid = item.calculate_guid()
         item.save()
         return item
 

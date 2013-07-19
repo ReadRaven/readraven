@@ -8,8 +8,7 @@ DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
-    ('Alex Chiang', 'alex@chizang.net'),
-    ('Paul Hummer', 'paul@eventuallyanyway.com'),
+    ('Alex Chiang', 'alex@readraven.com'),
 )
 
 MANAGERS = ADMINS
@@ -20,7 +19,7 @@ LOGIN_URL = '/usher/sign_in'
 
 # Hosts/domain names that are valid for this site; required if DEBUG is False
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = ['www.readraven.com', '.herokuapp.com']
+ALLOWED_HOSTS = ['www.readraven.com']
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -119,6 +118,7 @@ INSTALLED_APPS = (
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 
+    'django_push.subscriber',
     'djangosecure',
     'djcelery',
     'south',
@@ -197,3 +197,20 @@ SECURE_SSL_REDIRECT = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 API_LIMIT_PER_PAGE = 0
+
+# django-push setting, use https for callback urls
+PUSH_SSL_CALLBACK = True
+
+import dj_database_url
+DATABASES = {'default' : dj_database_url.config() }
+DATABASES['default']['ENGINE'] = 'django_postgrespool'
+
+SOUTH_DATABASE_ADAPTERS = {
+    'default': 'south.db.postgresql_psycopg2'
+}
+
+DATABASE_POOL_ARGS = {
+    'max_overflow': 50,
+    'pool_size': 5,
+    'recycle': 300
+}

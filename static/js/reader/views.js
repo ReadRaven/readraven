@@ -78,24 +78,21 @@ APP.Views.LeftSide = Backbone.View.extend({
     decrement: function(ele) {
         var countRegex = /^\((\d+)\)/;
 
-        var countNode = ele.find('.feed-count');
-        if (countNode.length === 0) {
-            return;
+        var countNode = ele.find('.feed-count'),
+            countNodeLength = countNode.length;
+        for (var i=0; i<countNodeLength; i++) {
+            var node = countNode[i],
+                match = $(node).text().match(countRegex),
+                count = parseInt(match[1], 10);
+
+            count--;
+            if (count === 0) {
+                countNode.remove();
+            } else {
+                countNode.text('('+count+')');
+            }
         }
 
-        var match = countNode.text().match(countRegex);
-        if (match === null || match.length !== 2) {
-            console.log('invalid match was: '+match);
-            return;
-        }
-
-        var count = parseInt(match[1], 10);
-        count--;
-        if (count === 0) {
-            countNode.remove();
-        } else {
-            countNode.text('('+count+')');
-        }
     },
     el: '#left-side',
     events: {
@@ -106,7 +103,7 @@ APP.Views.LeftSide = Backbone.View.extend({
         var el = this.$el;
 
         /* Decrement the 'All'. */
-        this.decrement(el.find('.all'));
+        this.decrement(el.find('.unread'));
 
         /* Decrement the feed itself. */
         var feedID = item.get('feed_id'),
@@ -164,22 +161,46 @@ $.fn.isOnScreen = function(percentage){
               viewport.bottom < bounds.top || viewport.top > bounds.bottom));
 };
 
-APP.Views.StrongSide = Backbone.View.extend({
+var StrongSideView = Backbone.View.extend({
+    hide: function() {
+        if (this.$el.is(':visible')) {
+            this.$el.hide();
+        }
+    },
+    show: function() {
+        if (!this.$el.is(':visible')) {
+            this.$el.show();
+        }
+    }
+});
+
+APP.Views.AccountManageView = StrongSideView.extend({
+    el: '#account-manage',
+    render: function() {
+        this.$el.html(this.template());
+
+        this.$el.find('[name="csrfmiddlewaretoken"]').val(window.CSRFTOKEN);
+    },
+    template: Handlebars.compile($('#account-manage-template').html())
+});
+
+APP.Views.FeedItemList = StrongSideView.extend({
     add: function(item) {
         this.renderItem(item);
     },
     containerEl: '#feeditem-container',
     currentRow: null,
     infiniteLoader: null,
-    el: '#strong-side',
+    el: '#feeditem-list',
     events: {
-        'click .feeditem-content': 'select_and_read',
-        'click .feeditem-loader': 'more'
+        'click .feeditem-content': 'select_and_read'
     },
     filter: function(config) {
         /* Take a config of feed and/or tag, and add them as filters, and
          * reset the items.
          */
+        config = config || {};
+
         this.$el.find(this.containerEl).empty();
         if (config.feed) {
             this.items.params.feed = config.feed;
@@ -197,13 +218,19 @@ APP.Views.StrongSide = Backbone.View.extend({
         }
         if (config.starred) {
             this.items.params.starred = config.starred;
-            this.items.params.read = ' ';
+            this.items.params.read = '~~~';
         } else {
             delete this.items.params.starred;
+        }
+        if (config.read) {
+            this.items.params.read = config.read;
+        } else {
             delete this.items.params.read;
         }
         this.items.params.offset = 0;
         this.items.fetch({reset: true, success: this.items.success});
+
+        this.show();
     },
     initialize: function(config) {
         config = config||{};
@@ -253,12 +280,10 @@ APP.Views.StrongSide = Backbone.View.extend({
     },
     more: function(e) {
         e.preventDefault();
-        if (this.$el.find('.feeditem-loader').length !== 0) {
-            if (this.items.hasNext()) {
-                this.items.getNext();
-            } else {
-                this.$el.find('.feeditem-loader').remove();
-            }
+        if (this.items.hasNext()) {
+            this.items.getNext();
+        } else {
+            this.infiniteLoader.remove();
         }
     },
     render: function() {
@@ -363,13 +388,6 @@ APP.Views.StrongSide = Backbone.View.extend({
         selected.addClass('selected');
         item = this.items.get(selected.parent().attr('data-feeditem'));
 
-        /* This happens when loading more items, the old items go out of
-         * scope and we'll get something undefined. Just return the
-         * current selected item.
-         */
-        if (item === undefined) {
-            return selected;
-        }
         if (item.get('read') === false) {
             item.save({'read': true}, {success: _.bind(function() {
                 Backbone.trigger('feeditemread', item);

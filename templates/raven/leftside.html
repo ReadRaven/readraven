@@ -2,18 +2,19 @@
 <a href="#nav" class="nav-menu-button">Menu</a>
 
 <div class="nav-inner">
-    <div class="toolbox">
-        <a href="{% url 'django.contrib.auth.views.logout' %}">Log out</a>
-    </div>
-
     <div class="pure-menu pure-menu-open">
         <ul>
             <li>
-                <a href="#all" class="all">
-                    All feeds
+                <a href="#unread" class="unread">
+                    Unread items
                 {% if unread_count %}
                     <span class="feed-count">({{unread_count}})</span>
                 {% endif %}
+                </a>
+            </li>
+            <li>
+                <a href="#all" class="all">
+                    All items
                 </a>
             </li>
             <li><a href="#starred">Starred</a></li>
@@ -85,4 +86,25 @@
 
     <a class="pure-button primary-button" id="add-feed-btn" href="#">Add feed</a>
 
+    <div class="pure-menu pure-menu-open">
+        <ul>
+            {% comment %}
+            <li>
+                <a href="#feeds">
+                    Manage feeds
+                </a>
+            </li>
+            {% endcomment %}
+            <li>
+                <a href="#account">
+                    Account settings
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'django.contrib.auth.views.logout' %}">
+                    Log out
+                </a>
+            </li>
+        </ul>
+    </div>
 </div>

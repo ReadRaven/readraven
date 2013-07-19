@@ -1,0 +1,36 @@
+<div class="content">
+    <form class="pure-form" action="/usher/import_takeout" method="post" enctype="multipart/form-data">
+
+        <fieldset>
+            <legend>OPML Import</legend>
+
+            <input type="hidden" name="csrfmiddlewaretoken" value="">
+            <input type="file" name="zipfile" />
+            <button type="submit" class="pure-button notice">Upload</button>
+        </fieldset>
+    </form>
+
+    <p>
+        Upload your Google Takeout zip file to import and preserve all
+        your historical Google Reader data. You can upload your Takeout as
+        many times as you like, but we will only save the last one.
+    </p>
+
+    <hr>
+    <div>
+        <h4>
+            Help! How do I find my Google Takeout file?
+        </h4>
+        <div class="help">
+        <p>
+            Simple! Get your file from
+            <a href="https://www.google.com/takeout/" target="_blank">google.com/takeout</a>
+        </p>
+        <p>
+            Select "Choose services" and then select the "Reader" option.
+            Complete the takeout process and download the resulting zip
+            file. When you're done, come back and upload it to ReadRaven. Whee!
+        </p>
+        <br>
+    </div>
+</div>

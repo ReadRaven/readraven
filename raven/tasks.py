@@ -86,14 +86,14 @@ def update_feeds(feeds, *args, **kwargs):
 class UpdateFeedBeat(PeriodicTask):
     '''A task for updating a set of feeds.'''
 
-    SLICE_SIZE = 200
-    run_every = timedelta(seconds=60*5)
+    SLICE_SIZE = 50
+    run_every = timedelta(seconds=60*6)
 
     def run(self):
         for freq in [Feed.FETCH_FAST, Feed.FETCH_DEFAULT, Feed.FETCH_SLOW]:
             age = datetime.utcnow() - timedelta(minutes=freq)
             feeds = Feed.objects.filter(last_fetched__lt=age,
-                                        fetch_frequency=freq)[:self.SLICE_SIZE]
+                                        fetch_frequency=freq).order_by('last_fetched')[:self.SLICE_SIZE]
             update_feeds.apply_async([feeds])
 
         # If we imported feeds + feeditems from Reader, we have

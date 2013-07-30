@@ -152,7 +152,7 @@ class Feed(models.Model):
         # pubsubhubbub? As for the magic number...
         # http://www.youtube.com/watch?v=tpQqH4H_SUQ#t=2m31s
         age = datetime.utcnow() - timedelta(days=1)
-        if self.items.filter(published__gt=age).count() >= 37 and self.subscribers.count > 1:
+        if self.items.filter(published__gt=age).count() >= 37 and self.subscribers.count() > 1:
             self.fetch_frequency = self.FETCH_FAST
             #logger.warn('Freq (fast): %s: %s' % (self.pk, self.link))
 

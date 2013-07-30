@@ -202,8 +202,13 @@ API_LIMIT_PER_PAGE = 0
 PUSH_SSL_CALLBACK = True
 
 import dj_database_url
-DATABASES = {'default' : dj_database_url.config() }
+DATABASES = {
+    'default' : dj_database_url.config(),
+    'master' : dj_database_url.config(env=MASTER_DATABASE_URL, default=DATABASE_URL)
+}
 DATABASES['default']['ENGINE'] = 'django_postgrespool'
+DATABASES['master']['ENGINE'] = 'django_postgrespool'
+DATABASE_ROUTERS = ['raven.routers.MasterSlaveRouter']
 
 SOUTH_DATABASE_ADAPTERS = {
     'default': 'south.db.postgresql_psycopg2'

@@ -53,7 +53,7 @@ class Feed(models.Model):
     subscription = models.ForeignKey(Subscription, related_name='feed', null=True)
 
     # Values are in minutes
-    FETCH_FAST = 5
+    FETCH_FAST = 10
     FETCH_DEFAULT = 30
     FETCH_SLOW = 60 * 24
     FETCH_PUSH = 0
@@ -152,19 +152,40 @@ class Feed(models.Model):
         # pubsubhubbub? As for the magic number...
         # http://www.youtube.com/watch?v=tpQqH4H_SUQ#t=2m31s
         age = datetime.utcnow() - timedelta(days=1)
-        if self.items.filter(published__gt=age).count() >= 37:
+        if self.items.filter(published__gt=age).count() >= 37 and self.subscribers.count > 1:
             self.fetch_frequency = self.FETCH_FAST
-            logger.warn('Freq (fast): %s: %s' % (self.pk, self.link))
+            #logger.warn('Freq (fast): %s: %s' % (self.pk, self.link))
 
         # No posts in a year? Let's fetch slower.
         age = datetime.utcnow() - timedelta(days=365)
         if self.items.filter(published__gt=age).count() <= 0:
             self.fetch_frequency = self.FETCH_SLOW
-            logger.warn('Freq (slow): %s: %s' % (self.pk, self.link))
+            #logger.warn('Freq (slow): %s: %s' % (self.pk, self.link))
+
+        # No posts in 5 years? Dead feed!
+        age = datetime.utcnow() - timedelta(days=5*365)
+        if self.items.filter(published__gt=age).count() <= 0:
+            logger.warn('Freq (dead‽): %s: %s' % (self.pk, self.link))
+
+        # Now let's fix any mistakes we've made...
+        if self.fetch_frequency == self.FETCH_FAST:
+            # First, let's look for feeds that may have been categorized
+            # fast in the past, but are no longer. Use a different
+            # threshold than above.
+            age = datetime.utcnow() - timedelta(days=1)
+            if self.items.filter(published__gt=age).count() < 10:
+                self.fetch_frequency = self.FETCH_DEFAULT
+                logger.warn('Freq (demote => default): %s: %s' % (self.pk, self.link))
+
+            # Second, we only want to fetch fast for popular feeds, where we
+            # define 'popular' as > 2 subscribers.
+            if self.subscribers.count() < 2:
+                self.fetch_frequency = self.FETCH_DEFAULT
+                logger.warn('Freq (demote => default): %s: %s' % (self.pk, self.link))
 
     def update(self, data=None, hack=False):
         # u'user/00109242490472324272/source/com.google/link'
-        if self.link.startswith('user/'):
+        if self.link.startswith('user/') or self.link.startswith('webfeed/'):
             self.fetch_frequency = self.FETCH_NEVER
             self.save()
             logger.warn('NEVER fetch reader_id: %s - %s' % (self.pk, self.link))

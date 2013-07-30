@@ -194,6 +194,12 @@ class Feed(models.Model):
         if data is None:
             data = feedparser.parse(self.link)
 
+        if data.get('status', '') == 404:
+            self.fetch_frequency = self.FETCH_NEVER
+            self.save()
+            logger.warn('NEVER fetch reader_id: %s - %s' % (self.pk, self.link))
+            return
+
         updated = False
         try:
             if self.title != data.feed.title:

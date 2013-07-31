@@ -168,20 +168,20 @@ class Feed(models.Model):
             logger.warn('Freq (dead?!): %s: %s' % (self.pk, self.link))
 
         # Now let's fix any mistakes we've made...
-        if self.fetch_frequency == self.FETCH_FAST:
+        #if self.fetch_frequency == self.FETCH_FAST:
             # First, let's look for feeds that may have been categorized
             # fast in the past, but are no longer. Use a different
             # threshold than above.
-            age = datetime.utcnow() - timedelta(days=1)
-            if self.items.filter(published__gt=age).count() < 10:
-                self.fetch_frequency = self.FETCH_DEFAULT
-                logger.warn('Freq (demote => default): %s: %s' % (self.pk, self.link))
+            #age = datetime.utcnow() - timedelta(days=1)
+            #if self.items.filter(published__gt=age).count() < 10:
+                #self.fetch_frequency = self.FETCH_DEFAULT
+                #logger.warn('Freq (demote => default): %s: %s' % (self.pk, self.link))
 
             # Second, we only want to fetch fast for popular feeds, where we
             # define 'popular' as > 2 subscribers.
-            if self.subscribers.count() < 2:
-                self.fetch_frequency = self.FETCH_DEFAULT
-                logger.warn('Freq (demote => default): %s: %s' % (self.pk, self.link))
+            #if self.subscribers.count() < 2:
+                #self.fetch_frequency = self.FETCH_DEFAULT
+                #logger.warn('Freq (demote => default): %s: %s' % (self.pk, self.link))
 
     def update(self, data=None, hack=False):
         # u'user/00109242490472324272/source/com.google/link'

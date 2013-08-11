@@ -17,6 +17,7 @@ from taggit.models import TaggedItem
 
 import feedparser
 import hashlib
+from urllib2 import URLError
 
 logger = logging.getLogger('django')
 User = get_user_model()
@@ -213,6 +214,18 @@ class Feed(models.Model):
             self.save()
             logger.warn('NEVER fetch reader_id: %s - %s' % (self.pk, self.link))
             return
+
+        if data.bozo == 1:
+            try:
+                raise data.bozo_exception
+            except URLError, e:
+                if 'Errno -2' in str(e):
+                    self.fetch_frequency = self.FETCH_NEVER
+                    self.save()
+                    logger.warn('BOZO reader: %s - %s - %s' % (self.pk, self.link, e))
+                    return
+            except:
+                logger.warn('Bozo: %d %s - %s' % (self.pk, self.link, data.bozo_exception))
 
         updated = False
         try:

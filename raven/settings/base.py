@@ -204,11 +204,14 @@ PUSH_SSL_CALLBACK = True
 import dj_database_url
 DATABASES = {
     'default' : dj_database_url.config(),
-    'master' : dj_database_url.config(env='MASTER_DATABASE_URL', default='DATABASE_URL')
 }
 DATABASES['default']['ENGINE'] = 'django_postgrespool'
-DATABASES['master']['ENGINE'] = 'django_postgrespool'
-DATABASE_ROUTERS = ['raven.routers.MasterSlaveRouter']
+
+# XXX: slaves will need to define the env variable. kinda nasty...
+if os.environ.get('I_AM_SLAVE', False):
+    DATABASES['writedb'] = dj_database_url.config(env='WRITEDB_URL', default='DATABASE_URL')
+    DATABASES['writedb']['ENGINE'] = 'django_postgrespool'
+    DATABASE_ROUTERS = ['raven.routers.MasterSlaveRouter']
 
 SOUTH_DATABASE_ADAPTERS = {
     'default': 'south.db.postgresql_psycopg2'

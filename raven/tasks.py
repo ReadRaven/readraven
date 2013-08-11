@@ -74,12 +74,6 @@ def _new_user_item(user, feed, entry):
 
 @task
 def update_feeds(feeds, *args, **kwargs):
-    # Touch each feed quickly, in case we do not process the entire
-    # queue before the next beat ticks.
-    for feed in feeds:
-        feed.last_fetched = datetime.utcnow()
-        feed.save()
-
     for feed in feeds:
         feed.update(hack=kwargs.get('hack', False))
 

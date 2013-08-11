@@ -148,6 +148,7 @@ class Feed(models.Model):
         Feed.calculate_stats()
 
     def calculate_stats(self):
+        self.last_fetched = datetime.utcnow()
         # I consider this to be a lot for 1 day. Why aren't they using
         # pubsubhubbub? As for the magic number...
         # http://www.youtube.com/watch?v=tpQqH4H_SUQ#t=2m31s
@@ -189,6 +190,10 @@ class Feed(models.Model):
             self.fetch_frequency = self.FETCH_NEVER
             self.save()
             logger.warn('NEVER fetch reader_id: %s - %s' % (self.pk, self.link))
+            return
+
+        age = datetime.utcnow() - self.last_fetched
+        if (age.seconds / 60) < self.fetch_frequency:
             return
 
         if data is None:

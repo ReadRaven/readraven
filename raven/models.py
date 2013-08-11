@@ -167,7 +167,7 @@ class Feed(models.Model):
         # No posts in 5 years? Dead feed!
         age = datetime.utcnow() - timedelta(days=5*365)
         if self.items.filter(published__gt=age).count() <= 0:
-            logger.warn('Freq (dead?!): %s: %s' % (self.pk, self.link))
+            logger.warn('Freq (dead?!): %s: %s %d' % (self.pk, self.link, self.items.filter(published__gt=age).count()))
 
         # Now let's fix any mistakes we've made...
         #if self.fetch_frequency == self.FETCH_FAST:

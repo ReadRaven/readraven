@@ -74,6 +74,7 @@ def _new_user_item(user, feed, entry):
 
 @task
 def update_feeds(feeds, *args, **kwargs):
+    logger.warn('Celery heartbeat (2/2): freq %d' % (feeds[0].fetch_frequency))
     for feed in feeds:
         feed.update(hack=kwargs.get('hack', False))
 
@@ -89,6 +90,7 @@ class UpdateFeedBeat(PeriodicTask):
             feeds = Feed.objects.filter(last_fetched__lt=age,
                                         fetch_frequency=freq).order_by('last_fetched')[:self.SLICE_SIZE]
             update_feeds.apply_async([feeds])
+            logger.warn('Celery heartbeat (1/2): freq %d' % (freq))
 
         # If we imported feeds + feeditems from Reader, we have
         # never marked them as fetched. So we find them here and

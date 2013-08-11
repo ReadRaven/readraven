@@ -16,5 +16,7 @@ class Command(BaseCommand):
             for pk in pks:
                 feed = Feed.objects.get(pk=pk)
                 feed.fetch_frequency = 0
+                print 'killed %s' % feed.link
+                print 'subscribers: %s' % feed.subscribers
+                print
                 feed.save()
-

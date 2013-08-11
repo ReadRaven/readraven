@@ -185,8 +185,17 @@ class Feed(models.Model):
                 #logger.warn('Freq (demote => default): %s: %s' % (self.pk, self.link))
 
     def update(self, data=None, hack=False):
+        if self.fetch_frequency == self.FETCH_NEVER:
+            return
+
         # u'user/00109242490472324272/source/com.google/link'
         if self.link.startswith('user/') or self.link.startswith('webfeed/'):
+            self.fetch_frequency = self.FETCH_NEVER
+            self.save()
+            logger.warn('NEVER fetch reader_id: %s - %s' % (self.pk, self.link))
+            return
+
+        if 'twitter.com/statuses/user_timeline' in self.link:
             self.fetch_frequency = self.FETCH_NEVER
             self.save()
             logger.warn('NEVER fetch reader_id: %s - %s' % (self.pk, self.link))

@@ -220,10 +220,10 @@ class Feed(models.Model):
                 self.generator = data.feed.generator
         except AttributeError:
             pass
-        if 'links' in data.feed:
-            for link in data.feed.links:
-                if link.rel == 'hub':
-                    self.subscription = Subscription.objects.subscribe(self.link.encode('utf-8'), hub=link.href.encode('utf-8'))
+        #if 'links' in data.feed:
+            #for link in data.feed.links:
+                #if link.rel == 'hub':
+                    #self.subscription = Subscription.objects.subscribe(self.link.encode('utf-8'), hub=link.href.encode('utf-8'))
         self.calculate_stats()
         self.save()
 

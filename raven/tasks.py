@@ -74,20 +74,15 @@ def _new_user_item(user, feed, entry):
 
 @task
 def update_feeds(feeds, *args, **kwargs):
-    # Touch each feed quickly, in case we do not process the entire
-    # queue before the next beat ticks.
-    for feed in feeds:
-        feed.last_fetched = datetime.utcnow()
-        feed.save()
-
+    logger.warn('Celery heartbeat (2/2): freq %d' % (feeds[0].fetch_frequency))
     for feed in feeds:
         feed.update(hack=kwargs.get('hack', False))
 
 class UpdateFeedBeat(PeriodicTask):
     '''A task for updating a set of feeds.'''
 
-    SLICE_SIZE = 50
-    run_every = timedelta(seconds=60*6)
+    SLICE_SIZE = 150
+    run_every = timedelta(seconds=60*10)
 
     def run(self):
         for freq in [Feed.FETCH_FAST, Feed.FETCH_DEFAULT, Feed.FETCH_SLOW]:
@@ -95,6 +90,7 @@ class UpdateFeedBeat(PeriodicTask):
             feeds = Feed.objects.filter(last_fetched__lt=age,
                                         fetch_frequency=freq).order_by('last_fetched')[:self.SLICE_SIZE]
             update_feeds.apply_async([feeds])
+            logger.warn('Celery heartbeat (1/2): freq %d' % (freq))
 
         # If we imported feeds + feeditems from Reader, we have
         # never marked them as fetched. So we find them here and

@@ -17,6 +17,7 @@ from taggit.models import TaggedItem
 
 import feedparser
 import hashlib
+from urllib2 import URLError
 
 logger = logging.getLogger('django')
 User = get_user_model()
@@ -148,6 +149,7 @@ class Feed(models.Model):
         Feed.calculate_stats()
 
     def calculate_stats(self):
+        self.last_fetched = datetime.utcnow()
         # I consider this to be a lot for 1 day. Why aren't they using
         # pubsubhubbub? As for the magic number...
         # http://www.youtube.com/watch?v=tpQqH4H_SUQ#t=2m31s
@@ -165,7 +167,7 @@ class Feed(models.Model):
         # No posts in 5 years? Dead feed!
         age = datetime.utcnow() - timedelta(days=5*365)
         if self.items.filter(published__gt=age).count() <= 0:
-            logger.warn('Freq (dead?!): %s: %s' % (self.pk, self.link))
+            logger.warn('Freq (dead?!): %s: %s %d' % (self.pk, self.link, self.items.filter(published__gt=age).count()))
 
         # Now let's fix any mistakes we've made...
         #if self.fetch_frequency == self.FETCH_FAST:
@@ -184,11 +186,24 @@ class Feed(models.Model):
                 #logger.warn('Freq (demote => default): %s: %s' % (self.pk, self.link))
 
     def update(self, data=None, hack=False):
+        if self.fetch_frequency == self.FETCH_NEVER:
+            return
+
         # u'user/00109242490472324272/source/com.google/link'
         if self.link.startswith('user/') or self.link.startswith('webfeed/'):
             self.fetch_frequency = self.FETCH_NEVER
             self.save()
             logger.warn('NEVER fetch reader_id: %s - %s' % (self.pk, self.link))
+            return
+
+        if 'twitter.com/statuses/user_timeline' in self.link:
+            self.fetch_frequency = self.FETCH_NEVER
+            self.save()
+            logger.warn('NEVER fetch reader_id: %s - %s' % (self.pk, self.link))
+            return
+
+        age = datetime.utcnow() - self.last_fetched
+        if (age.seconds / 60) < self.fetch_frequency:
             return
 
         if data is None:
@@ -199,6 +214,18 @@ class Feed(models.Model):
             self.save()
             logger.warn('NEVER fetch reader_id: %s - %s' % (self.pk, self.link))
             return
+
+        if data.bozo == 1:
+            try:
+                raise data.bozo_exception
+            except URLError, e:
+                if 'Errno -2' in str(e):
+                    self.fetch_frequency = self.FETCH_NEVER
+                    self.save()
+                    logger.warn('BOZO reader: %s - %s - %s' % (self.pk, self.link, e))
+                    return
+            except:
+                logger.warn('Bozo: %d %s - %s' % (self.pk, self.link, data.bozo_exception))
 
         updated = False
         try:
@@ -220,10 +247,10 @@ class Feed(models.Model):
                 self.generator = data.feed.generator
         except AttributeError:
             pass
-        if 'links' in data.feed:
-            for link in data.feed.links:
-                if link.rel == 'hub':
-                    self.subscription = Subscription.objects.subscribe(self.link.encode('utf-8'), hub=link.href.encode('utf-8'))
+        #if 'links' in data.feed:
+            #for link in data.feed.links:
+                #if link.rel == 'hub':
+                    #self.subscription = Subscription.objects.subscribe(self.link.encode('utf-8'), hub=link.href.encode('utf-8'))
         self.calculate_stats()
         self.save()
 
